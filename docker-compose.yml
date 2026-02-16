@@ -15,4 +15,4 @@ services:
     volumes:
       - ./.neo4j/data:/data
       - ./.neo4j/logs:/logs
-    restart: unless-stopped
+    restart: no
