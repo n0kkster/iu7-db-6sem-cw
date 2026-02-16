@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../Analyzer.Domain/Analyzer.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
