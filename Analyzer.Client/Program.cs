@@ -6,6 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddScoped(sp => new HttpClient 
+{ 
+    // Probably set ports manually or add launchSettings to git?
+    BaseAddress = new Uri("https://localhost:7021")
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
