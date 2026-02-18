@@ -1,8 +1,18 @@
+// using Neo4j.Driver;
+using Analyzer.Application.Interfaces;
+using Analyzer.Application.Services;
+using Analyzer.Infrastructure.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddSingleton<IGraphRepository, TestGraphRepository>();
+builder.Services.AddScoped<IGraphService, GraphService>();
+
+builder.Services.AddControllers();
 
 // Add CORS to allow Blazor app to use API
 builder.Services.AddCors(options =>
@@ -28,7 +38,6 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowBlazorHttpsOrigin");
 
-app.MapGet("/", () => "Main page");
-app.MapGet("/aboba", () => "aboba!");
+app.MapControllers();
 
 app.Run();
