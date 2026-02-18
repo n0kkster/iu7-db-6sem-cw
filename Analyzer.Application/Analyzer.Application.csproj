@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Analyzer.Domain/Analyzer.Domain.csproj" />
+    <ProjectReference Include="../Analyzer.Shared/Analyzer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Analyzer.Application/Analyzer.Application.csproj" />
+    <ProjectReference Include="../Analyzer.Infrastructure/Analyzer.Infrastructure.csproj" />
     <ProjectReference Include="../Analyzer.Shared/Analyzer.Shared.csproj" />
   </ItemGroup>
 
