@@ -5,8 +5,8 @@ using Analyzer.Domain.Enums;
 
 public interface IGraphRepository
 {
-    Task<ComponentNode> GetNodeAsync(int id);
-    Task CreateNodeAsync(ComponentType type, string name);
-    Task DeleteNodeAsync(int id);
-    Task UpdateNodeAsync(ComponentNode node);
+    Task<Guid> CreateComponentAsync(ComponentType type, string name);
+    Task<Component> GetComponentAsync(Guid id);
+    Task UpdateComponentAsync(Component node);
+    Task DeleteComponentAsync(Guid id);
 }

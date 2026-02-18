@@ -28,26 +28,29 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         _queryConfig = new QueryConfig(database: "neo4j");
     }
 
-    public async Task CreateNodeAsync(ComponentType type, string name)
+    public async Task<Guid> CreateComponentAsync(ComponentType type, string name)
     {
-        Log.Information($"Creating node of type {type} with name {name}");
-        await _driver.ExecutableQuery($"CREATE (:{type} {{name: '{name}'}})")
+        var guid = Guid.NewGuid();
+        Log.Information($"Creating node of type {type} with name {name} and guid: {guid}");
+        await _driver.ExecutableQuery($"CREATE (:{type} {{name: '{name}', id: '{guid}'}})")
                      .WithConfig(_queryConfig)
                      .ExecuteAsync();
-        Log.Information($"Created node of type {type} with name {name}");
+        Log.Information($"Created node of type {type} with name {name} and guid: {guid}");
+        
+        return guid;
     }
 
-    public async Task DeleteNodeAsync(int id)
+    public async Task<Component> GetComponentAsync(Guid id)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<ComponentNode> GetNodeAsync(int id)
+    public async Task UpdateComponentAsync(Component node)
     {
         throw new NotImplementedException();
     }
 
-    public async Task UpdateNodeAsync(ComponentNode node)
+    public async Task DeleteComponentAsync(Guid id)
     {
         throw new NotImplementedException();
     }
