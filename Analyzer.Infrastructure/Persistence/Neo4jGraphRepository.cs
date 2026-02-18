@@ -28,7 +28,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         _queryConfig = new QueryConfig(database: "neo4j");
     }
 
-    public async Task<Guid> CreateComponentAsync(ComponentType type, string name)
+    public async Task<Guid> AddComponentAsync(ComponentType type, string name)
     {
         var guid = Guid.NewGuid();
         Log.Information($"Creating node of type {type} with name {name} and guid: {guid}");
@@ -36,7 +36,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                      .WithConfig(_queryConfig)
                      .ExecuteAsync();
         Log.Information($"Created node of type {type} with name {name} and guid: {guid}");
-        
+
         return guid;
     }
 
