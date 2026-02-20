@@ -1,7 +1,142 @@
 ﻿@page "/"
+@using Analyzer.Shared.DTO;
+@using Analyzer.Domain.Enums;
+@inject IDialogService DialogService
 
-<PageTitle>Home</PageTitle>
+<div class="dashboard-container">
+    @* Верхняя панель инструментов для графа *@
+    <div class="toolbar border-b mud-border-lines-default pa-3 d-flex align-center mud-theme-surface">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mr-3"
+                   OnClick="OpenAddComponentDialog">
+            Добавить компонент
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.FlashOn"
+                   OnClick="OpenSimulationPanel">
+            Симуляция отказа
+        </MudButton>
+        <MudSpacer />
+        <MudChip T="string" Color="Color.Success" Variant="Variant.Text">Статус: Стабилен</MudChip>
+    </div>
 
-<h1>Hello, world!</h1>
+    @* Область графа (ЗАГЛУШКА) *@
+    <div class="graph-canvas" @onclick="SelectMockNode">
+        <div class="placeholder-content shadow-sm">
+            <MudIcon Icon="@Icons.Material.Filled.Polyline" Size="Size.Large" Color="Color.Default" Class="mb-3"
+                     Style="font-size: 4rem;" />
+            <MudText Typo="Typo.h5" Color="Color.Primary">Визуализация архитектуры</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+                Здесь будет отрендерен граф (JS Interop + D3.js/Cytoscape).<br />
+                Кликни по фону, чтобы открыть свойства узла.
+            </MudText>
+        </div>
+    </div>
+</div>
 
-Welcome to your new app.
+@* Выдвижная панель справа для свойств компонента *@
+<MudDrawer @bind-Open="@_isPropertiesPanelOpen" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary"
+           Width="400px">
+    <MudDrawerHeader Class="d-flex align-center justify-space-between border-b mud-border-lines-default">
+        <MudText Typo="Typo.h6" Color="Color.Primary">Свойства узла</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@(() => _isPropertiesPanelOpen = false)" />
+    </MudDrawerHeader>
+
+    <div class="pa-4">
+        <MudTextField T="string" Label="Название" Value="@("AuthService")" Variant="Variant.Outlined"
+                      Margin="Margin.Dense" Class="mb-4" />
+
+        <MudSelect T="string" Label="Тип компонента" Value="@("Microservice")" Variant="Variant.Outlined"
+                   Margin="Margin.Dense" Class="mb-4">
+            <MudSelectItem Value="@("Microservice")" />
+            <MudSelectItem Value="@("Database (Postgres)")" />
+            <MudSelectItem Value="@("Message Broker (Kafka)")" />
+        </MudSelect>
+
+        <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2 mt-4">Зависимости (связи)</MudText>
+        <MudList T="string" Dense="true" Class="border mud-border-lines-default rounded mud-theme-background">
+            <MudListItem Icon="@Icons.Material.Filled.ArrowForward" Text="UserDB (Database)" />
+            <MudListItem Icon="@Icons.Material.Filled.ArrowBack" Text="ApiGateway (Microservice)" />
+        </MudList>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Error" FullWidth="true" Class="mt-6"
+                   StartIcon="@Icons.Material.Filled.PowerOff">
+            Оценить последствия отказа
+        </MudButton>
+    </div>
+</MudDrawer>
+
+<style>
+    .dashboard-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+    }
+
+    .graph-canvas {
+        flex-grow: 1;
+        /* Цвет фона: берем из Background текущей палитры */
+        background-color: var(--mud-palette-background);
+        /* Рисуем точки для сетки: берем цвет линий (LinesDefault) из текущей палитры */
+        background-image: radial-gradient(var(--mud-palette-lines-default) 1.5px, transparent 1.5px);
+        background-size: 24px 24px;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        position: relative;
+    }
+
+    /* Адаптивная карточка-заглушка */
+    .placeholder-content {
+        text-align: center;
+        /* Фон плашки: берем Surface (поверхность карточек) */
+        background: var(--mud-palette-surface);
+        padding: 40px;
+        border-radius: 12px;
+        /* Граница: берем цвет разделителей */
+        border: 2px dashed var(--mud-palette-lines-default);
+        pointer-events: none;
+        /* Пропускаем клик насквозь на canvas */
+        max-width: 500px;
+    }
+</style>
+
+@code {
+    private bool _isPropertiesPanelOpen = false;
+
+    private void SelectMockNode()
+    {
+        _isPropertiesPanelOpen = true;
+    }
+
+    private void OpenSimulationPanel()
+    {
+        // Логика запуска симуляции
+    }
+
+    private async Task OpenAddComponentDialog()
+    {
+        var options = new DialogOptions 
+        { 
+            CloseOnEscapeKey = true, 
+            MaxWidth = MaxWidth.Small, 
+            FullWidth = true,
+            // Скругляем углы у модального окна в стиле нашего дизайна
+            @* ClassBackground = "mud-theme-surface rounded-lg"  *@
+        };
+
+        // Открываем диалог
+        var dialog = await DialogService.ShowAsync<AddComponentDialog>("Новый компонент", options);
+        
+        // Ждем результат закрытия диалога
+        var result = await dialog.Result;
+
+        if (!result?.Canceled ?? false)
+        {
+            // Здесь можно вызвать логику обновления графа
+            // Guid newId = (Guid)result.Data;
+            // await RefreshGraph();
+        }
+    }
+}
