@@ -2,7 +2,6 @@ namespace Analyzer.Api.Controllers;
 
 using Analyzer.Application.Interfaces;
 using Analyzer.Shared.DTO;
-using Analyzer.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -17,10 +16,9 @@ public class ComponentController(IGraphService graphService) : ControllerBase
         return Ok("Component index page");
     }
 
-    [HttpGet("create")]
-    public async Task<IActionResult> CreateService()
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateService([FromBody] CreateComponentDto dto)
     {
-        CreateComponentDto dto = new(ComponentType.Microservice, "Test");
         Console.WriteLine("CreateService called!");
         var guid = await _graphService.CreateComponentAsync(dto);
         Console.WriteLine("Created service!");
