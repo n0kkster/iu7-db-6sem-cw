@@ -1,0 +1,38 @@
+@using Blazor.Diagrams.Components.Renderers
+@using Blazor.Diagrams.Core.Models
+@using Analyzer.Domain.Enums;
+
+<MudPaper Elevation="2" Class="pa-3 mud-theme-surface"
+          Style="min-width: 180px; border: 1px solid var(--mud-palette-lines-default); border-radius: 8px;">
+
+    <div class="d-flex align-center">
+        @* Иконка зависит от типа компонента *@
+        <MudIcon Icon="@GetIcon()" Color="Color.Primary" Class="mr-2" />
+        <div>
+            <MudText Typo="Typo.subtitle2" Class="font-bold">@Node.Name</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.Type</MudText>
+        </div>
+    </div>
+
+    @* Отрисовка портов (кружочков для связей) *@
+    @foreach (var port in Node.Ports)
+    {
+        <PortRenderer @key="port" Port="port" />
+    }
+</MudPaper>
+
+@code {
+    public ComponentModel Node { get; set; }
+
+    private string GetIcon()
+    {
+        return Node.Type switch
+        {
+            ComponentType.Database => Icons.Material.Filled.Storage,
+            ComponentType.MessageBroker => Icons.Material.Filled.AllInclusive,
+            ComponentType.ExternalAPI => Icons.Material.Filled.CloudQueue,
+            ComponentType.Microservice => Icons.Material.Filled.Memory,
+            _ => Icons.Material.Filled.QuestionMark
+        };
+    }
+}
