@@ -32,12 +32,49 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     {
         var guid = Guid.NewGuid();
         Log.Information($"Creating node of type {type} with name {name} and guid: {guid}");
-        await _driver.ExecutableQuery($"CREATE (:{type} {{name: '{name}', id: '{guid}'}})")
+        var query = $"CREATE (:{type} {{name: '{name}', id: '{guid}'}})";
+        
+        await _driver.ExecutableQuery(query)
                      .WithConfig(_queryConfig)
                      .ExecuteAsync();
         Log.Information($"Created node of type {type} with name {name} and guid: {guid}");
 
         return guid;
+    }
+
+    public async Task<List<Component>> GetAllComponentsAsync()
+    {
+        Console.WriteLine("Getting all components..");
+
+        var query = "MATCH (n) RETURN n.name AS name, n.id as id, labels(n) as type";
+        var (result, _, _) = await _driver.ExecutableQuery(query)
+                                          .WithConfig(_queryConfig)
+                                          .ExecuteAsync();
+        List<Component> components = [];
+        foreach (var record in result)
+        {
+            var type = record["type"].As<List<string>>().First() switch
+            {
+                "Microservice" => ComponentType.Microservice,
+                "Database" => ComponentType.Database,
+                "MessageBroker" => ComponentType.MessageBroker,
+                "ExternalAPI" => ComponentType.ExternalAPI,
+                _ => ComponentType.Unknown
+            };
+
+            if (Guid.TryParse(record["id"].As<string>(), out var id) != true)
+            {
+                // mb throw?
+                Console.WriteLine("Cannot parse GUID");
+            }
+
+            Console.WriteLine($"Name: {record["name"].As<string>()}, type: {type}, id: {id}");
+            components.Add(
+                new(record["name"].As<string>(), type, id)
+            );
+        }
+
+        return components;
     }
 
     public async Task<Component> GetComponentAsync(Guid id)

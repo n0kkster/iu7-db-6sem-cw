@@ -17,12 +17,20 @@ public class ComponentController(IGraphService graphService) : ControllerBase
     }
 
     [HttpPost("create")]
-    public async Task<IActionResult> CreateService([FromBody] CreateComponentDto dto)
+    public async Task<IActionResult> CreateComponent([FromBody] CreateComponentDto dto)
     {
         Console.WriteLine("CreateService called!");
         var guid = await _graphService.CreateComponentAsync(dto);
         Console.WriteLine("Created service!");
 
         return Ok(guid);
+    }
+
+    [HttpGet("get")]
+    public async Task<IActionResult> GetAllComponents()
+    {
+        var componentDtos = await _graphService.GetAllComponentsAsync();
+        
+        return Ok(componentDtos);
     }
 }

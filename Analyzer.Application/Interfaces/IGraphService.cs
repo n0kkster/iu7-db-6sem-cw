@@ -5,4 +5,5 @@ using Analyzer.Shared.DTO;
 public interface IGraphService
 {
     Task<Guid> CreateComponentAsync(CreateComponentDto dto);
+    Task<List<ComponentDto>> GetAllComponentsAsync();
 }

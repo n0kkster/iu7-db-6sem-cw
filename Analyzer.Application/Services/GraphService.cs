@@ -15,4 +15,18 @@ public class GraphService(IGraphRepository repository) : IGraphService
             
         return await _repository.AddComponentAsync(type, name);
     }
+
+    public async Task<List<ComponentDto>> GetAllComponentsAsync()
+    {
+        var components = await _repository.GetAllComponentsAsync();
+        List<ComponentDto> componentDtos = [];
+        foreach (var component in components)
+        {
+            componentDtos.Add(
+                new (component.Id, component.Type, component.Name, component.Links)
+            );
+        }
+
+        return componentDtos;
+    }
 }
