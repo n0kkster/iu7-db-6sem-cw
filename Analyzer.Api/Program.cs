@@ -9,8 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+var neo4jUri = builder.Configuration["Neo4jSettings:Uri"];
+var neo4jUser = builder.Configuration["Neo4jSettings:User"];
+var neo4jPass = builder.Configuration["Neo4jSettings:Password"];
+
 builder.Services.AddSingleton(sp =>
-    GraphDatabase.Driver("bolt://localhost:7687", AuthTokens.Basic("neo4j", "mysecretpassword")));
+    GraphDatabase.Driver(neo4jUri, AuthTokens.Basic(neo4jUser, neo4jPass)));
+
 builder.Services.AddScoped<IGraphRepository, Neo4jGraphRepository>();
 builder.Services.AddScoped<IGraphService, GraphService>();
 
