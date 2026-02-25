@@ -17,4 +17,6 @@ public class Component
             field = value;
         }
     }
+
+    public List<Link> Links { get; } = [];
 }
