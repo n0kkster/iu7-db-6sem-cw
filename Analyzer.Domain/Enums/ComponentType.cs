@@ -5,5 +5,6 @@ public enum ComponentType
     Microservice,
     Database,
     MessageBroker,
-    ExternalAPI
+    ExternalAPI,
+    Unknown
 }
