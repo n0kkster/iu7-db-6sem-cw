@@ -13,10 +13,15 @@ public sealed class TestGraphRepository : IGraphRepository
 
     public async Task<Guid> AddComponentAsync(ComponentType type, string name)
     {
-        Component comp = new() { Type = type, Name = name };
+        Component comp = new(name, type);
         Console.WriteLine($"[TEST] Creating node of type {type} with name {name}");
         Console.WriteLine($"[TEST] Created node of type {type} with name {name} and guid {comp.Id}");
         return comp.Id;
+    }
+
+    public async Task<List<Component>> GetAllComponentsAsync()
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<Component> GetComponentAsync(Guid id)
