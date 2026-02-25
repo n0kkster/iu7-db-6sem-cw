@@ -10,7 +10,7 @@
         <MudIcon Icon="@GetIcon()" Color="Color.Primary" Class="mr-2" />
         <div>
             <MudText Typo="Typo.subtitle2" Class="font-bold">@Node.Name</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.Type</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@GetTypeTranslation()</MudText>
         </div>
     </div>
 
@@ -22,7 +22,20 @@
 </MudPaper>
 
 @code {
+    [Parameter]
     public ComponentModel Node { get; set; }
+
+    private string GetTypeTranslation()
+    {
+        return Node.Type switch
+        {
+            ComponentType.Microservice => "Микросервис",
+            ComponentType.Database => "База данных",
+            ComponentType.MessageBroker => "Брокер сообщений",
+            ComponentType.ExternalAPI => "Внешнее API",
+            _ => "Неизвестно"
+        };
+    }
 
     private string GetIcon()
     {
