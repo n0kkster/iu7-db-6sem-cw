@@ -5,9 +5,9 @@ using Analyzer.Domain.Exceptions;
 
 public class Component
 {
-    public Guid Id { get; } = Guid.NewGuid();
-    public required ComponentType Type { get; init; }
-    public required string Name
+    public Guid Id { get; init; }
+    public ComponentType Type { get; init; }
+    public string Name
     {
         get;
         set
@@ -19,4 +19,15 @@ public class Component
     }
 
     public List<Link> Links { get; } = [];
+
+    public Component(string name, ComponentType type, Guid guid) 
+    {
+        Name = name;
+        Type = type;
+        Id = guid;        
+    }
+
+    public Component(string name, ComponentType type)
+        : this(name, type, Guid.NewGuid())
+    { }
 }
