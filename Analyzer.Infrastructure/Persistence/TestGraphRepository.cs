@@ -15,7 +15,7 @@ public sealed class TestGraphRepository : IGraphRepository
     {
         Component comp = new() { Type = type, Name = name };
         Console.WriteLine($"[TEST] Creating node of type {type} with name {name}");
-        Console.WriteLine($"[TEST] Created node of type {type} with name {name}");
+        Console.WriteLine($"[TEST] Created node of type {type} with name {name} and guid {comp.Id}");
         return comp.Id;
     }
 
