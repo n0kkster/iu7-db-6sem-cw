@@ -18,16 +18,27 @@ public class Component
         }
     }
 
-    public List<Link> Links { get; } = [];
+    public string Description
+    {
+        get;
+        set
+        {
+            if (value.Length == 0)
+                throw new InvalidComponentNameException("Описание компонента не может быть пустой строкой");
+            field = value;
+        }
+    }
 
-    public Component(string name, ComponentType type, Guid guid) 
+
+    public Component(string name, ComponentType type, string desription, Guid guid) 
     {
         Name = name;
         Type = type;
-        Id = guid;        
+        Id = guid;
+        Description = desription;
     }
 
-    public Component(string name, ComponentType type)
-        : this(name, type, Guid.NewGuid())
+    public Component(string name, ComponentType type, string desription)
+        : this(name, type, desription, Guid.NewGuid())
     { }
 }
