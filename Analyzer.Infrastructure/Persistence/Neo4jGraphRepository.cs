@@ -33,7 +33,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         var guid = Guid.NewGuid();
         Log.Information($"Creating node of type {type} with name {name} and guid: {guid}");
         var query = $"CREATE (:{type} {{name: '{name}', id: '{guid}'}})";
-        
+
         await _driver.ExecutableQuery(query)
                      .WithConfig(_queryConfig)
                      .ExecuteAsync();
@@ -51,27 +51,36 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                                           .WithConfig(_queryConfig)
                                           .ExecuteAsync();
         List<Component> components = [];
-        foreach (var record in result)
+        try
         {
-            var type = record["type"].As<List<string>>().First() switch
+            foreach (var record in result)
             {
-                "Microservice" => ComponentType.Microservice,
-                "Database" => ComponentType.Database,
-                "MessageBroker" => ComponentType.MessageBroker,
-                "ExternalAPI" => ComponentType.ExternalAPI,
-                _ => ComponentType.Unknown
-            };
+                var type = record["type"].As<List<string>>().First() switch
+                {
+                    "Microservice" => ComponentType.Microservice,
+                    "Database" => ComponentType.Database,
+                    "MessageBroker" => ComponentType.MessageBroker,
+                    "ExternalAPI" => ComponentType.ExternalAPI,
+                    _ => ComponentType.Unknown
+                };
 
-            if (Guid.TryParse(record["id"].As<string>(), out var id) != true)
-            {
-                // mb throw?
-                Console.WriteLine("Cannot parse GUID");
+                if (Guid.TryParse(record["id"].As<string>(), out var id) != true)
+                {
+                    throw new KeyNotFoundException("Cannot parse GUID");
+                }
+
+                var desc = record["description"].As<string>();
+
+                // Console.WriteLine($"Name: {record["name"].As<string>()}, type: {type}, id: {id}");
+                components.Add(
+                    new(record["name"].As<string>(), type, desc, id)
+                );
             }
-
-            Console.WriteLine($"Name: {record["name"].As<string>()}, type: {type}, id: {id}");
-            components.Add(
-                new(record["name"].As<string>(), type, id)
-            );
+        }
+        catch (KeyNotFoundException e)
+        {
+            Console.WriteLine($"Cannot parse Neo4J answer: {e}");
+            // throw e;
         }
 
         return components;
