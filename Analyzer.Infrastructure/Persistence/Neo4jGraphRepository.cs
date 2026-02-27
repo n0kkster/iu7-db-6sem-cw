@@ -28,11 +28,11 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         _queryConfig = new QueryConfig(database: "neo4j");
     }
 
-    public async Task<Guid> AddComponentAsync(ComponentType type, string name)
+    public async Task<Guid> AddComponentAsync(ComponentType type, string name, string desc)
     {
         var guid = Guid.NewGuid();
         Log.Information($"Creating node of type {type} with name {name} and guid: {guid}");
-        var query = $"CREATE (:{type} {{name: '{name}', id: '{guid}'}})";
+        var query = $"CREATE (:{type} {{name: '{name}', id: '{guid}', desc: {desc}}})";
 
         await _driver.ExecutableQuery(query)
                      .WithConfig(_queryConfig)
