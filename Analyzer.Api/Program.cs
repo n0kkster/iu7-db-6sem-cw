@@ -2,6 +2,12 @@ using Neo4j.Driver;
 using Analyzer.Application.Interfaces;
 using Analyzer.Application.Services;
 using Analyzer.Infrastructure.Persistence;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
