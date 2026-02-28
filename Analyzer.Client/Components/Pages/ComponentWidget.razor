@@ -6,7 +6,6 @@
           Style="min-width: 180px; border: 1px solid var(--mud-palette-lines-default); border-radius: 8px;">
 
     <div class="d-flex align-center">
-        @* Иконка зависит от типа компонента *@
         <MudIcon Icon="@GetIcon()" Color="Color.Primary" Class="mr-2" />
         <div>
             <MudText Typo="Typo.subtitle2" Class="font-bold">@Node.Name</MudText>
@@ -14,7 +13,6 @@
         </div>
     </div>
 
-    @* Отрисовка портов (кружочков для связей) *@
     @foreach (var port in Node.Ports)
     {
         <PortRenderer @key="port" Port="port" />
