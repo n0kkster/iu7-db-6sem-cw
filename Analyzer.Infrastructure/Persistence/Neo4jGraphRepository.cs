@@ -28,11 +28,11 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         _queryConfig = new QueryConfig(database: "neo4j");
     }
 
-    public async Task<Guid> AddComponentAsync(ComponentType type, string name, string desc)
+    public async Task<Guid> AddComponentAsync(ComponentType type, string name, string description)
     {
         var guid = Guid.NewGuid();
-        Log.Information($"Creating node of type {type} with name {name} and guid: {guid}");
-        var query = $"CREATE (:{type} {{name: '{name}', id: '{guid}', desc: {desc}}})";
+        Log.Information($"Creating node of type {type} with name {name} and guid: {guid} and desc: {description}");
+        var query = $"CREATE (:{type} {{name: '{name}', id: '{guid}', desc: '{description}'}})";
 
         await _driver.ExecutableQuery(query)
                      .WithConfig(_queryConfig)
@@ -46,7 +46,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     {
         Console.WriteLine("Getting all components..");
 
-        var query = "MATCH (n) RETURN n.name AS name, n.id as id, labels(n) as type";
+        var query = "MATCH (n) RETURN n.name AS name, n.id as id, n.desc as desc, labels(n) as type";
         var (result, _, _) = await _driver.ExecutableQuery(query)
                                           .WithConfig(_queryConfig)
                                           .ExecuteAsync();
@@ -69,7 +69,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                     throw new KeyNotFoundException("Cannot parse GUID");
                 }
 
-                var desc = record["description"].As<string>();
+                var desc = record["desc"].As<string>();
 
                 // Console.WriteLine($"Name: {record["name"].As<string>()}, type: {type}, id: {id}");
                 components.Add(

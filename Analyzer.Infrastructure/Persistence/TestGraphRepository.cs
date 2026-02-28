@@ -11,9 +11,9 @@ public sealed class TestGraphRepository : IGraphRepository
         Console.WriteLine("Ctor called!");
     }
 
-    public async Task<Guid> AddComponentAsync(ComponentType type, string name)
+    public async Task<Guid> AddComponentAsync(ComponentType type, string name, string description)
     {
-        Component comp = new(name, type);
+        Component comp = new(name, type, description);
         Console.WriteLine($"[TEST] Creating node of type {type} with name {name}");
         Console.WriteLine($"[TEST] Created node of type {type} with name {name} and guid {comp.Id}");
         return comp.Id;

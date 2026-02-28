@@ -9,11 +9,11 @@ public class GraphService(IGraphRepository repository) : IGraphService
     readonly IGraphRepository _repository = repository;
     public async Task<Guid> CreateComponentAsync(CreateComponentDto component)
     {
-        var (type, name) = component;
+        var (type, name, desc) = component;
         if (name.Length == 0)
             throw new InvalidComponentNameException("Имя компонента не может быть пустой строкой");
             
-        return await _repository.AddComponentAsync(type, name);
+        return await _repository.AddComponentAsync(type, name, desc);
     }
 
     public async Task<List<ComponentDto>> GetAllComponentsAsync()
@@ -23,7 +23,7 @@ public class GraphService(IGraphRepository repository) : IGraphService
         foreach (var component in components)
         {
             componentDtos.Add(
-                new (component.Id, component.Type, component.Name, component.Links)
+                new (component.Id, component.Type, component.Name, component.Description)
             );
         }
 
