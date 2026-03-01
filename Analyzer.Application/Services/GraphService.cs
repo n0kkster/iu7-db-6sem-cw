@@ -38,4 +38,17 @@ public class GraphService(IGraphRepository repository) : IGraphService
 
         return componentDto;
     }
+
+    public async Task<List<LinkDto>> GetAllLinksAsync()
+    {
+        var links = await _repository.GetAllLinksAsync();
+        var linkDtos = links.Select(link => new LinkDto(
+            link.SourceId,
+            link.TargetId,
+            link.Severity,
+            link.Protocol
+        )).ToList();
+
+        return linkDtos;
+    }
 }

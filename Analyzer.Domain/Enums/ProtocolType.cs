@@ -5,5 +5,6 @@ public enum ProtocolType
     REST,
     gRPC,
     SOAP, 
-    AMQP
+    AMQP,
+    Unknown
 }

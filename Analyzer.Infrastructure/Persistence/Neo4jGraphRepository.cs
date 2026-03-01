@@ -96,7 +96,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         if ((result?.Count ?? 0) == 0)
             // TODO: переделать на норм исключение
             throw new Exception($"Объект с GUID {id} не найден.");
-        
+
         var record = result!.First();
 
         var type = record["type"].As<List<string>>().First() switch
@@ -119,6 +119,44 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     }
 
     public async Task DeleteComponentAsync(Guid id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<List<Link>> GetAllLinksAsync()
+    {
+        Log.Information("Getting all links..");
+        
+        var query = @"
+        MATCH (source)-[r:DEPENDS_ON]->(target)
+        RETURN source.id AS SourceId, target.id AS TargetId, 
+               r.severity AS Severity, r.protocol AS Protocol";
+
+        var (records, _, _) = await _driver.ExecutableQuery(query)
+                                           .WithConfig(_queryConfig)
+                                           .ExecuteAsync();
+
+        var links = records.Select(record => new Link
+        {
+            SourceId = Guid.Parse(record["SourceId"].As<string>()),
+            TargetId = Guid.Parse(record["TargetId"].As<string>()),
+            
+            Severity = Enum.TryParse<LinkSeverity>(record["Severity"].As<string>(), true, out var sev) 
+                    ? sev : LinkSeverity.Unknown,
+                    
+            Protocol = Enum.TryParse<ProtocolType>(record["Protocol"].As<string>(), true, out var prot) 
+                    ? prot : ProtocolType.Unknown
+        }).ToList();
+
+        return links;
+    }
+
+    public async Task<List<Link>> GetComponentInboundLinksAsync(Guid id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<List<Link>> GetComponentOutboundLinksAsync(Guid id)
     {
         throw new NotImplementedException();
     }

@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Analyzer.Domain.Entities
 @using Analyzer.Shared.DTO;
 @using Analyzer.Domain.Enums;
 @using Analyzer.Client.Models;
@@ -53,7 +54,7 @@
         <MudText Typo="Typo.h6" Color="Color.Primary">Свойства компонента</MudText>
         <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@(() => _isPropertiesPanelOpen = false)" />
     </MudDrawerHeader>
-    
+
     <div class="pa-4">
         @if (_isLoadingDetails)
         {
@@ -147,7 +148,7 @@
     }
 
     private async void OnComponentSelected(Model? model, Blazor.Diagrams.Core.Events.PointerEventArgs e)
-    { 
+    {
         if (model is ComponentModel componentModel && componentModel.Selected)
         {
             _isPropertiesPanelOpen = true;
@@ -183,7 +184,11 @@
         try
         {
             var components = await Http.GetFromJsonAsync<List<ComponentDto>>("api/component/get") ?? [];
-            RenderGraph(components);
+            var links = await Http.GetFromJsonAsync<List<LinkDto>>("api/link/get") ?? [];
+
+            var compDict = new Dictionary<Guid, ComponentModel>();
+            RenderGraph(components, ref compDict);
+            RenderLinks(links, compDict);
         }
         catch (Exception e)
         {
@@ -214,16 +219,52 @@
         }
     }
 
-    private void RenderGraph(List<ComponentDto> components)
+    private void RenderGraph(List<ComponentDto> components, ref Dictionary<Guid, ComponentModel> compDict)
     {
         int x = 100, y = 100;
         foreach (var comp in components)
         {
             var node = new ComponentModel(comp.Id, comp.Name, comp.Type, new Point(x, y));
             Diagram?.Nodes.Add(node);
+            compDict.Add(comp.Id, node);
 
             x += 250;
             if (x > 800) { x = 100; y += 200; }
+        }
+    }
+
+    private void RenderLinks(List<LinkDto> links, Dictionary<Guid, ComponentModel> compDict)
+    {
+        foreach (var link in links)
+        {
+            if (compDict.TryGetValue(link.SourceId, out var sourceNode) &&
+                compDict.TryGetValue(link.TargetId, out var targetNode))
+            {
+                var sourcePort = sourceNode.GetPort(PortAlignment.Bottom)!;
+                var targetPort = targetNode.GetPort(PortAlignment.Top)!;
+
+                var linkModel = new LinkModel(sourcePort, targetPort)
+                {
+                    PathGenerator = new SmoothPathGenerator(),
+                    Router = new NormalRouter(),
+
+                    Color = link.Severity switch
+                    {
+                        LinkSeverity.High => "#ff3f5f", // Красный
+                        LinkSeverity.Mid => "#ffb545", // Оранжевый
+                        LinkSeverity.Low => "#3dcb6c", // Зеленый
+                        _ => "#74718e"
+                    },
+                    Width = link.Severity == LinkSeverity.High ? 3 : 2
+                };
+
+                linkModel.TargetMarker = LinkMarker.Arrow;
+
+                var label = new LinkLabelModel(linkModel, link.Protocol.ToString());
+                linkModel.Labels.Add(label);
+
+                Diagram?.Links.Add(linkModel);
+            }
         }
     }
 

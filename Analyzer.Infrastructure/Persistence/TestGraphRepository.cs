@@ -38,4 +38,19 @@ public sealed class TestGraphRepository : IGraphRepository
     {
         throw new NotImplementedException();
     }
+
+    public Task<List<Link>> GetAllLinksAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<Link>> GetComponentInboundLinksAsync(Guid id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<Link>> GetComponentOutboundLinksAsync(Guid id)
+    {
+        throw new NotImplementedException();
+    }
 }
