@@ -29,4 +29,13 @@ public class GraphService(IGraphRepository repository) : IGraphService
 
         return componentDtos;
     }
+
+    public async Task<ComponentDto> GetComponentDetailsAsync(Guid id)
+    {
+        var component = await _repository.GetComponentAsync(id);
+        System.Console.WriteLine($"name: {component.Name}, type: {component.Type}, desc: {component.Description}");
+        ComponentDto componentDto = new (component.Id, component.Type, component.Name, component.Description);
+
+        return componentDto;
+    }
 }

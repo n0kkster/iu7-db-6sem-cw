@@ -48,36 +48,31 @@
 </div>
 
 @* Выдвижная панель справа для свойств компонента *@
-@* <MudDrawer @bind-Open="@_isPropertiesPanelOpen" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary"
-           Width="400px">
+<MudDrawer @bind-Open="@_isPropertiesPanelOpen" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" Width="400px">
     <MudDrawerHeader Class="d-flex align-center justify-space-between border-b mud-border-lines-default">
-        <MudText Typo="Typo.h6" Color="Color.Primary">Свойства узла</MudText>
+        <MudText Typo="Typo.h6" Color="Color.Primary">Свойства компонента</MudText>
         <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@(() => _isPropertiesPanelOpen = false)" />
     </MudDrawerHeader>
-
+    
     <div class="pa-4">
-        <MudTextField T="string" Label="Название" Value="@("AuthService")" Variant="Variant.Outlined"
-                      Margin="Margin.Dense" Class="mb-4" />
+        @if (_isLoadingDetails)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="50px" Class="mb-4" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="50px" Class="mb-4" />
+        }
+        else if (_selectedComponent != null)
+        {
+            <MudTextField T="string" Label="Название" Value="@_selectedComponent.Name" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
+            <MudTextField T="string" Label="Тип" Value="@_selectedComponent.Type.ToString()" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
+            <MudTextField T="string" Label="GUID" Value="@_selectedComponent.Id.ToString()" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
+            <MudTextField T="string" Label="Описание" Value="@_selectedComponent.Description" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
 
-        <MudSelect T="string" Label="Тип компонента" Value="@("Microservice")" Variant="Variant.Outlined"
-                   Margin="Margin.Dense" Class="mb-4">
-            <MudSelectItem Value="@("Microservice")" />
-            <MudSelectItem Value="@("Database (Postgres)")" />
-            <MudSelectItem Value="@("Message Broker (Kafka)")" />
-        </MudSelect>
-
-        <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2 mt-4">Зависимости (связи)</MudText>
-        <MudList T="string" Dense="true" Class="border mud-border-lines-default rounded mud-theme-background">
-            <MudListItem Icon="@Icons.Material.Filled.ArrowForward" Text="UserDB (Database)" />
-            <MudListItem Icon="@Icons.Material.Filled.ArrowBack" Text="ApiGateway (Microservice)" />
-        </MudList>
-
-        <MudButton Variant="Variant.Filled" Color="Color.Error" FullWidth="true" Class="mt-6"
-                   StartIcon="@Icons.Material.Filled.PowerOff">
-            Оценить последствия отказа
-        </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" FullWidth="true" Class="mt-6" StartIcon="@Icons.Material.Filled.PowerOff">
+                Сымитировать падение
+            </MudButton>
+        }
     </div>
-</MudDrawer> *@
+</MudDrawer>
 
 <style>
     .dashboard-container {
@@ -122,7 +117,6 @@
     private BlazorDiagram? Diagram { get; set; } = null!;
     private bool _isLoadingGraph = true;
 
-    // Состояние боковой панели
     private bool _isPropertiesPanelOpen = false;
     private bool _isLoadingDetails = false;
     private ComponentDto? _selectedComponent;
@@ -172,7 +166,7 @@
     }
 
     private async void OnComponentSelected(SelectableModel model)
-    {
+    { 
         // Проверяем, что кликнули именно по нашему узлу, а не по связи
         if (model is ComponentModel componentModel && componentModel.Selected)
         {
@@ -182,11 +176,8 @@
 
             try
             {
-                // --- ТВОЙ ЗАПРОС К API ЗА ДЕТАЛЯМИ ---
-                // _selectedComponent = await Http.GetFromJsonAsync<ComponentDto>($"api/component/get?id={nodeModel.ComponentId}");
+                _selectedComponent = await Http.GetFromJsonAsync<ComponentDto>($"api/component/get/{componentModel.ComponentId}");
 
-                // Имитация сети
-                await Task.Delay(500);
             }
             finally
             {
@@ -211,10 +202,8 @@
             FullWidth = true,
         };
 
-        // Открываем диалог
         var dialog = await DialogService.ShowAsync<AddComponentDialog>("Новый компонент", options);
 
-        // Ждем результат закрытия диалога
         var result = await dialog.Result;
 
         if (!result?.Canceled ?? false)

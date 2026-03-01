@@ -44,4 +44,23 @@ public class ComponentController(IGraphService graphService) : ControllerBase
             return Problem(detail: "Неизвестная ошибка", statusCode: 500);
         }
     }
+
+    [HttpGet("get/{id}")]
+    public async Task<IActionResult> GetComponentDetails(Guid id)
+    {
+        try
+        {
+            var componentDto = await _graphService.GetComponentDetailsAsync(id);
+
+            return Ok(componentDto);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Problem(detail: "Ошибка получения компонента из базы данных", statusCode: 500);
+        }
+        catch
+        {
+            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
+        }
+    }
 }

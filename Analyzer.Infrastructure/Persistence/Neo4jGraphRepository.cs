@@ -3,7 +3,6 @@ namespace Analyzer.Infrastructure.Persistence;
 using Analyzer.Application.Interfaces;
 using Analyzer.Domain.Entities;
 using Analyzer.Domain.Enums;
-
 using Neo4j.Driver;
 using Serilog;
 
@@ -44,7 +43,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
     public async Task<List<Component>> GetAllComponentsAsync()
     {
-        Console.WriteLine("Getting all components..");
+        Log.Information("Getting all components..");
 
         var query = "MATCH (n) RETURN n.name AS name, n.id as id, n.desc as desc, labels(n) as type";
         var (result, _, _) = await _driver.ExecutableQuery(query)
@@ -71,7 +70,6 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
                 var desc = record["desc"].As<string>();
 
-                // Console.WriteLine($"Name: {record["name"].As<string>()}, type: {type}, id: {id}");
                 components.Add(
                     new(record["name"].As<string>(), type, desc, id)
                 );
@@ -79,8 +77,8 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         }
         catch (KeyNotFoundException e)
         {
-            Console.WriteLine($"Cannot parse Neo4J answer: {e}");
-            // throw e;
+            Log.Error($"Cannot parse Neo4J answer.");
+            throw e;
         }
 
         return components;
@@ -88,7 +86,31 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
     public async Task<Component> GetComponentAsync(Guid id)
     {
-        throw new NotImplementedException();
+        Log.Information($"Getting components {id}..");
+
+        var query = $"MATCH (n) WHERE n.id = '{id}' RETURN n.name AS name, n.id as id, n.desc as desc, labels(n) as type";
+        var (result, _, _) = await _driver.ExecutableQuery(query)
+                                          .WithConfig(_queryConfig)
+                                          .ExecuteAsync();
+
+        if ((result?.Count ?? 0) == 0)
+            // TODO: переделать на норм исключение
+            throw new Exception($"Объект с GUID {id} не найден.");
+        
+        var record = result!.First();
+
+        var type = record["type"].As<List<string>>().First() switch
+        {
+            "Microservice" => ComponentType.Microservice,
+            "Database" => ComponentType.Database,
+            "MessageBroker" => ComponentType.MessageBroker,
+            "ExternalAPI" => ComponentType.ExternalAPI,
+            _ => ComponentType.Unknown
+        };
+
+        var desc = record["desc"].As<string>();
+
+        return new(record["name"].As<string>(), type, desc, id);
     }
 
     public async Task UpdateComponentAsync(Component node)
