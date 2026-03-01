@@ -1,19 +1,26 @@
 using MudBlazor.Services;
 using Analyzer.Client.Components;
+using Analyzer.Client.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add MudBlazor services
+builder.Services.AddScoped<ErrorHandler>();
+builder.Services.AddScoped(sp =>
+{
+    var handler = sp.GetRequiredService<ErrorHandler>();    
+    handler.InnerHandler = new HttpClientHandler();
+    var client = new HttpClient(handler)
+    {
+        BaseAddress = new Uri("http://localhost:1555") 
+    };
+
+    return client;
+});
+
 builder.Services.AddMudServices();
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
-builder.Services.AddScoped(sp => new HttpClient 
-{ 
-    BaseAddress = new Uri("http://localhost:1555")
-});
 
 var app = builder.Build();
 
