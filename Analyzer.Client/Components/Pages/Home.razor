@@ -114,7 +114,7 @@
 </style>
 
 @code {
-    private BlazorDiagram? Diagram { get; set; } = null!;
+    private BlazorDiagram? Diagram { get; set; } = null;
     private bool _isLoadingGraph = true;
 
     private bool _isPropertiesPanelOpen = false;
@@ -132,7 +132,9 @@
 
         Diagram = new BlazorDiagram(options);
         Diagram.RegisterComponent<ComponentModel, ComponentWidget>();
-        Diagram.SelectionChanged += OnComponentSelected;
+
+        Diagram.PointerDoubleClick += OnComponentSelected;
+        Diagram.PointerClick += OnCanvasClicked;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -140,6 +142,34 @@
         if (firstRender)
         {
             await RefreshGraphAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async void OnComponentSelected(Model? model, Blazor.Diagrams.Core.Events.PointerEventArgs e)
+    { 
+        if (model is ComponentModel componentModel && componentModel.Selected)
+        {
+            _isPropertiesPanelOpen = true;
+            _isLoadingDetails = true;
+            StateHasChanged();
+            try
+            {
+                _selectedComponent = await Http.GetFromJsonAsync<ComponentDto>($"api/component/get/{componentModel.ComponentId}");
+            }
+            finally
+            {
+                _isLoadingDetails = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void OnCanvasClicked(Model? model, Blazor.Diagrams.Core.Events.PointerEventArgs e)
+    {
+        if (model is null && _isPropertiesPanelOpen)
+        {
+            _isPropertiesPanelOpen = false;
             StateHasChanged();
         }
     }
@@ -162,34 +192,6 @@
         finally
         {
             _isLoadingGraph = false;
-        }
-    }
-
-    private async void OnComponentSelected(SelectableModel model)
-    { 
-        // Проверяем, что кликнули именно по нашему узлу, а не по связи
-        if (model is ComponentModel componentModel && componentModel.Selected)
-        {
-            _isPropertiesPanelOpen = true;
-            _isLoadingDetails = true;
-            StateHasChanged(); // Открываем панель с загрузкой
-
-            try
-            {
-                _selectedComponent = await Http.GetFromJsonAsync<ComponentDto>($"api/component/get/{componentModel.ComponentId}");
-
-            }
-            finally
-            {
-                _isLoadingDetails = false;
-                StateHasChanged();
-            }
-        }
-        else if (Diagram?.GetSelectedModels().Count() == 0)
-        {
-            // Закрываем панель, если кликнули по пустому месту холста
-            _isPropertiesPanelOpen = false;
-            StateHasChanged();
         }
     }
 
@@ -227,6 +229,7 @@
 
     public void Dispose()
     {
-        Diagram?.SelectionChanged -= OnComponentSelected;
+        Diagram?.PointerDoubleClick -= OnComponentSelected;
+        Diagram?.PointerClick -= OnCanvasClicked;
     }
 }
