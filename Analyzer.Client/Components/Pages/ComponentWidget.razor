@@ -1,10 +1,9 @@
-@using Blazor.Diagrams.Components.Renderers
 @using Blazor.Diagrams.Core.Models
 @using Analyzer.Domain.Enums;
 @using Analyzer.Client.Models;
 
-<MudPaper Elevation="2" Class="pa-3 mud-theme-surface"
-          Style="min-width: 180px; border: 1px solid var(--mud-palette-lines-default); border-radius: 8px;">
+<MudPaper Elevation="2" Class="custom-node-wrapper pa-3 mud-theme-surface" 
+          Style="min-width: 180px; border: 1px solid var(--mud-palette-lines-default); border-radius: 8px; overflow: visible; position: relative;">
 
     <div class="d-flex align-center">
         <MudIcon Icon="@GetIcon()" Color="Color.Primary" Class="mr-2" />
@@ -19,6 +18,49 @@
         <PortRenderer @key="port" Port="port" />
     }
 </MudPaper>
+
+<style>
+    .custom-node-wrapper .diagram-port {
+        position: absolute !important;
+        width: 14px !important;
+        height: 14px !important;
+        background-color: var(--mud-palette-background) !important;
+        border: 2px solid var(--mud-palette-lines-default) !important;
+        border-radius: 50% !important;
+        z-index: 10;
+        cursor: crosshair;
+        transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .custom-node-wrapper .diagram-port:hover {
+        border-color: var(--mud-palette-primary) !important;
+        background-color: var(--mud-palette-primary) !important;
+    }
+
+    .custom-node-wrapper .diagram-port.top { 
+        top: -7px !important; 
+        left: 50% !important; 
+        transform: translateX(-50%) !important; 
+    }
+    
+    .custom-node-wrapper .diagram-port.bottom { 
+        bottom: -7px !important; 
+        left: 50% !important; 
+        transform: translateX(-50%) !important; 
+    }
+    
+    .custom-node-wrapper .diagram-port.left { 
+        left: -7px !important; 
+        top: 50% !important; 
+        transform: translateY(-50%) !important; 
+    }
+    
+    .custom-node-wrapper .diagram-port.right { 
+        right: -7px !important; 
+        top: 50% !important; 
+        transform: translateY(-50%) !important; 
+    }
+</style>
 
 @code {
     [Parameter]
