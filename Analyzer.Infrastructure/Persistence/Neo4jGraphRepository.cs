@@ -36,6 +36,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         await _driver.ExecutableQuery(query)
                      .WithConfig(_queryConfig)
                      .ExecuteAsync();
+
         Log.Information($"Created node of type {type} with name {name} and guid: {guid}");
 
         return guid;
@@ -49,46 +50,42 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         var (result, _, _) = await _driver.ExecutableQuery(query)
                                           .WithConfig(_queryConfig)
                                           .ExecuteAsync();
-        List<Component> components = [];
         try
         {
-            foreach (var record in result)
-            {
-                var type = record["type"].As<List<string>>().First() switch
-                {
-                    "Microservice" => ComponentType.Microservice,
-                    "Database" => ComponentType.Database,
-                    "MessageBroker" => ComponentType.MessageBroker,
-                    "ExternalAPI" => ComponentType.ExternalAPI,
-                    _ => ComponentType.Unknown
-                };
+            var components = result.Select(record => new Component(
+                name: record["name"].As<string>(),
+                desription: record["desc"].As<string>(),
+                
+                type: Enum.TryParse<ComponentType>(record["type"].As<List<string>>().First(),
+                        true, out var type)
+                        ? type : ComponentType.Unknown,
 
-                if (Guid.TryParse(record["id"].As<string>(), out var id) != true)
-                {
-                    throw new KeyNotFoundException("Cannot parse GUID");
-                }
+                guid: Guid.TryParse(record["id"].As<string>(), out var guid)
+                        ? guid : throw new KeyNotFoundException("Cannot parse GUID")
+            )).ToList();
 
-                var desc = record["desc"].As<string>();
-
-                components.Add(
-                    new(record["name"].As<string>(), type, desc, id)
-                );
-            }
+            return components;
         }
         catch (KeyNotFoundException e)
         {
             Log.Error($"Cannot parse Neo4J answer.");
             throw e;
         }
-
-        return components;
+        catch (Exception e)
+        {
+            Log.Error($"Unknown error: {e.Message}");
+            throw e;
+        }
     }
 
     public async Task<Component> GetComponentAsync(Guid id)
     {
         Log.Information($"Getting components {id}..");
 
-        var query = $"MATCH (n) WHERE n.id = '{id}' RETURN n.name AS name, n.id as id, n.desc as desc, labels(n) as type";
+        var query = @$"MATCH (n) 
+            WHERE n.id = '{id}' 
+            RETURN n.name AS Name, n.id AS Id, n.desc AS Desc, labels(n) AS Type";
+
         var (result, _, _) = await _driver.ExecutableQuery(query)
                                           .WithConfig(_queryConfig)
                                           .ExecuteAsync();
@@ -99,18 +96,13 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
         var record = result!.First();
 
-        var type = record["type"].As<List<string>>().First() switch
-        {
-            "Microservice" => ComponentType.Microservice,
-            "Database" => ComponentType.Database,
-            "MessageBroker" => ComponentType.MessageBroker,
-            "ExternalAPI" => ComponentType.ExternalAPI,
-            _ => ComponentType.Unknown
-        };
+        var type = Enum.TryParse<ComponentType>(record["Type"].As<List<string>>().First(),
+            true, out var t)
+            ? t : ComponentType.Unknown;
 
-        var desc = record["desc"].As<string>();
+        var desc = record["Desc"].As<string>();
 
-        return new(record["name"].As<string>(), type, desc, id);
+        return new(record["Name"].As<string>(), type, desc, id);
     }
 
     public async Task UpdateComponentAsync(Component node)
@@ -126,7 +118,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     public async Task<List<Link>> GetAllLinksAsync()
     {
         Log.Information("Getting all links..");
-        
+
         var query = @"
         MATCH (source)-[r:DEPENDS_ON]->(target)
         RETURN source.id AS SourceId, target.id AS TargetId, 
@@ -140,11 +132,11 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         {
             SourceId = Guid.Parse(record["SourceId"].As<string>()),
             TargetId = Guid.Parse(record["TargetId"].As<string>()),
-            
-            Severity = Enum.TryParse<LinkSeverity>(record["Severity"].As<string>(), true, out var sev) 
+
+            Severity = Enum.TryParse<LinkSeverity>(record["Severity"].As<string>(), true, out var sev)
                     ? sev : LinkSeverity.Unknown,
-                    
-            Protocol = Enum.TryParse<ProtocolType>(record["Protocol"].As<string>(), true, out var prot) 
+
+            Protocol = Enum.TryParse<ProtocolType>(record["Protocol"].As<string>(), true, out var prot)
                     ? prot : ProtocolType.Unknown
         }).ToList();
 
