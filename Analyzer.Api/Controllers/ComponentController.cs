@@ -29,8 +29,19 @@ public class ComponentController(IGraphService graphService) : ControllerBase
     [HttpGet("get")]
     public async Task<IActionResult> GetAllComponents()
     {
-        var componentDtos = await _graphService.GetAllComponentsAsync();
-        
-        return Ok(componentDtos);
+        try
+        {
+            var componentDtos = await _graphService.GetAllComponentsAsync();
+
+            return Ok(componentDtos);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Problem(detail: "Ошибка получения компонента из базы данных", statusCode: 500);
+        }
+        catch
+        {
+            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
+        }
     }
 }

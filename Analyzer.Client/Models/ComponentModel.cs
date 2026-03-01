@@ -1,3 +1,5 @@
+namespace Analyzer.Client.Models;
+
 using Blazor.Diagrams.Core.Models;
 using Blazor.Diagrams.Core.Geometry;
 using Analyzer.Domain.Enums;
