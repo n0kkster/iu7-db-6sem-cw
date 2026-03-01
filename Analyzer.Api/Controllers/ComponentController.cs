@@ -19,9 +19,7 @@ public class ComponentController(IGraphService graphService) : ControllerBase
     [HttpPost("create")]
     public async Task<IActionResult> CreateComponent([FromBody] CreateComponentDto dto)
     {
-        Console.WriteLine("CreateService called!");
         var guid = await _graphService.CreateComponentAsync(dto);
-        Console.WriteLine("Created service!");
 
         return Ok(guid);
     }
