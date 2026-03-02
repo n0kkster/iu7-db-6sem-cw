@@ -1,0 +1,34 @@
+\documentclass[a4paper,oneside,14pt]{extarticle}
+
+\input{auto/preamble}
+
+\begin{document}
+
+\makecourseworktitle
+    {Информатика и системы управления} % Название факультета
+    {Программное обеспечение ЭВМ и информационные технологии} % Название кафедры
+    {Разработка базы данных для анализа отказоустойчивости систем на основе микросервисной архитектуры} % Тема работы
+    {А.~Н.~Диваев/ИУ7-62Б} % Номер группы/ФИО студента (если авторов несколько, их необходимо разделить запятой)
+    {Д.~Ю.~Мальцева} % ФИО научного руководителя
+    {} % ФИО консультанта (необязательный аргумент; если консультантов несколько, их необходимо разделить запятой)
+    {Д.~Ю.~Мальцева} % ФИО нормоконтролера
+
+% \includepdf[pages={1}]{tz.pdf}
+
+\setcounter{page}{4}
+
+\include{parts/00-summary}
+
+\renewcommand{\contentsname}{СОДЕРЖАНИЕ}
+\tableofcontents
+
+\include{parts/01-introduction}
+\include{parts/02-analytical}
+\include{parts/03-design}
+\include{parts/04-technological}
+\include{parts/05-research}
+\include{parts/06-conclusion}
+\include{parts/07-bibliography}
+\include{parts/08-appendix}
+
+\end{document}
