@@ -12,7 +12,7 @@ public class Component
         get;
         set
         {
-            if (value.Length == 0)
+            if (string.IsNullOrWhiteSpace(value))
                 throw new InvalidComponentNameException("Имя компонента не может быть пустой строкой");
             field = value;
         }
@@ -23,7 +23,7 @@ public class Component
         get;
         set
         {
-            if (value.Length == 0)
+            if (string.IsNullOrWhiteSpace(value))
                 throw new InvalidComponentNameException("Описание компонента не может быть пустой строкой");
             field = value;
         }
