@@ -36,5 +36,11 @@ public class ErrorHandler(ISnackbar snackbar) : DelegatingHandler
             _snackbar.Add("Нет связи с сервером. Проверьте подключение.", Severity.Error);
             throw;
         }
+        catch (Exception e)
+        {
+            Console.WriteLine($"{e.Message}");
+            _snackbar.Add("Неизвестная ошибка", Severity.Error);
+            throw;
+        }
     }
 }
