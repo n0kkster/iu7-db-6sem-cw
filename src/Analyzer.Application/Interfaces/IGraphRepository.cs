@@ -7,7 +7,7 @@ public interface IGraphRepository
 {
     Task<Guid> AddComponentAsync(ComponentType type, string name, string description);
     Task<Component> GetComponentAsync(Guid id);
-    Task UpdateComponentAsync(Component node);
+    Task UpdateComponentAsync(Component component);
     Task DeleteComponentAsync(Guid id);
     Task<List<Component>> GetAllComponentsAsync();
 

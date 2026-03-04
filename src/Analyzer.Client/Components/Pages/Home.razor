@@ -52,7 +52,7 @@
 <MudDrawer @bind-Open="@_isPropertiesPanelOpen" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" Width="400px">
     <MudDrawerHeader Class="d-flex align-center justify-space-between border-b mud-border-lines-default">
         <MudText Typo="Typo.h6" Color="Color.Primary">Свойства компонента</MudText>
-        <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@(() => _isPropertiesPanelOpen = false)" />
+        <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@OnPropertiesPanelClose" />
     </MudDrawerHeader>
 
     <div class="pa-4">
@@ -63,10 +63,25 @@
         }
         else if (_selectedComponent != null)
         {
-            <MudTextField T="string" Label="Название" Value="@_selectedComponent.Name" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
+            <MudTextField T="string" Label="Название" Immediate="true" @bind-Value="_selectedName" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
             <MudTextField T="string" Label="Тип" Value="@_selectedComponent.Type.ToString()" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
             <MudTextField T="string" Label="GUID" Value="@_selectedComponent.Id.ToString()" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
-            <MudTextField T="string" Label="Описание" Value="@_selectedComponent.Description" ReadOnly="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
+            <MudTextField T="string" Label="Описание" Immediate="true" @bind-Value="_selectedDesc" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-4" />
+
+            <MudButton Color="Color.Primary" 
+                       Variant="Variant.Filled" 
+                       OnClick="OnUpdateComponentAsync" 
+                       Disabled="@(!_isUpdateFormValid)">
+                @if (_isUpdatingComponent)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="MudBlazor.Size.Small" Indeterminate="true"/>
+                    <MudText Class="ms-2">Сохранение...</MudText>
+                }
+                else
+                {
+                    <MudText>Обновить компонент</MudText>
+                }
+            </MudButton>
 
             <MudButton Variant="Variant.Filled" Color="Color.Error" FullWidth="true" Class="mt-6" StartIcon="@Icons.Material.Filled.PowerOff">
                 Сымитировать падение
@@ -121,6 +136,40 @@
     private bool _isPropertiesPanelOpen = false;
     private bool _isLoadingDetails = false;
     private ComponentDto? _selectedComponent;
+    private bool _isUpdatingComponent = false;
+    private bool _componentPropertyUpdated = false;
+    private bool _isUpdateFormValid => _componentPropertyUpdated && !_isUpdatingComponent 
+        && !string.IsNullOrWhiteSpace(_selectedName) && !string.IsNullOrWhiteSpace(_selectedDesc);
+    private string _selectedDesc
+    {
+        get
+        {
+            return _selectedComponent?.Description ?? "";
+        }
+        set
+        {
+            if ((_selectedComponent?.Description ?? "") != value)
+            {
+                _selectedComponent?.Description = value;
+                _componentPropertyUpdated = true;
+            }
+        }
+    }
+    private string _selectedName
+    {
+        get
+        {
+            return _selectedComponent?.Name ?? "";
+        }
+        set
+        {
+            if ((_selectedComponent?.Name ?? "") != value)
+            {
+                _selectedComponent?.Name = value;
+                _componentPropertyUpdated = true;
+            }
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -135,7 +184,6 @@
         Diagram.RegisterComponent<ComponentModel, ComponentWidget>();
 
         Diagram.PointerDoubleClick += OnComponentSelected;
-        Diagram.PointerClick += OnCanvasClicked;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -151,6 +199,7 @@
     {
         if (model is ComponentModel componentModel && componentModel.Selected)
         {
+            _componentPropertyUpdated = false;
             _isPropertiesPanelOpen = true;
             _isLoadingDetails = true;
             StateHasChanged();
@@ -166,13 +215,28 @@
         }
     }
 
-    private void OnCanvasClicked(Model? model, Blazor.Diagrams.Core.Events.PointerEventArgs e)
+    private async Task OnPropertiesPanelClose()
     {
-        if (model is null && _isPropertiesPanelOpen)
-        {
-            _isPropertiesPanelOpen = false;
-            StateHasChanged();
-        }
+        _isPropertiesPanelOpen = false;
+        _componentPropertyUpdated = false;
+    }
+
+    private async Task OnUpdateComponentAsync()
+    {
+        if (_selectedComponent is null)
+            return;
+     
+        _isUpdatingComponent = true;
+        _componentPropertyUpdated = false;
+
+        await Http.PostAsJsonAsync<ComponentDto>(
+            $"api/component/update/", 
+            _selectedComponent
+        );
+
+        _isUpdatingComponent = false;
+
+        await RefreshGraphAsync();
     }
 
     private async Task RefreshGraphAsync()
@@ -271,6 +335,5 @@
     public void Dispose()
     {
         Diagram?.PointerDoubleClick -= OnComponentSelected;
-        Diagram?.PointerClick -= OnCanvasClicked;
     }
 }

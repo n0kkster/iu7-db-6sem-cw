@@ -29,7 +29,7 @@ public sealed class TestGraphRepository : IGraphRepository
         throw new NotImplementedException();
     }
 
-    public async Task UpdateComponentAsync(Component node)
+    public async Task UpdateComponentAsync(Component component)
     {
         throw new NotImplementedException();
     }

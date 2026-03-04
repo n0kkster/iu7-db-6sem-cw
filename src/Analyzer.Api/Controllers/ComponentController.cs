@@ -3,6 +3,7 @@ namespace Analyzer.Api.Controllers;
 using Analyzer.Application.Interfaces;
 using Analyzer.Shared.DTO;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -59,6 +60,22 @@ public class ComponentController(IGraphService graphService) : ControllerBase
         catch
         {
             return Problem(detail: "Неизвестная ошибка", statusCode: 500);
+        }
+    }
+
+    [HttpPost("update")]
+    public async Task<IActionResult> UpdateComponent([FromBody] ComponentDto dto)
+    {
+        try
+        {
+            await _graphService.UpdateComponentAsync(dto);
+
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Ошибка обновления компонента: {e.Message}");
+            return Problem(detail: $"Ошибка обновления компонента: {e.Message}", statusCode: 500);
         }
     }
 }

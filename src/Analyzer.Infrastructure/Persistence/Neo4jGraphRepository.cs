@@ -105,9 +105,17 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         return new(record["Name"].As<string>(), type, desc, id);
     }
 
-    public async Task UpdateComponentAsync(Component node)
+    public async Task UpdateComponentAsync(Component component)
     {
-        throw new NotImplementedException();
+        Log.Information($"Updating component {component.Id}..");
+
+        var query = @$"
+            MATCH (c {{id: '{component.Id}'}})
+            SET c.name = '{component.Name}', c.desc = '{component.Description}'";
+
+        await _driver.ExecutableQuery(query)
+                     .WithConfig(_queryConfig)
+                     .ExecuteAsync();
     }
 
     public async Task DeleteComponentAsync(Guid id)

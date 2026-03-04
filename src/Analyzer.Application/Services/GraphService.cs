@@ -3,6 +3,7 @@ namespace Analyzer.Application.Services;
 using Analyzer.Application.Interfaces;
 using Analyzer.Shared.DTO;
 using Analyzer.Domain.Exceptions;
+using Analyzer.Domain.Entities;
 
 public class GraphService(IGraphRepository repository) : IGraphService
 {
@@ -23,7 +24,12 @@ public class GraphService(IGraphRepository repository) : IGraphService
         foreach (var component in components)
         {
             componentDtos.Add(
-                new (component.Id, component.Type, component.Name, component.Description)
+                new() {
+                    Id = component.Id, 
+                    Type = component.Type, 
+                    Name = component.Name, 
+                    Description = component.Description
+                }
             );
         }
 
@@ -34,7 +40,12 @@ public class GraphService(IGraphRepository repository) : IGraphService
     {
         var component = await _repository.GetComponentAsync(id);
         System.Console.WriteLine($"name: {component.Name}, type: {component.Type}, desc: {component.Description}");
-        ComponentDto componentDto = new (component.Id, component.Type, component.Name, component.Description);
+        ComponentDto componentDto = new() {
+                    Id = component.Id, 
+                    Type = component.Type, 
+                    Name = component.Name, 
+                    Description = component.Description
+                };
 
         return componentDto;
     }
@@ -50,5 +61,11 @@ public class GraphService(IGraphRepository repository) : IGraphService
         )).ToList();
 
         return linkDtos;
+    }
+
+    public async Task UpdateComponentAsync(ComponentDto dto)
+    {
+        Component component = new(dto.Name, dto.Type, dto.Description, dto.Id);
+        await _repository.UpdateComponentAsync(component);
     }
 }
