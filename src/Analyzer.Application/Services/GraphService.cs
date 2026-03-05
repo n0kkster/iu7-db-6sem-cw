@@ -11,27 +11,24 @@ public class GraphService(IGraphRepository repository) : IGraphService
     public async Task<Guid> CreateComponentAsync(CreateComponentDto component)
     {
         var (type, name, desc) = component;
-        if (name.Length == 0)
-            throw new InvalidComponentNameException("Имя компонента не может быть пустой строкой");
-            
+        if (string.IsNullOrWhiteSpace(name))
+            throw new InvalidComponentPropertyException("Имя компонента не может быть пустой строкой");
+
+        if (string.IsNullOrWhiteSpace(name))
+            throw new InvalidComponentPropertyException("Описание компонента не может быть пустой строкой");
+
         return await _repository.AddComponentAsync(type, name, desc);
     }
 
     public async Task<List<ComponentDto>> GetAllComponentsAsync()
     {
         var components = await _repository.GetAllComponentsAsync();
-        List<ComponentDto> componentDtos = [];
-        foreach (var component in components)
-        {
-            componentDtos.Add(
-                new() {
-                    Id = component.Id, 
-                    Type = component.Type, 
-                    Name = component.Name, 
-                    Description = component.Description
-                }
-            );
-        }
+        var componentDtos = components.Select(component => new ComponentDto() {
+            Id = component.Id,
+            Type = component.Type,
+            Name = component.Name,
+            Description = component.Description
+        }).ToList();
 
         return componentDtos;
     }
@@ -39,13 +36,13 @@ public class GraphService(IGraphRepository repository) : IGraphService
     public async Task<ComponentDto> GetComponentDetailsAsync(Guid id)
     {
         var component = await _repository.GetComponentAsync(id);
-        System.Console.WriteLine($"name: {component.Name}, type: {component.Type}, desc: {component.Description}");
-        ComponentDto componentDto = new() {
-                    Id = component.Id, 
-                    Type = component.Type, 
-                    Name = component.Name, 
-                    Description = component.Description
-                };
+        ComponentDto componentDto = new()
+        {
+            Id = component.Id,
+            Type = component.Type,
+            Name = component.Name,
+            Description = component.Description
+        };
 
         return componentDto;
     }
