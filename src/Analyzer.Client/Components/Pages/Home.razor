@@ -71,7 +71,9 @@
             <MudButton Color="Color.Primary" 
                        Variant="Variant.Filled" 
                        OnClick="OnUpdateComponentAsync" 
-                       Disabled="@(!_isUpdateFormValid)">
+                       Disabled="@(!_isUpdateFormValid)"
+                       StartIcon="@Icons.Material.Filled.Update"
+                       FullWidth="true">
                 @if (_isUpdatingComponent)
                 {
                     <MudProgressCircular Class="ms-n1" Size="MudBlazor.Size.Small" Indeterminate="true"/>
@@ -83,7 +85,29 @@
                 }
             </MudButton>
 
-            <MudButton Variant="Variant.Filled" Color="Color.Error" FullWidth="true" Class="mt-6" StartIcon="@Icons.Material.Filled.PowerOff">
+            <MudButton Color="Color.Error" 
+                       Variant="Variant.Filled"
+                       OnClick="OnDeleteComponentAsync"
+                       Disabled="@(_isDeletingComponent)"
+                       FullWidth="true" 
+                       Class="mt-6" 
+                       StartIcon="@Icons.Material.Filled.Delete">
+                @if (_isDeletingComponent)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="MudBlazor.Size.Small" Indeterminate="true"/>
+                    <MudText Class="ms-2">Удаление...</MudText>
+                }
+                else
+                {
+                    <MudText>Удалить компонент</MudText>
+                }
+            </MudButton>
+
+            <MudButton Color="Color.Error"
+                       Variant="Variant.Filled" 
+                       FullWidth="true" 
+                       Class="mt-6" 
+                       StartIcon="@Icons.Material.Filled.PowerOff">
                 Сымитировать падение
             </MudButton>
         }
@@ -140,6 +164,8 @@
     private bool _componentPropertyUpdated = false;
     private bool _isUpdateFormValid => _componentPropertyUpdated && !_isUpdatingComponent 
         && !string.IsNullOrWhiteSpace(_selectedName) && !string.IsNullOrWhiteSpace(_selectedDesc);
+    private bool _isDeletingComponent = false;
+
     private string _selectedDesc
     {
         get
@@ -235,6 +261,21 @@
         );
 
         _isUpdatingComponent = false;
+
+        await RefreshGraphAsync();
+    }
+
+    private async Task OnDeleteComponentAsync()
+    {
+        if (_selectedComponent is null)
+            return;
+     
+        _isDeletingComponent = true;
+        _componentPropertyUpdated = false;
+
+        await Http.DeleteAsync($"api/component/{_selectedComponent.Id}");
+
+        _isDeletingComponent = false;
 
         await RefreshGraphAsync();
     }

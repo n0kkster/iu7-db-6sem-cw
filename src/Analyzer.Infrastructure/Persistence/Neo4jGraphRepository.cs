@@ -55,7 +55,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             var components = result.Select(record => new Component(
                 name: record["name"].As<string>(),
                 desription: record["desc"].As<string>(),
-                
+
                 type: Enum.TryParse<ComponentType>(record["type"].As<List<string>>().First(),
                         true, out var type)
                         ? type : ComponentType.Unknown,
@@ -120,7 +120,14 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
     public async Task DeleteComponentAsync(Guid id)
     {
-        throw new NotImplementedException();
+        Log.Information($"Deleting component {id}..");
+        var query = @$"
+            MATCH (c {{id: '{id}'}})
+            DETACH DELETE c";
+
+        await _driver.ExecutableQuery(query)
+                     .WithConfig(_queryConfig)
+                     .ExecuteAsync();
     }
 
     public async Task<List<Link>> GetAllLinksAsync()

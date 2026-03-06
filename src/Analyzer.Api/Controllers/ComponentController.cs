@@ -78,4 +78,23 @@ public class ComponentController(IGraphService graphService) : ControllerBase
             return Problem(detail: $"Ошибка обновления компонента: {e.Message}", statusCode: 500);
         }
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteComponent(Guid id)
+    {
+        try
+        {
+            await _graphService.DeleteComponentAsync(id);
+
+            return Ok();
+        }
+        catch (KeyNotFoundException)
+        {
+            return Problem(detail: "Ошибка удаления компонента из базы данных", statusCode: 500);
+        }
+        catch
+        {
+            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
+        }
+    }
 }

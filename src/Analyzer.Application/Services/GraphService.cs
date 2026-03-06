@@ -65,4 +65,9 @@ public class GraphService(IGraphRepository repository) : IGraphService
         Component component = new(dto.Name, dto.Type, dto.Description, dto.Id);
         await _repository.UpdateComponentAsync(component);
     }
+
+    public async Task DeleteComponentAsync(Guid id)
+    {
+        await _repository.DeleteComponentAsync(id);
+    }
 }

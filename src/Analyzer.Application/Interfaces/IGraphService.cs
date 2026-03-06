@@ -9,4 +9,5 @@ public interface IGraphService
     Task<ComponentDto> GetComponentDetailsAsync(Guid id);
     Task<List<LinkDto>> GetAllLinksAsync();
     Task UpdateComponentAsync(ComponentDto dto);
+    Task DeleteComponentAsync(Guid id);
 }
