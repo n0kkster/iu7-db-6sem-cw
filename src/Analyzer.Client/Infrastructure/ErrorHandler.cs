@@ -2,7 +2,6 @@ namespace Analyzer.Client.Infrastructure;
 
 using MudBlazor;
 
-
 public class ErrorHandler(ISnackbar snackbar) : DelegatingHandler
 {
     private readonly ISnackbar _snackbar = snackbar;
@@ -16,6 +15,7 @@ public class ErrorHandler(ISnackbar snackbar) : DelegatingHandler
 
             if (!response.IsSuccessStatusCode)
             {
+                await response.Content.LoadIntoBufferAsync();
                 var errorContent = await response.Content.ReadFromJsonAsync<HttpErrorResponse>(cancellationToken);
                 
                 var errorMessage = errorContent is null 

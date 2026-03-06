@@ -7,7 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<ErrorHandler>();
 builder.Services.AddScoped(sp =>
 {
-    // causes stream already consumed (sometimes ??)
     var handler = sp.GetRequiredService<ErrorHandler>();    
     handler.InnerHandler = new HttpClientHandler();
     var client = new HttpClient(handler)
