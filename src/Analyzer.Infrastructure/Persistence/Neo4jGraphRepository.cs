@@ -205,6 +205,45 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         Log.Information($"Удален компонент с GUID: {id}.");
     }
 
+    public async Task<Guid> AddLinkAsync(Guid sourceId, Guid targetId, LinkSeverity severity, ProtocolType protocol)
+    {
+        Log.Information($"Создаем связь {sourceId} -> {targetId}..");
+        var guid = Guid.NewGuid();
+        
+        var query = @$"
+            MATCH (s {{
+                id: $SourceId 
+            }})
+            MATCH (t {{
+                id: $TargetId 
+            }})
+            CREATE (s)-[:DEPENDS_ON {{id: $Id, severity: $Severity, protocol: $Protocol}}]->(t)";
+
+        try
+        {
+            await _driver.ExecutableQuery(query)
+                        .WithConfig(_queryConfig)
+                        .WithParameters(new
+                        {
+                            Id = guid.ToString(),
+                            SourceId = sourceId.ToString(),
+                            TargetId = targetId.ToString(),
+                            Severity = severity.ToString(),
+                            Protocol = protocol.ToString()
+                        })
+                        .ExecuteAsync();
+
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Неизвестная ошибка: {e.Message}");
+            throw e;
+        }
+        Log.Information($"Создана связь с GUID: {guid}");
+
+        return guid;
+    }
+
     public async Task<List<Link>> GetAllLinksAsync()
     {
         Log.Information("Получаем все связи..");
@@ -214,7 +253,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             var query = @"
                 MATCH (source)-[r:DEPENDS_ON]->(target)
                 RETURN source.id AS SourceId, target.id AS TargetId, 
-                    r.severity AS Severity, r.protocol AS Protocol";
+                    r.severity AS Severity, r.protocol AS Protocol, r.id AS Id";
 
             var (records, _, _) = await _driver.ExecutableQuery(query)
                                                .WithConfig(_queryConfig)

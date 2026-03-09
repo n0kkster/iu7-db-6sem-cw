@@ -58,6 +58,11 @@ public class GraphService(IGraphRepository repository) : IGraphService
         await _repository.DeleteComponentAsync(id);
     }
 
+    public async Task<Guid> CreateLinkAsync(CreateLinkDto dto)
+    {
+        var (sourceId, targetId, severity, protocol) = dto;
+        return await _repository.AddLinkAsync(sourceId, targetId, severity, protocol);
+    }
     public async Task<List<LinkDto>> GetAllLinksAsync()
     {
         var links = await _repository.GetAllLinksAsync();

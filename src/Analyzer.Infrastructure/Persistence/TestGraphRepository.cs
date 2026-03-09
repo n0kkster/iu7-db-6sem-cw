@@ -53,4 +53,9 @@ public sealed class TestGraphRepository : IGraphRepository
     {
         throw new NotImplementedException();
     }
+
+    public Task<Guid> AddLinkAsync(Guid sourceId, Guid targetId, LinkSeverity severity, ProtocolType protocol)
+    {
+        throw new NotImplementedException();
+    }
 }

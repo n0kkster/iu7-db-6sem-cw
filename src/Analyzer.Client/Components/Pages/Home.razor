@@ -13,7 +13,10 @@
 @using Blazor.Diagrams.Options
 @inject IDialogService DialogService
 @inject HttpClient Http
+@using MudBlazor.Extensions
 @using Serilog
+
+@inject ISnackbar Snackbar
 
 <div class="dashboard-container">
     @* Верхняя панель инструментов для графа *@
@@ -52,7 +55,7 @@
 </div>
 
 @* Выдвижная панель справа для свойств компонента *@
-<MudDrawer @bind-Open="@_isPropertiesPanelOpen" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" Width="400px">
+<MudDrawer @bind-Open="@_isComponentPropertiesPanelOpen" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" Width="400px">
     <MudDrawerHeader Class="d-flex align-center justify-space-between border-b mud-border-lines-default">
         <MudText Typo="Typo.h6" Color="Color.Primary">Свойства компонента</MudText>
         <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@OnPropertiesPanelClose" />
@@ -157,10 +160,15 @@
 </style>
 
 @code {
+    // Основное состояние страницы
+    // ===========================
     private BlazorDiagram? Diagram { get; set; } = null;
     private bool _isLoadingGraph = true;
+    // ===========================
 
-    private bool _isPropertiesPanelOpen = false;
+    // Состояние выдвижной панели для манипуляции компонентом
+    // ======================================================
+    private bool _isComponentPropertiesPanelOpen = false;
     private bool _isLoadingDetails = false;
     private ComponentDto? _selectedComponent;
     private bool _isUpdatingComponent = false;
@@ -199,7 +207,13 @@
             }
         }
     }
+    // ======================================================
 
+    private bool _isCancelingLinkCreation = false;
+
+
+    // События
+    // =================================================
     protected override void OnInitialized()
     {
         var options = new BlazorDiagramOptions
@@ -213,6 +227,8 @@
         Diagram.RegisterComponent<ComponentModel, ComponentWidget>();
 
         Diagram.PointerDoubleClick += OnComponentSelected;
+
+        Diagram.Links.Added += OnLinkAdded;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -229,7 +245,7 @@
         if (model is ComponentModel componentModel && componentModel.Selected)
         {
             _componentPropertyUpdated = false;
-            _isPropertiesPanelOpen = true;
+            _isComponentPropertiesPanelOpen = true;
             _isLoadingDetails = true;
             StateHasChanged();
             try
@@ -246,7 +262,7 @@
 
     private async Task OnPropertiesPanelClose()
     {
-        _isPropertiesPanelOpen = false;
+        _isComponentPropertiesPanelOpen = false;
         _componentPropertyUpdated = false;
     }
 
@@ -283,6 +299,76 @@
         await RefreshGraphAsync();
     }
 
+    private void OnLinkAdded(BaseLinkModel baseLink)
+    {
+        baseLink.TargetAttached += OnLinkTargetAttached;
+    }
+
+    private async void OnLinkTargetAttached(BaseLinkModel baseLink)
+    {
+        if (baseLink is LinkModel linkModel)
+        {
+            baseLink.TargetAttached -= OnLinkTargetAttached;
+
+            if (linkModel.Source.Model is not PortModel || linkModel.Target.Model is not PortModel)
+            {
+                // TODO: Fix System.NullReferenceException
+                //Snackbar.Add("Ошибка создания связи! Источник или приемник не является портом!", Severity.Error); *@
+                Diagram?.Links.Remove(linkModel);
+                return;
+            }
+
+            var sourceId = linkModel.Source.Model.As<PortModel>()!.GetParent<ComponentModel>().ComponentId;
+            var targetId = linkModel.Target.Model.As<PortModel>()!.GetParent<ComponentModel>().ComponentId;
+
+            var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+            };
+
+            var dialog = await DialogService.ShowAsync<LinkConfigDialog>("Настройка связи", options);
+            var result = await dialog.Result;
+
+            if ((!result?.Canceled ?? false) && result!.Data is LinkConfigDialog.LinkConfigResult config)
+            {
+                var linkDto = new CreateLinkDto(sourceId, targetId, config.Severity, config.Protocol);
+                await Http.PostAsJsonAsync("api/v1/links/", linkDto);
+
+                ApplyLinkStyles(linkModel, config.Severity, config.Protocol);
+            }
+            else
+            {
+                _isCancelingLinkCreation = true;
+                Diagram?.Links.Remove(linkModel);
+                _isCancelingLinkCreation = false;
+            }
+        }
+    }
+    // =================================================
+
+    private async Task OpenAddComponentDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+        };
+
+        var dialog = await DialogService.ShowAsync<AddComponentDialog>("Новый компонент", options);
+
+        var result = await dialog.Result;
+
+        if (!result?.Canceled ?? false)
+        {
+            await RefreshGraphAsync();
+        }
+    }
+
+    // Все, что связано с отрисовкой графа
+    // ===================================
     private async Task RefreshGraphAsync()
     {
         _isLoadingGraph = true;
@@ -305,25 +391,6 @@
         finally
         {
             _isLoadingGraph = false;
-        }
-    }
-
-    private async Task OpenAddComponentDialog()
-    {
-        var options = new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Small,
-            FullWidth = true,
-        };
-
-        var dialog = await DialogService.ShowAsync<AddComponentDialog>("Новый компонент", options);
-
-        var result = await dialog.Result;
-
-        if (!result?.Canceled ?? false)
-        {
-            await RefreshGraphAsync();
         }
     }
 
@@ -355,26 +422,35 @@
                 {
                     PathGenerator = new SmoothPathGenerator(),
                     Router = new NormalRouter(),
-
-                    Color = link.Severity switch
-                    {
-                        LinkSeverity.High => "#ff3f5f", // Красный
-                        LinkSeverity.Mid => "#ffb545", // Оранжевый
-                        LinkSeverity.Low => "#3dcb6c", // Зеленый
-                        _ => "#74718e"
-                    },
-                    Width = link.Severity == LinkSeverity.High ? 3 : 2
                 };
 
-                linkModel.TargetMarker = LinkMarker.Arrow;
-
-                var label = new LinkLabelModel(linkModel, link.Protocol.ToString());
-                linkModel.Labels.Add(label);
-
+                ApplyLinkStyles(linkModel, link.Severity, link.Protocol);
                 Diagram?.Links.Add(linkModel);
             }
         }
     }
+    // ===================================
+
+    // Вспомогательные методы
+    // ===================================
+    private void ApplyLinkStyles(LinkModel linkModel, LinkSeverity severity, ProtocolType protocol)
+    {
+        linkModel.Color = severity switch
+        {
+            LinkSeverity.High => "#ff3f5f",
+            LinkSeverity.Mid => "#ffb545",
+            LinkSeverity.Low => "#3dcb6c",
+            _ => "#74718e"
+        };
+        linkModel.Width = severity == LinkSeverity.High ? 3 : 2;
+        linkModel.TargetMarker = LinkMarker.Arrow;
+        
+        linkModel.Labels.Clear();
+        linkModel.Labels.Add(new LinkLabelModel(linkModel, protocol.ToString()));
+        
+        Diagram?.Refresh();
+    }
+    // ===================================
 
     public void Dispose()
     {

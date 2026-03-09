@@ -28,4 +28,19 @@ public class LinkController(IGraphService graphService) : ControllerBase
             return Problem(detail: "Неизвестная ошибка", statusCode: 500);
         }
     }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateLink([FromBody] CreateLinkDto linkDto)
+    {
+        try
+        {
+            var guid = await _graphService.CreateLinkAsync(linkDto);
+
+            return Ok(guid);
+        }
+        catch
+        {
+            return Problem(detail: "Ошибка создания связи", statusCode: 500);
+        }
+    }
 }
