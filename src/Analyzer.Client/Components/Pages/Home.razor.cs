@@ -17,6 +17,9 @@ using Analyzer.Client.Components.Dialogs;
 using Analyzer.Client.Components.Widgets;
 using Blazor.Diagrams.Core.Geometry;
 
+using BlazorLinkModel = Blazor.Diagrams.Core.Models.LinkModel;
+using LinkModel = Models.LinkModel;
+
 public partial class Home : ComponentBase, IDisposable
 {
     [Inject] 
@@ -38,6 +41,13 @@ public partial class Home : ComponentBase, IDisposable
     // ===========================
     private bool _isComponentPropertiesPanelOpen = false;
     private Guid? _selectedComponentId;
+
+    private bool _isLinkPropertiesPanelOpen = false;
+    private LinkModel? _selectedLinkModel;
+    private string? _selectedLinkSourceName;
+    private string? _selectedLinkTargetName;
+    
+    private bool _isCancelingLinkCreation = false;
     // ===========================
 
 
@@ -58,6 +68,8 @@ public partial class Home : ComponentBase, IDisposable
 
         Diagram.PointerDoubleClick += OnComponentSelected;
         Diagram.PointerClick += OnCanvasOrLinkClicked;
+
+        Diagram.Links.Added += OnLinkAdded;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -78,17 +90,100 @@ public partial class Home : ComponentBase, IDisposable
         {
             _selectedComponentId = componentModel.ComponentId;
             _isComponentPropertiesPanelOpen = true;
+            _isLinkPropertiesPanelOpen = false;
             StateHasChanged();
         }
     }
 
     private void OnCanvasOrLinkClicked(Model? model, Blazor.Diagrams.Core.Events.PointerEventArgs e)
     {
-        if (model == null)
+        if (model is LinkModel linkModel)
+        {
+            if (linkModel.Source.Model is PortModel sourcePort && 
+                linkModel.Target.Model is PortModel targetPort)
+            {
+                _selectedLinkModel = linkModel;
+
+                _selectedLinkSourceName = sourcePort.GetParent<ComponentModel>().Name;
+                _selectedLinkTargetName = targetPort.GetParent<ComponentModel>().Name;
+
+                _isLinkPropertiesPanelOpen = true;
+                _isComponentPropertiesPanelOpen = false;
+                StateHasChanged();
+            }
+            else
+            {
+                Console.WriteLine("Каким-то образом выбрана некорректная связь..");
+                return;
+            }
+        }
+        else if (model == null)
         {
             _isComponentPropertiesPanelOpen = false;
+            _isLinkPropertiesPanelOpen = false;
             Diagram?.UnselectAll(); 
             StateHasChanged();
+        }
+    }
+
+    private void OnLinkAdded(BaseLinkModel baseLink)
+    {
+        baseLink.TargetAttached += OnLinkTargetAttached;
+    }
+
+    private async void OnLinkTargetAttached(BaseLinkModel baseLink)
+    {
+        if (baseLink is BlazorLinkModel linkModel)
+        {
+            baseLink.TargetAttached -= OnLinkTargetAttached;
+
+            if (linkModel.Source.Model is not PortModel sourcePort 
+                || linkModel.Target.Model is not PortModel targetPort)
+            {
+                Snackbar.Add("Ошибка создания связи! Источник или приемник не является портом!", Severity.Error);
+                Diagram?.Links.Remove(linkModel);
+                return;
+            }
+
+            var sourceId = sourcePort.GetParent<ComponentModel>().ComponentId;
+            var targetId = targetPort.GetParent<ComponentModel>().ComponentId;
+
+            var options = new DialogOptions
+            {
+                CloseOnEscapeKey = true,
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+            };
+
+            var dialog = await DialogService.ShowAsync<LinkConfigDialog>("Настройка связи", options);
+            var result = await dialog.Result;
+
+            if ((!result?.Canceled ?? false) && result!.Data is LinkConfigDialog.LinkConfigResult config)
+            {
+                var linkDto = new CreateLinkDto(sourceId, targetId, config.Severity, config.Protocol);
+                var response = await Http.PostAsJsonAsync("api/v1/links/", linkDto);
+                var createdLinkGuid = await response.Content.ReadFromJsonAsync<Guid>();
+                
+                Diagram?.Links.Remove(linkModel);
+
+                var smartLink = new LinkModel(sourcePort, targetPort)
+                {
+                    LinkId = createdLinkGuid,
+                    Severity = config.Severity,
+                    Protocol = config.Protocol,
+                    PathGenerator = new SmoothPathGenerator(),
+                    Router = new NormalRouter()
+                };
+
+                ApplyLinkStyles(smartLink, config.Severity, config.Protocol);
+                Diagram?.Links.Add(smartLink);
+            }
+            else
+            {
+                _isCancelingLinkCreation = true;
+                Diagram?.Links.Remove(linkModel);
+                _isCancelingLinkCreation = false;
+            }
         }
     }
 
@@ -167,6 +262,9 @@ public partial class Home : ComponentBase, IDisposable
 
                 var linkModel = new LinkModel(sourcePort, targetPort)
                 {
+                    LinkId = link.Id,
+                    Severity = link.Severity,
+                    Protocol = link.Protocol,
                     PathGenerator = new SmoothPathGenerator(),
                     Router = new NormalRouter(),
                 };
@@ -180,7 +278,8 @@ public partial class Home : ComponentBase, IDisposable
 
     // Вспомогательные методы
     // ===================================
-    private void ApplyLinkStyles(LinkModel linkModel, LinkSeverity severity, ProtocolType protocol)
+    private void ApplyLinkStyles(LinkModel linkModel, 
+        LinkSeverity severity, ProtocolType protocol)
     {
         linkModel.Color = severity switch
         {
@@ -203,5 +302,6 @@ public partial class Home : ComponentBase, IDisposable
     {
         Diagram?.PointerDoubleClick -= OnComponentSelected;
         Diagram?.PointerClick -= OnCanvasOrLinkClicked;
+        Diagram?.Links.Added -= OnLinkAdded;
     }
 }

@@ -42,3 +42,9 @@
     OnClose="@(() => _isComponentPropertiesPanelOpen = false)"
     OnGraphChanged="RefreshGraphAsync" />
 
+<LinkPropertiesPanel 
+    IsOpen="@_isLinkPropertiesPanelOpen" 
+    SelectedLink="@_selectedLinkModel"
+    SourceName="@_selectedLinkSourceName" 
+    TargetName="@_selectedLinkTargetName" 
+    OnClose="@(() => _isLinkPropertiesPanelOpen = false)" />
