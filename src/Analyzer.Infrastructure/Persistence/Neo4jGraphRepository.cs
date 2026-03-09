@@ -222,6 +222,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
             var links = records.Select(record => new Link
             {
+                Id = Guid.Parse(record["Id"].As<string>()),
                 SourceId = Guid.Parse(record["SourceId"].As<string>()),
                 TargetId = Guid.Parse(record["TargetId"].As<string>()),
 
