@@ -30,9 +30,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     public async Task<Guid> AddComponentAsync(ComponentType type, string name, string description)
     {
         var guid = Guid.NewGuid();
-        Log.Information(@$"
-            Создаем компонент типа {type} с именем {name}, 
-            GUID: {guid} и описанием {description}");
+        Log.Information($"Создаем компонент типа {type} с именем {name}, GUID: {guid} и описанием {description}");
         
         var query = @$"
             CREATE (:{type} {{
