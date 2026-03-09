@@ -5,12 +5,12 @@ using Analyzer.Shared.DTO;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/links")]
 public class LinkController(IGraphService graphService) : ControllerBase
 {
     readonly IGraphService _graphService = graphService;
 
-    [HttpGet("get")]
+    [HttpGet]
     public async Task<IActionResult> GetAllLinks()
     {
         try

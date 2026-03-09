@@ -6,26 +6,12 @@ using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/components")]
 public class ComponentController(IGraphService graphService) : ControllerBase
 {
     readonly IGraphService _graphService = graphService;
 
     [HttpGet]
-    public async Task<IActionResult> Index()
-    {
-        return Ok("Component index page");
-    }
-
-    [HttpPost("create")]
-    public async Task<IActionResult> CreateComponent([FromBody] CreateComponentDto dto)
-    {
-        var guid = await _graphService.CreateComponentAsync(dto);
-
-        return Ok(guid);
-    }
-
-    [HttpGet("get")]
     public async Task<IActionResult> GetAllComponents()
     {
         try
@@ -44,7 +30,15 @@ public class ComponentController(IGraphService graphService) : ControllerBase
         }
     }
 
-    [HttpGet("get/{id}")]
+    [HttpPost]
+    public async Task<IActionResult> CreateComponent([FromBody] CreateComponentDto dto)
+    {
+        var guid = await _graphService.CreateComponentAsync(dto);
+
+        return Ok(guid);
+    }
+
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetComponentDetails(Guid id)
     {
         try
@@ -63,7 +57,7 @@ public class ComponentController(IGraphService graphService) : ControllerBase
         }
     }
 
-    [HttpPost("update")]
+    [HttpPut]
     public async Task<IActionResult> UpdateComponent([FromBody] ComponentDto dto)
     {
         try

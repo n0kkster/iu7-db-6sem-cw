@@ -231,7 +231,7 @@
             StateHasChanged();
             try
             {
-                _selectedComponent = await Http.GetFromJsonAsync<ComponentDto>($"api/component/get/{componentModel.ComponentId}");
+                _selectedComponent = await Http.GetFromJsonAsync<ComponentDto>($"api/v1/components/{componentModel.ComponentId}");
             }
             finally
             {
@@ -255,8 +255,8 @@
         _isUpdatingComponent = true;
         _componentPropertyUpdated = false;
 
-        await Http.PostAsJsonAsync<ComponentDto>(
-            $"api/component/update/", 
+        await Http.PutAsJsonAsync<ComponentDto>(
+            $"api/v1/components", 
             _selectedComponent
         );
 
@@ -273,7 +273,7 @@
         _isDeletingComponent = true;
         _componentPropertyUpdated = false;
 
-        await Http.DeleteAsync($"api/component/{_selectedComponent.Id}");
+        await Http.DeleteAsync($"api/v1/components/{_selectedComponent.Id}");
 
         _isDeletingComponent = false;
 
@@ -288,8 +288,8 @@
 
         try
         {
-            var components = await Http.GetFromJsonAsync<List<ComponentDto>>("api/component/get") ?? [];
-            var links = await Http.GetFromJsonAsync<List<LinkDto>>("api/link/get") ?? [];
+            var components = await Http.GetFromJsonAsync<List<ComponentDto>>("api/v1/components/") ?? [];
+            var links = await Http.GetFromJsonAsync<List<LinkDto>>("api/v1/links/") ?? [];
 
             var compDict = new Dictionary<Guid, ComponentModel>();
             RenderGraph(components, ref compDict);
