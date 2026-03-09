@@ -13,7 +13,7 @@ public class Component
         set
         {
             if (string.IsNullOrWhiteSpace(value))
-                throw new InvalidComponentNameException("Имя компонента не может быть пустой строкой");
+                throw new InvalidComponentPropertyException("Имя компонента не может быть пустой строкой");
             field = value;
         }
     }
@@ -24,7 +24,7 @@ public class Component
         set
         {
             if (string.IsNullOrWhiteSpace(value))
-                throw new InvalidComponentNameException("Описание компонента не может быть пустой строкой");
+                throw new InvalidComponentPropertyException("Описание компонента не может быть пустой строкой");
             field = value;
         }
     }

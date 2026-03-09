@@ -10,7 +10,6 @@ public interface IGraphRepository
     Task UpdateComponentAsync(Component component);
     Task DeleteComponentAsync(Guid id);
     Task<List<Component>> GetAllComponentsAsync();
-
     Task<List<Link>> GetAllLinksAsync();
     Task<List<Link>> GetComponentInboundLinksAsync(Guid id);
     Task<List<Link>> GetComponentOutboundLinksAsync(Guid id);
