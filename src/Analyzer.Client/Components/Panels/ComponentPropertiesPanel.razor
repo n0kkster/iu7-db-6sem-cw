@@ -40,8 +40,13 @@
                 }
             </MudButton>
 
-            <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="DeleteAsync" Disabled="@_isDeleting"
-                       FullWidth="true" Class="mt-6" StartIcon="@Icons.Material.Filled.Delete">
+            <MudButton Color="Color.Error" 
+                       Variant="Variant.Filled" 
+                       OnClick="DeleteAsync" 
+                       Disabled="@_isDeleting"
+                       FullWidth="true" 
+                       Class="mt-6" 
+                       StartIcon="@Icons.Material.Filled.Delete">
                 @if (_isDeleting)
                 {
                     <MudProgressCircular Class="ms-n1" Size="MudBlazor.Size.Small" Indeterminate="true" />
@@ -53,7 +58,11 @@
                 }
             </MudButton>
 
-            <MudButton Color="Color.Error" Variant="Variant.Filled" FullWidth="true" Class="mt-6"
+            <MudButton Color="Color.Error" 
+                       Variant="Variant.Filled" 
+                       OnClick="RunSimulationAsync"
+                       FullWidth="true" 
+                       Class="mt-6"
                        StartIcon="@Icons.Material.Filled.PowerOff">
                 Сымитировать падение
             </MudButton>
@@ -66,6 +75,7 @@
     [Parameter] public Guid? ComponentId { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnGraphChanged { get; set; }
+    [Parameter] public EventCallback<Guid> OnSimulateFailure { get; set; }
 
     private ComponentDto? _component;
     private bool _isLoading = false;
@@ -147,6 +157,15 @@
         
         await ClosePanel();
         await OnGraphChanged.InvokeAsync();
+    }
+
+    private async Task RunSimulationAsync()
+    {
+        if (ComponentId.HasValue)
+        {
+            await OnSimulateFailure.InvokeAsync(ComponentId.Value);
+            await ClosePanel();
+        }
     }
 
     private async Task ClosePanel()

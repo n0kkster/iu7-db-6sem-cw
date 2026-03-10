@@ -1,5 +1,6 @@
 namespace Analyzer.Infrastructure.Persistence;
 
+using System.Diagnostics;
 using Analyzer.Application.Interfaces;
 using Analyzer.Domain.Entities;
 using Analyzer.Domain.Enums;
@@ -321,5 +322,54 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             throw e;
         }
         Log.Information($"Удален компонент с GUID: {id}.");
+    }
+
+    public async Task<List<Component>> GetImpactedComponentsAsync(Guid failedComponentId)
+    {
+        Log.Information($"Запуск поиска критического пути для компонента: {failedComponentId}..");
+
+        var query = @"
+                MATCH 
+                (failed {id: $FailedId})<-[:DEPENDS_ON*]-(affected)
+                RETURN affected.name AS Name, 
+                       affected.id AS Id, 
+                       affected.desc AS Desc, 
+                       labels(affected) AS Type";
+
+        try
+        {
+            Stopwatch stopWatch = new();
+            stopWatch.Start();
+            var (result, _, _) = await _driver.ExecutableQuery(query)
+                         .WithConfig(_queryConfig)
+                         .WithParameters(new { FailedId = failedComponentId.ToString() })
+                         .ExecuteAsync();
+            stopWatch.Stop();
+
+            var components = result.Select(record => new Component(
+                name: record["Name"].As<string>(),
+                desription: record["Desc"].As<string>(),
+
+                type: Enum.TryParse<ComponentType>(record["Type"].As<List<string>>().First(),
+                        true, out var type)
+                        ? type : ComponentType.Unknown,
+
+                guid: Guid.TryParse(record["Id"].As<string>(), out var guid)
+                        ? guid : throw new KeyNotFoundException("Ошибка парсинга GUID")
+            )).ToList();
+
+            Log.Information($"Поиск критического пути завершен. Время исполнения: {stopWatch.ElapsedMilliseconds} мс");
+            return components;
+        }
+        catch (KeyNotFoundException e)
+        {
+            Log.Error($"Невозможно распарсить ответ БД: {e.Message}");
+            throw e;
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Неизвестная ошибка: {e.Message}");
+            throw e;
+        }        
     }
 }

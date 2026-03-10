@@ -4,21 +4,26 @@
 <div class="dashboard-container">
     @* Верхняя панель инструментов для графа *@
     <div class="toolbar border-b mud-border-lines-default pa-3 d-flex align-center mud-theme-surface">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Update" Class="mr-3"
-                   OnClick="RefreshGraphAsync">
-            Обновить граф
-        </MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mr-3"
-                   OnClick="OpenAddComponentDialog">
-            Добавить компонент
-        </MudButton>
-        @* <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.FlashOn" OnClick="OpenSimulationPanel">
-            Симуляция отказа
-        </MudButton> *@
-
-        <MudSpacer />
-
-        <MudChip T="string" Color="Color.Success" Variant="Variant.Text">Статус: Стабилен</MudChip>
+        
+        @if (!_isSimulationMode)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Update" Class="mr-3" OnClick="RefreshGraphAsync">
+                Обновить граф
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mr-3" OnClick="OpenAddComponentDialog">
+                Добавить компонент
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Close" Class="mr-3" OnClick="ResetSimulation">
+                Выйти из режима симуляции
+            </MudButton>
+            <MudText Typo="Typo.subtitle1" Color="Color.Error" Class="font-bold ml-4">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" Size="MudBlazor.Size.Small" Class="mr-2" />
+                Отображение каскадного отказа
+            </MudText>
+        }
     </div>
 
     @* Контейнер для графа *@
@@ -40,7 +45,8 @@
     IsOpen="@_isComponentPropertiesPanelOpen" 
     ComponentId="@_selectedComponentId" 
     OnClose="@(() => _isComponentPropertiesPanelOpen = false)"
-    OnGraphChanged="RefreshGraphAsync" />
+    OnGraphChanged="RefreshGraphAsync" 
+    OnSimulateFailure="RunSimulationAsync" />
 
 <LinkPropertiesPanel 
     IsOpen="@_isLinkPropertiesPanelOpen" 

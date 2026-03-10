@@ -9,4 +9,8 @@ public class LinkModel(PortModel sourcePort, PortModel targetPort)
     public Guid LinkId { get; set; } 
     public LinkSeverity Severity { get; set; }
     public ProtocolType Protocol { get; set; }
+
+    // Режим подсветки во время симуляции
+    public bool IsFailed { get; set; } = false;
+    public bool IsDimmed { get; set; } = false; 
 }

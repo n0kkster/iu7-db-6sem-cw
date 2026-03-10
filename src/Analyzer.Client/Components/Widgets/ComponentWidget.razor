@@ -4,8 +4,16 @@
 @using Analyzer.Domain.Enums;
 @using Analyzer.Client.Models;
 
-<MudPaper Elevation="2" Class="custom-node-wrapper pa-3 mud-theme-surface" 
-          Style="min-width: 180px; border: 1px solid var(--mud-palette-lines-default); border-radius: 8px; overflow: visible; position: relative;">
+<MudPaper Elevation="2" 
+    Class="@(@$"custom-node-wrapper pa-3 mud-theme-surface 
+        {(Node.IsFailed ? "failed-node" : "")} 
+        {(Node.IsDimmed ? "dimmed-node" : "")}")" 
+    Style="
+        min-width: 180px; 
+        border: 1px solid var(--mud-palette-lines-default); 
+        border-radius: 8px; 
+        overflow: visible; 
+        position: relative;">
 
     <div class="d-flex align-center">
         <MudIcon Icon="@GetIcon()" Color="Color.Primary" Class="mr-2" />
@@ -22,6 +30,26 @@
 </MudPaper>
 
 <style>
+    @@keyframes pulse-error {
+        0% { box-shadow: 0 0 0 0 rgba(255, 63, 95, 0.7); }
+        70% { box-shadow: 0 0 15px 20px rgba(255, 63, 95, 0); }
+        100% { box-shadow: 0 0 10px 0 rgba(255, 63, 95, 0); }
+    }
+
+    .failed-node {
+        border-color: var(--mud-palette-error) !important;
+        background-color: rgba(255, 63, 95, 0.1) !important;
+        box-shadow: 0 0 15px rgba(255, 63, 95, 0.5);
+        animation: pulse-error 1.5s infinite;
+        z-index: 1000;
+    }
+
+    .dimmed-node {
+        opacity: 0.3;
+        filter: grayscale(100%);
+        pointer-events: none;
+    }
+
     .custom-node-wrapper .diagram-port {
         position: absolute !important;
         width: 14px !important;

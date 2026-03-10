@@ -9,7 +9,10 @@ public class ComponentModel : NodeModel
     public Guid ComponentId { get; set; }
     public string Name { get; set; }
     public ComponentType Type { get; set; }
-    public string Status { get; set; } = "Healthy";
+
+    // Режим подсветки во время симуляции
+    public bool IsFailed { get; set; } = false;
+    public bool IsDimmed { get; set; } = false; 
 
     public ComponentModel(Guid id, string name, ComponentType type, 
                           Point? position = null) 

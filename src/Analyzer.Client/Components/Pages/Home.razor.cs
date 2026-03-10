@@ -22,13 +22,13 @@ using LinkModel = Models.LinkModel;
 
 public partial class Home : ComponentBase, IDisposable
 {
-    [Inject] 
+    [Inject]
     private IDialogService DialogService { get; set; } = default!;
-    
-    [Inject] 
+
+    [Inject]
     private HttpClient Http { get; set; } = default!;
-    
-    [Inject] 
+
+    [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
 
     // Основное состояние страницы
@@ -46,10 +46,11 @@ public partial class Home : ComponentBase, IDisposable
     private LinkModel? _selectedLinkModel;
     private string? _selectedLinkSourceName;
     private string? _selectedLinkTargetName;
-    
+
     private bool _isCancelingLinkCreation = false;
     // ===========================
 
+    private bool _isSimulationMode = false;
 
     // =================================================
     // ИНИЦИАЛИЗАЦИЯ И ЖИЗНЕННЫЙ ЦИКЛ
@@ -99,7 +100,7 @@ public partial class Home : ComponentBase, IDisposable
     {
         if (model is LinkModel linkModel)
         {
-            if (linkModel.Source.Model is PortModel sourcePort && 
+            if (linkModel.Source.Model is PortModel sourcePort &&
                 linkModel.Target.Model is PortModel targetPort)
             {
                 _selectedLinkModel = linkModel;
@@ -122,7 +123,7 @@ public partial class Home : ComponentBase, IDisposable
         {
             _isComponentPropertiesPanelOpen = false;
             _isLinkPropertiesPanelOpen = false;
-            Diagram?.UnselectAll(); 
+            Diagram?.UnselectAll();
             StateHasChanged();
         }
     }
@@ -138,7 +139,7 @@ public partial class Home : ComponentBase, IDisposable
         {
             baseLink.TargetAttached -= OnLinkTargetAttached;
 
-            if (linkModel.Source.Model is not PortModel sourcePort 
+            if (linkModel.Source.Model is not PortModel sourcePort
                 || linkModel.Target.Model is not PortModel targetPort)
             {
                 Snackbar.Add("Ошибка создания связи! Источник или приемник не является портом!", Severity.Error);
@@ -164,7 +165,7 @@ public partial class Home : ComponentBase, IDisposable
                 var linkDto = new CreateLinkDto(sourceId, targetId, config.Severity, config.Protocol);
                 var response = await Http.PostAsJsonAsync("api/v1/links/", linkDto);
                 var createdLinkGuid = await response.Content.ReadFromJsonAsync<Guid>();
-                
+
                 Diagram?.Links.Remove(linkModel);
 
                 var smartLink = new LinkModel(sourcePort, targetPort)
@@ -286,9 +287,116 @@ public partial class Home : ComponentBase, IDisposable
     }
     // ===================================
 
+    // Симуляция
+    private async Task RunSimulationAsync(Guid initialFailedComponentId)
+    {
+        _isLoadingGraph = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<Guid>>(
+                $"api/v1/analysis/simulate/{initialFailedComponentId}");
+
+            if (result is null || !result.Any())
+            {
+                Snackbar.Add("Сбой не привел к каскадному отказу других компонентов.", Severity.Success);
+                return;
+            }
+
+            _isSimulationMode = true;
+
+            var allFailedIds = result.ToHashSet();
+            allFailedIds.Add(initialFailedComponentId);
+
+            foreach (var node in Diagram!.Nodes)
+            {
+                if (node is ComponentModel componentModel)
+                {
+                    if (allFailedIds.Contains(componentModel.ComponentId))
+                    {
+                        componentModel.IsFailed = true;
+                        componentModel.IsDimmed = false;
+                    }
+                    else
+                    {
+                        componentModel.IsFailed = false;
+                        componentModel.IsDimmed = true;
+                    }
+                    componentModel.Refresh();
+                }
+            }
+
+            foreach (var link in Diagram.Links)
+            {
+                if (link is LinkModel linkModel)
+                {
+                    if (linkModel.Source.Model is PortModel sourcePort &&
+                        linkModel.Target.Model is PortModel targetPort)
+                    {
+                        var sourceId = sourcePort.GetParent<ComponentModel>().ComponentId;
+                        var targetId = targetPort.GetParent<ComponentModel>().ComponentId;
+
+                        if (allFailedIds.Contains(sourceId) && allFailedIds.Contains(targetId))
+                        {
+                            linkModel.Color = "#ff3f5f";
+                            linkModel.Width = 4;
+                            linkModel.IsDimmed = false;
+                        }
+                        else
+                        {
+                            linkModel.Color = "#e2e8f0";
+                            linkModel.IsDimmed = true;
+                        }
+                        linkModel.Refresh();
+                    }
+                }
+            }
+
+            Snackbar.Add($"Симуляция завершена. Затронуто узлов: {allFailedIds.Count}", Severity.Warning);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add($"Ошибка при выполнении симуляции: {e.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoadingGraph = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ResetSimulation()
+    {
+        _isSimulationMode = false;
+
+        foreach (var node in Diagram!.Nodes)
+        {
+            if (node is ComponentModel componentModel)
+            {
+                componentModel.IsFailed = false;
+                componentModel.IsDimmed = false;
+                componentModel.Refresh();
+            }
+        }
+
+        foreach (var link in Diagram.Links)
+        {
+            if (link is LinkModel linkModel)
+            {
+                linkModel.IsDimmed = false;
+                ApplyLinkStyles(linkModel, linkModel.Severity, linkModel.Protocol);
+                linkModel.Refresh();
+            }
+        }
+
+        StateHasChanged();
+    }
+    // ===================================
+
     // Вспомогательные методы
     // ===================================
-    private void ApplyLinkStyles(LinkModel linkModel, 
+    private void ApplyLinkStyles(LinkModel linkModel,
         LinkSeverity severity, ProtocolType protocol)
     {
         linkModel.Color = severity switch
