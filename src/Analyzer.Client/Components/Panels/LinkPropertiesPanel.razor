@@ -1,5 +1,7 @@
 @namespace Analyzer.Client.Components.Panels
 
+@inject HttpClient Http
+
 <MudDrawer Open="@IsOpen" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" Width="400px"
            OnClose="ClosePanel">
     <MudDrawerHeader Class="d-flex align-center justify-space-between border-b mud-border-lines-default">
@@ -23,7 +25,15 @@
                        FullWidth="true" 
                        StartIcon="@Icons.Material.Filled.Delete"
                        OnClick="DeleteLinkAsync">
-                Удалить связь
+                @if (_isDeleting)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="MudBlazor.Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Удаление...</MudText>
+                }
+                else
+                {
+                    <MudText>Удалить связь</MudText>
+                }
             </MudButton>
         }
     </div>
@@ -36,11 +46,21 @@
     [Parameter] public string? SourceName { get; set; }
     [Parameter] public string? TargetName { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<Models.LinkModel?> OnDelete { get; set; }
+
+    private bool _isDeleting = false;
 
     private async Task ClosePanel() => await OnClose.InvokeAsync();
 
     private async Task DeleteLinkAsync()
     {
-        
+        if (SelectedLink is null)
+            return;
+
+        _isDeleting = true;
+        await Http.DeleteAsync($"api/v1/links/{SelectedLink.LinkId}");
+        _isDeleting = false;
+
+        await OnDelete.InvokeAsync(SelectedLink);
     }
 }

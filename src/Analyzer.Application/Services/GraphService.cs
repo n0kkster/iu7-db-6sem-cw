@@ -76,4 +76,9 @@ public class GraphService(IGraphRepository repository) : IGraphService
 
         return linkDtos;
     }
+
+    public async Task DeleteLinkAsync(Guid id)
+    {
+        await _repository.DeleteLinkAsync(id);
+    }
 }

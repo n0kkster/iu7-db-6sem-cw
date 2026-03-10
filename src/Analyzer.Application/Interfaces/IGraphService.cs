@@ -12,5 +12,5 @@ public interface IGraphService
 
     Task<Guid> CreateLinkAsync(CreateLinkDto dto);
     Task<List<LinkDto>> GetAllLinksAsync();
-
+    Task DeleteLinkAsync(Guid id);
 }

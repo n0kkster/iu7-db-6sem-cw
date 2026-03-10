@@ -296,4 +296,28 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     {
         throw new NotImplementedException();
     }
+
+    public async Task DeleteLinkAsync(Guid id)
+    {
+        Log.Information($"Удаляем связь с GUID: {id}..");
+        try
+        {
+            var query = @"
+                MATCH ()-[r:DEPENDS_ON]->()
+                WHERE r.id = $Id
+                DELETE r";
+
+            await _driver.ExecutableQuery(query)
+                         .WithConfig(_queryConfig)
+                         .WithParameters(new { Id = id.ToString() })
+                         .ExecuteAsync();
+
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Неизвестная ошибка: {e.Message}");
+            throw e;
+        }
+        Log.Information($"Удален компонент с GUID: {id}.");
+    }
 }

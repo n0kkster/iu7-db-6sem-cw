@@ -43,4 +43,23 @@ public class LinkController(IGraphService graphService) : ControllerBase
             return Problem(detail: "Ошибка создания связи", statusCode: 500);
         }
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteLink(Guid id)
+    {
+        try
+        {
+            await _graphService.DeleteLinkAsync(id);
+
+            return Ok();
+        }
+        catch (KeyNotFoundException)
+        {
+            return Problem(detail: "Ошибка удаления связи из базы данных", statusCode: 500);
+        }
+        catch
+        {
+            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
+        }
+    }
 }

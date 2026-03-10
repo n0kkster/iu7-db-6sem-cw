@@ -15,4 +15,5 @@ public interface IGraphRepository
     Task<List<Link>> GetAllLinksAsync();
     Task<List<Link>> GetComponentInboundLinksAsync(Guid id);
     Task<List<Link>> GetComponentOutboundLinksAsync(Guid id);
+    Task DeleteLinkAsync(Guid id);
 }

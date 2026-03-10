@@ -117,7 +117,8 @@ public partial class Home : ComponentBase, IDisposable
                 return;
             }
         }
-        else if (model == null)
+        // TODO: фикс обработки клика на холст при закрытии панели
+        else if (model is null)
         {
             _isComponentPropertiesPanelOpen = false;
             _isLinkPropertiesPanelOpen = false;
@@ -204,6 +205,15 @@ public partial class Home : ComponentBase, IDisposable
         {
             await RefreshGraphAsync();
         }
+    }
+
+    public async Task DeleteLink(LinkModel linkModel)
+    {
+        if (linkModel is null)
+            return;
+        Diagram?.Links.Remove(linkModel);
+        _isLinkPropertiesPanelOpen = false;
+        StateHasChanged();
     }
 
     // =================================================

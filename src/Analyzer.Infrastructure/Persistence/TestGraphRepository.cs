@@ -58,4 +58,9 @@ public sealed class TestGraphRepository : IGraphRepository
     {
         throw new NotImplementedException();
     }
+
+    public Task DeleteLinkAsync(Guid id)
+    {
+        throw new NotImplementedException();
+    }
 }
