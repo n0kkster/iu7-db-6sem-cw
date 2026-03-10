@@ -5,6 +5,8 @@ using Analyzer.Infrastructure.Persistence;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 
+using Microsoft.OpenApi;
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(theme: AnsiConsoleTheme.Code)
     .CreateLogger();
@@ -26,6 +28,17 @@ builder.Services.AddScoped<IGraphRepository, Neo4jGraphRepository>();
 builder.Services.AddScoped<IGraphService, GraphService>();
 
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo 
+    { 
+        Title = "FaultAnalyzer API", 
+        Version = "v1",
+        Description = "API для анализа отказоустойчивости систем на базе микросервисной архитектуры"
+    });    
+});
 
 // Add CORS to allow Blazor app to use API
 builder.Services.AddCors(options =>
@@ -56,6 +69,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(options => 
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "FaultAnalyzer API v1");
+        options.RoutePrefix = string.Empty; 
+    });
 }
 
 app.UseHttpsRedirection();
