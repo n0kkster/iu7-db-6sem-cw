@@ -185,12 +185,13 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     public async Task DeleteComponentAsync(Guid id)
     {
         Log.Information($"Удаляем компонент с GUID: {id}..");
-        try
-        {
-            var query = @"
+        
+        var query = @"
                 MATCH (c {id: $Id})
                 DETACH DELETE c";
 
+        try
+        {
             await _driver.ExecutableQuery(query)
                          .WithConfig(_queryConfig)
                          .WithParameters(new { Id = id.ToString() })
@@ -248,13 +249,13 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     {
         Log.Information("Получаем все связи..");
 
-        try
-        {
-            var query = @"
+        var query = @"
                 MATCH (source)-[r:DEPENDS_ON]->(target)
                 RETURN source.id AS SourceId, target.id AS TargetId, 
                     r.severity AS Severity, r.protocol AS Protocol, r.id AS Id";
 
+        try
+        {
             var (records, _, _) = await _driver.ExecutableQuery(query)
                                                .WithConfig(_queryConfig)
                                                .ExecuteAsync();
@@ -300,13 +301,14 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     public async Task DeleteLinkAsync(Guid id)
     {
         Log.Information($"Удаляем связь с GUID: {id}..");
-        try
-        {
-            var query = @"
+
+        var query = @"
                 MATCH ()-[r:DEPENDS_ON]->()
                 WHERE r.id = $Id
                 DELETE r";
-
+        
+        try
+        {
             await _driver.ExecutableQuery(query)
                          .WithConfig(_queryConfig)
                          .WithParameters(new { Id = id.ToString() })
