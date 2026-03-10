@@ -138,8 +138,8 @@
 
     private async Task DeleteAsync()
     {
-        if (_component == null) 
-        return;
+        if (_component is null) 
+            return;
         
         _isDeleting = true;
         await Http.DeleteAsync($"api/v1/components/{_component.Id}");
