@@ -72,7 +72,7 @@ public partial class Home : ComponentBase, IDisposable
         var options = new BlazorDiagramOptions
         {
             AllowMultiSelection = false,
-            Zoom = { Enabled = true, Inverse = false },
+            Zoom = { Enabled = true, Inverse = true },
             Links = { DefaultRouter = new NormalRouter(), DefaultPathGenerator = new SmoothPathGenerator() }
         };
 
