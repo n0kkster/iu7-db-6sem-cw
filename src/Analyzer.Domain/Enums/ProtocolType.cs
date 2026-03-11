@@ -6,5 +6,6 @@ public enum ProtocolType
     gRPC,
     SOAP, 
     AMQP,
+    TCP,
     Unknown
 }
