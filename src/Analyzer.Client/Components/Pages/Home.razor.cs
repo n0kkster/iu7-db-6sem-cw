@@ -19,6 +19,7 @@ using Blazor.Diagrams.Core.Geometry;
 
 using BlazorLinkModel = Blazor.Diagrams.Core.Models.LinkModel;
 using LinkModel = Models.LinkModel;
+using Microsoft.AspNetCore.Components.Forms;
 
 public partial class Home : ComponentBase, IDisposable
 {
@@ -30,6 +31,9 @@ public partial class Home : ComponentBase, IDisposable
 
     [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager NavManager { get; set; } = default!;
 
     // Основное состояние страницы
     // ===========================
@@ -46,11 +50,18 @@ public partial class Home : ComponentBase, IDisposable
     private LinkModel? _selectedLinkModel;
     private string? _selectedLinkSourceName;
     private string? _selectedLinkTargetName;
-
-    private bool _isCancelingLinkCreation = false;
     // ===========================
 
+    // Состояние симуляции
+    // ===========================
     private bool _isSimulationMode = false;
+    // ===========================
+
+    // Состояние импорта и экспорта
+    // ===========================
+    private bool _isImportingSystem = false;
+    private bool _isExportingSystem = false;
+    // ===========================
 
     // =================================================
     // ИНИЦИАЛИЗАЦИЯ И ЖИЗНЕННЫЙ ЦИКЛ
@@ -182,9 +193,7 @@ public partial class Home : ComponentBase, IDisposable
             }
             else
             {
-                _isCancelingLinkCreation = true;
                 Diagram?.Links.Remove(linkModel);
-                _isCancelingLinkCreation = false;
             }
         }
     }
@@ -393,6 +402,55 @@ public partial class Home : ComponentBase, IDisposable
         StateHasChanged();
     }
     // ===================================
+
+    private async Task ImportSystemAsync(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            if (file is null)
+                return;
+
+            _isImportingSystem = true;
+
+            // Ограничиваем размер загружаемого файла (например, 10 МБ)
+            long maxFileSize = 10 * 1024 * 1024;
+
+            using var stream = file.OpenReadStream(maxFileSize);
+            using var content = new MultipartFormDataContent();
+
+            // Упаковываем файл в HTTP-запрос
+            var fileContent = new StreamContent(stream);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            content.Add(fileContent, "file", file.Name);
+
+            // Отправляем на бэкенд
+            var response = await Http.PostAsync("api/v1/systems/import", content);
+            response.EnsureSuccessStatusCode();
+
+            Snackbar.Add("Система успешно импортирована", Severity.Success);
+
+            // Принудительно перерисовываем граф новыми данными
+            await RefreshGraphAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Ошибка импорта: {ex.Message}");
+            Snackbar.Add("Не удалось импортировать систему", Severity.Error);
+        }
+        finally
+        {
+            _isImportingSystem = false;
+        }
+    }
+
+    private async Task ExportSystemAsync()
+    {
+        // а где хранить активную систему? на фронте наверное все таки
+        _isExportingSystem = true;
+        NavManager.NavigateTo("http://localhost:1555/api/v1/systems/export", forceLoad: true);
+        _isExportingSystem = false;
+    }
 
     // Вспомогательные методы
     // ===================================

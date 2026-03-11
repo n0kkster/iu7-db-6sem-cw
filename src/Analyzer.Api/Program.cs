@@ -27,6 +27,7 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddScoped<IGraphRepository, Neo4jGraphRepository>();
 builder.Services.AddScoped<IGraphService, GraphService>();
 builder.Services.AddScoped<IAnalysisService, AnalysisService>();
+builder.Services.AddScoped<ISystemsService, SystemsService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
