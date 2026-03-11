@@ -130,7 +130,6 @@ public partial class Home : ComponentBase, IDisposable
                 return;
             }
         }
-        // TODO: фикс обработки клика на холст при закрытии панели
         else if (model is ComponentModel componentModel)
         {
             // Убираем выделение с прошлой модели
