@@ -56,7 +56,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         catch (Exception e)
         {
             Log.Error($"Неизвестная ошибка: {e.Message}");
-            throw e;
+            throw;
         }
         Log.Information($"Создан компонент с GUID: {guid}");
 
@@ -98,12 +98,12 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         catch (KeyNotFoundException e)
         {
             Log.Error($"Невозможно распарсить ответ БД: {e.Message}");
-            throw e;
+            throw;
         }
         catch (Exception e)
         {
             Log.Error($"Неизвестная ошибка: {e.Message}");
-            throw e;
+            throw;
         }
     }
 
@@ -144,12 +144,12 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         catch (KeyNotFoundException e)
         {
             Log.Error($"Невозможно распарсить ответ БД: {e.Message}");
-            throw e;
+            throw;
         }
         catch (Exception e)
         {
             Log.Error($"Неизвестная ошибка: {e.Message}");
-            throw e;
+            throw;
         }
     }
 
@@ -177,7 +177,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         catch (Exception e)
         {
             Log.Error($"Неизвестная ошибка: {e.Message}");
-            throw e;
+            throw;
         }
 
         Log.Information($"Обновлен компонент с GUID: {component.Id}.");
@@ -202,7 +202,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         catch (Exception e)
         {
             Log.Error($"Неизвестная ошибка: {e.Message}");
-            throw e;
+            throw;
         }
         Log.Information($"Удален компонент с GUID: {id}.");
     }
@@ -239,7 +239,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         catch (Exception e)
         {
             Log.Error($"Неизвестная ошибка: {e.Message}");
-            throw e;
+            throw;
         }
         Log.Information($"Создана связь с GUID: {guid}");
 
@@ -280,12 +280,12 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         catch (KeyNotFoundException e)
         {
             Log.Error($"Невозможно распарсить ответ БД: {e.Message}");
-            throw e;
+            throw;
         }
         catch (Exception e)
         {
             Log.Error($"Неизвестная ошибка: {e.Message}");
-            throw e;
+            throw;
         }
     }
 
@@ -319,7 +319,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         catch (Exception e)
         {
             Log.Error($"Неизвестная ошибка: {e.Message}");
-            throw e;
+            throw;
         }
         Log.Information($"Удален компонент с GUID: {id}.");
     }
@@ -364,12 +364,12 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         catch (KeyNotFoundException e)
         {
             Log.Error($"Невозможно распарсить ответ БД: {e.Message}");
-            throw e;
+            throw;
         }
         catch (Exception e)
         {
             Log.Error($"Неизвестная ошибка: {e.Message}");
-            throw e;
+            throw;
         }        
     }
 }
