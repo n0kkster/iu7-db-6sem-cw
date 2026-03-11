@@ -616,13 +616,13 @@ public partial class Home : ComponentBase, IDisposable
             }
         }
 
-        var sPort = source.GetPort(sourceAlign);
-        var tPort = target.GetPort(targetAlign);
+        var newSourcePort = source.GetPort(sourceAlign);
+        var newTargetPort = target.GetPort(targetAlign);
 
-        if (sourcePort is not null && targetPort is not null)
+        if (newSourcePort is not null && newTargetPort is not null)
         {
-            link.SetSource(new SinglePortAnchor(sourcePort));
-            link.SetTarget(new SinglePortAnchor(targetPort));
+            link.SetSource(new SinglePortAnchor(newSourcePort));
+            link.SetTarget(new SinglePortAnchor(newTargetPort));
 
             link.Refresh();
         }
