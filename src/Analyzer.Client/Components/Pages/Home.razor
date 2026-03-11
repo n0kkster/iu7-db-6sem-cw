@@ -7,10 +7,20 @@
         
         @if (!_isSimulationMode)
         {
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Update" Class="mr-3" OnClick="RefreshGraphAsync">
+            <MudButton Variant="Variant.Outlined" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.Update" 
+                       Class="mr-3" OnClick="RefreshGraphAsync">
                 Обновить граф
             </MudButton>
-            
+            <MudButton Variant="Variant.Outlined" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.AutoAwesomeMosaic" 
+                       Class="mr-3" 
+                       OnClick="AutoArrangeNodesAsync">
+                Авто-раскладка
+            </MudButton>
+                    
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mr-3" OnClick="OpenAddComponentDialog">
                 Добавить компонент
             </MudButton>

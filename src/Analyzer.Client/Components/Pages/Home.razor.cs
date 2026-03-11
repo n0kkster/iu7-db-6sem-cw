@@ -20,6 +20,7 @@ using Blazor.Diagrams.Core.Geometry;
 using BlazorLinkModel = Blazor.Diagrams.Core.Models.LinkModel;
 using LinkModel = Models.LinkModel;
 using Microsoft.AspNetCore.Components.Forms;
+using Blazor.Diagrams.Core.Anchors;
 
 public partial class Home : ComponentBase, IDisposable
 {
@@ -188,6 +189,8 @@ public partial class Home : ComponentBase, IDisposable
                     Router = new NormalRouter()
                 };
 
+                UpdateDynamicPorts(smartLink);
+
                 ApplyLinkStyles(smartLink, config.Severity, config.Protocol);
                 Diagram?.Links.Add(smartLink);
             }
@@ -293,6 +296,104 @@ public partial class Home : ComponentBase, IDisposable
                 Diagram?.Links.Add(linkModel);
             }
         }
+    }
+
+    private async Task AutoArrangeNodesAsync()
+    {
+        if (Diagram is null || !Diagram.Nodes.Any()) 
+            return;
+
+        var nodes = Diagram.Nodes.OfType<ComponentModel>().ToList();
+        var links = Diagram.Links.OfType<LinkModel>().ToList();
+
+        var inDegree = nodes.ToDictionary(n => n.ComponentId, n => 0);
+        var outNodes = nodes.ToDictionary(n => n.ComponentId, n => new List<Guid>());
+
+        foreach (var link in links)
+        {
+            if (link.Source.Model is PortModel sourcePort &&
+                link.Target.Model is PortModel targetPort)
+            {
+                var sourceId = sourcePort.GetParent<ComponentModel>().ComponentId;
+                var targetId = targetPort.GetParent<ComponentModel>().ComponentId;
+
+                if (outNodes.ContainsKey(sourceId)) outNodes[sourceId].Add(targetId);
+                if (inDegree.ContainsKey(targetId)) inDegree[targetId]++;
+            }
+
+        }
+
+        var columns = new Dictionary<int, List<ComponentModel>>();
+        var queue = new Queue<(Guid NodeId, int Level)>();
+
+        foreach (var kvp in inDegree.Where(k => k.Value == 0))
+            queue.Enqueue((kvp.Key, 0));
+
+        if (!queue.Any()) 
+            queue.Enqueue((nodes.First().ComponentId, 0));
+
+        var visited = new HashSet<Guid>();
+
+        while (queue.Any())
+        {
+            var (currentId, level) = queue.Dequeue();
+            if (visited.Contains(currentId)) 
+                continue;
+
+            visited.Add(currentId);
+
+            if (!columns.ContainsKey(level))
+                columns[level] = [];
+
+            columns[level].Add(nodes.First(n => n.ComponentId == currentId));
+
+            foreach (var target in outNodes[currentId])
+                queue.Enqueue((target, level + 1));
+        }
+
+        var unvisited = nodes.Where(n => !visited.Contains(n.ComponentId)).ToList();
+        if (unvisited.Any())
+        {
+            if (!columns.ContainsKey(0))
+                columns[0] = [];
+
+            columns[0].AddRange(unvisited);
+        }
+
+        int startX = 100;
+        int colWidth = 350;
+        int rowHeight = 150;
+
+        foreach (var col in columns.OrderBy(c => c.Key))
+        {
+            var nodesInCol = col.Value;
+
+            int startY = 100 + ((10 - nodesInCol.Count) * rowHeight / 2);
+            if (startY < 50) 
+                startY = 50;
+
+            for (int i = 0; i < nodesInCol.Count; i++)
+            {
+                var node = nodesInCol[i];
+                node.SetPosition(startX, startY + (i * rowHeight));
+
+                // _pendingPositions[node.ComponentId] = node.Position;
+            }
+
+            startX += colWidth;
+        }
+
+        Diagram.Refresh();
+
+        // Костыль, костылечек, родненький
+        await Task.Delay(15);
+
+        foreach (var link in Diagram.Links)
+            if (link is LinkModel linkModel)
+                UpdateDynamicPorts(linkModel);
+
+        // _savePositionTimer?.Change(500, Timeout.Infinite);
+        Snackbar.Add("Авто-раскладка применена", Severity.Success);
     }
     // ===================================
 
@@ -413,24 +514,20 @@ public partial class Home : ComponentBase, IDisposable
 
             _isImportingSystem = true;
 
-            // Ограничиваем размер загружаемого файла (например, 10 МБ)
             long maxFileSize = 10 * 1024 * 1024;
 
             using var stream = file.OpenReadStream(maxFileSize);
             using var content = new MultipartFormDataContent();
 
-            // Упаковываем файл в HTTP-запрос
             var fileContent = new StreamContent(stream);
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
             content.Add(fileContent, "file", file.Name);
 
-            // Отправляем на бэкенд
             var response = await Http.PostAsync("api/v1/systems/import", content);
             response.EnsureSuccessStatusCode();
 
             Snackbar.Add("Система успешно импортирована", Severity.Success);
 
-            // Принудительно перерисовываем граф новыми данными
             await RefreshGraphAsync();
         }
         catch (Exception ex)
@@ -471,6 +568,64 @@ public partial class Home : ComponentBase, IDisposable
         linkModel.Labels.Add(new LinkLabelModel(linkModel, protocol.ToString()));
 
         Diagram?.Refresh();
+    }
+
+    private void UpdateDynamicPorts(LinkModel link)
+    {
+        if (link.Source.Model is not PortModel sourcePort ||
+            link.Target.Model is not PortModel targetPort)
+            return;
+
+        var source = sourcePort.GetParent<ComponentModel>();
+        var target = targetPort.GetParent<ComponentModel>();
+
+        var sourceCenterX = source.Position.X + 100;
+        var sourceCenterY = source.Position.Y + 40;
+        var targetCenterX = target.Position.X + 100;
+        var targetCenterY = target.Position.Y + 40;
+
+        var dx = targetCenterX - sourceCenterX;
+        var dy = targetCenterY - sourceCenterY;
+
+        PortAlignment sourceAlign, targetAlign;
+
+        if (Math.Abs(dx) > Math.Abs(dy))
+        {
+            if (dx > 0)
+            {
+                sourceAlign = PortAlignment.Right;
+                targetAlign = PortAlignment.Left;
+            }
+            else
+            {
+                sourceAlign = PortAlignment.Left;
+                targetAlign = PortAlignment.Right;
+            }
+        }
+        else
+        {
+            if (dy > 0)
+            {
+                sourceAlign = PortAlignment.Bottom;
+                targetAlign = PortAlignment.Top;
+            }
+            else
+            {
+                sourceAlign = PortAlignment.Top;
+                targetAlign = PortAlignment.Bottom;
+            }
+        }
+
+        var sPort = source.GetPort(sourceAlign);
+        var tPort = target.GetPort(targetAlign);
+
+        if (sourcePort is not null && targetPort is not null)
+        {
+            link.SetSource(new SinglePortAnchor(sourcePort));
+            link.SetTarget(new SinglePortAnchor(targetPort));
+
+            link.Refresh();
+        }
     }
     // ===================================
 
