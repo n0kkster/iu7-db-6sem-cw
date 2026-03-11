@@ -2,6 +2,13 @@ using MudBlazor.Services;
 using Analyzer.Client.Components;
 using Analyzer.Client.Infrastructure;
 
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+    .CreateLogger();
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<ErrorHandler>();
