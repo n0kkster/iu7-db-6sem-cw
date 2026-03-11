@@ -12,16 +12,19 @@ public class ComponentModel : NodeModel
 
     // Режим подсветки во время симуляции
     public bool IsFailed { get; set; } = false;
-    public bool IsDimmed { get; set; } = false; 
+    public bool IsDimmed { get; set; } = false;
 
-    public ComponentModel(Guid id, string name, ComponentType type, 
-                          Point? position = null) 
+    // Для подсветки при выборе
+    public bool IsSelected { get; set; } = false;
+
+    public ComponentModel(Guid id, string name, ComponentType type,
+                          Point? position = null)
         : base(position ?? Point.Zero)
     {
         ComponentId = id;
         Name = name;
         Type = type;
-        
+
         AddPort(PortAlignment.Top);
         AddPort(PortAlignment.Bottom);
         AddPort(PortAlignment.Left);

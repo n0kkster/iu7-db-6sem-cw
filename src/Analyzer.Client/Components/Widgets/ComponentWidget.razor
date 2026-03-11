@@ -7,7 +7,8 @@
 <MudPaper Elevation="2" 
     Class="@(@$"custom-node-wrapper pa-3 mud-theme-surface 
         {(Node.IsFailed ? "failed-node" : "")} 
-        {(Node.IsDimmed ? "dimmed-node" : "")}")" 
+        {(Node.IsDimmed ? "dimmed-node" : "")}
+        {(Node.IsSelected ? "selected-node" : "")}")" 
     Style="
         min-width: 180px; 
         border: 1px solid var(--mud-palette-lines-default); 
@@ -43,11 +44,16 @@
         animation: pulse-error 1.5s infinite;
         z-index: 1000;
     }
+    
 
     .dimmed-node {
         opacity: 0.3;
         filter: grayscale(100%);
         pointer-events: none;
+    }
+
+    .selected-node {
+        box-shadow: 0 0 15px rgb(144, 213, 255);
     }
 
     .custom-node-wrapper .diagram-port {

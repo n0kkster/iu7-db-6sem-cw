@@ -82,7 +82,7 @@
 
 <ComponentPropertiesPanel 
     IsOpen="@_isComponentPropertiesPanelOpen" 
-    ComponentId="@_selectedComponentId" 
+    ComponentModel="@_selectedComponentModel" 
     OnClose="@(() => _isComponentPropertiesPanelOpen = false)"
     OnGraphChanged="RefreshGraphAsync" 
     OnSimulateFailure="RunSimulationAsync" />

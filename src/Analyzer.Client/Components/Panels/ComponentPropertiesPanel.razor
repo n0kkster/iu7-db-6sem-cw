@@ -1,6 +1,9 @@
 @namespace Analyzer.Client.Components.Panels
 
+@using Analyzer.Client.Models
 @using Analyzer.Shared.DTO
+@using System.Runtime.InteropServices
+@using System.Net.WebSockets
 @inject HttpClient Http
 
 <MudDrawer Open="@IsOpen" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" Width="400px"
@@ -72,7 +75,7 @@
 
 @code {
     [Parameter] public bool IsOpen { get; set; }
-    [Parameter] public Guid? ComponentId { get; set; }
+    [Parameter] public ComponentModel? ComponentModel { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnGraphChanged { get; set; }
     [Parameter] public EventCallback<Guid> OnSimulateFailure { get; set; }
@@ -83,7 +86,6 @@
     private bool _isDeleting = false;
     private bool _hasChanges = false;
 
-    // Свойства с логикой отслеживания изменений
     private string ComponentName
     {
         get => _component?.Name ?? "";
@@ -115,16 +117,17 @@
         !string.IsNullOrWhiteSpace(ComponentName) &&
         !string.IsNullOrWhiteSpace(ComponentDesc);
 
-    // Подгружаем данные при открытии панели с новым ID
     protected override async Task OnParametersSetAsync()
     {
-        if (IsOpen && ComponentId.HasValue && (_component == null || _component.Id != ComponentId.Value))
+        if (IsOpen && ComponentModel is not null && 
+            (_component is null || _component.Id != ComponentModel.ComponentId))
         {
             _isLoading = true;
             _hasChanges = false;
             try 
             { 
-                _component = await Http.GetFromJsonAsync<ComponentDto>($"api/v1/components/{ComponentId.Value}"); 
+                _component = await Http.GetFromJsonAsync<ComponentDto>(
+                    $"api/v1/components/{ComponentModel.ComponentId}"); 
             }
             finally 
             { 
@@ -161,15 +164,18 @@
 
     private async Task RunSimulationAsync()
     {
-        if (ComponentId.HasValue)
+        if (ComponentModel is not null)
         {
-            await OnSimulateFailure.InvokeAsync(ComponentId.Value);
+            await OnSimulateFailure.InvokeAsync(ComponentModel.ComponentId);
             await ClosePanel();
         }
     }
 
     private async Task ClosePanel()
     {
+        ComponentModel?.IsSelected = false;
+        ComponentModel?.Refresh();
+
         _component = null;
         await OnClose.InvokeAsync();
     }

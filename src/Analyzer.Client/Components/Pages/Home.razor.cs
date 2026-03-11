@@ -45,7 +45,7 @@ public partial class Home : ComponentBase, IDisposable
     // Состояния панелей 
     // ===========================
     private bool _isComponentPropertiesPanelOpen = false;
-    private Guid? _selectedComponentId;
+    private ComponentModel? _selectedComponentModel;
 
     private bool _isLinkPropertiesPanelOpen = false;
     private LinkModel? _selectedLinkModel;
@@ -99,9 +99,9 @@ public partial class Home : ComponentBase, IDisposable
     // =================================================
     private async void OnComponentSelected(Model? model, Blazor.Diagrams.Core.Events.PointerEventArgs e)
     {
-        if (model is ComponentModel componentModel)
+        if (model is ComponentModel componentModel && 
+            _selectedComponentModel == componentModel)
         {
-            _selectedComponentId = componentModel.ComponentId;
             _isComponentPropertiesPanelOpen = true;
             _isLinkPropertiesPanelOpen = false;
             StateHasChanged();
@@ -131,11 +131,25 @@ public partial class Home : ComponentBase, IDisposable
             }
         }
         // TODO: фикс обработки клика на холст при закрытии панели
+        else if (model is ComponentModel componentModel)
+        {
+            // Убираем выделение с прошлой модели
+            _selectedComponentModel?.IsSelected = false;
+            _selectedComponentModel?.Refresh();
+
+            _selectedComponentModel = componentModel;
+            componentModel.IsSelected = true;
+            componentModel.Refresh();
+        }
         else if (model is null)
         {
+            _selectedComponentModel?.IsSelected = false;
+            _selectedComponentModel?.Refresh();
+            _selectedComponentModel = null;
+
             _isComponentPropertiesPanelOpen = false;
             _isLinkPropertiesPanelOpen = false;
-            Diagram?.UnselectAll();
+            
             StateHasChanged();
         }
     }
