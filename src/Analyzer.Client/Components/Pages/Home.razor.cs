@@ -418,7 +418,7 @@ public partial class Home : ComponentBase, IDisposable
 
         try
         {
-            var result = await Http.GetFromJsonAsync<List<Guid>>(
+            var result = await Http.GetFromJsonAsync<IReadOnlyCollection<Guid>>(
                 $"api/v1/analysis/simulate/{initialFailedComponentId}");
 
             if (result is null || !result.Any())

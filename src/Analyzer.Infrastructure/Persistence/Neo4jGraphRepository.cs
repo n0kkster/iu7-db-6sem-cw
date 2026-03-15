@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Analyzer.Application.Interfaces.Repositories;
 using Analyzer.Domain.Entities;
 using Analyzer.Domain.Enums;
+using Analyzer.Shared.DTO;
 using Neo4j.Driver;
 using Serilog;
 
@@ -324,7 +325,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         Log.Information($"Удален компонент с GUID: {id}.");
     }
 
-    public async Task<List<Component>> GetImpactedComponentsAsync(Guid failedComponentId)
+    public async Task<IReadOnlyCollection<Guid>> GetCascadingFailureImpactAsync(Guid failedComponentId)
     {
         Log.Information($"Запуск поиска критического пути для компонента: {failedComponentId}..");
 
@@ -346,17 +347,10 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                          .ExecuteAsync();
             stopWatch.Stop();
 
-            var components = result.Select(record => new Component(
-                name: record["Name"].As<string>(),
-                desription: record["Desc"].As<string>(),
-
-                type: Enum.TryParse<ComponentType>(record["Type"].As<List<string>>().First(),
-                        true, out var type)
-                        ? type : ComponentType.Unknown,
-
-                guid: Guid.TryParse(record["Id"].As<string>(), out var guid)
+            var components = result.Select(record =>    
+                        Guid.TryParse(record["Id"].As<string>(), out var guid)
                         ? guid : throw new KeyNotFoundException("Ошибка парсинга GUID")
-            )).ToList();
+            ).ToList();
 
             Log.Information($"Поиск критического пути завершен. Время исполнения: {stopWatch.ElapsedMilliseconds} мс");
             return components;
@@ -371,5 +365,25 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             Log.Error($"Неизвестная ошибка: {e.Message}");
             throw;
         }        
+    }
+
+    public Task<IReadOnlyCollection<IReadOnlyCollection<Guid>>> GetCyclicDependenciesAsync(Guid systemId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<Guid, int>> GetSinglePointsOfFailureAsync(Guid systemId, int threshold = 3)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IReadOnlyCollection<Guid>> GetDecommissioningImpactAsync(Guid targetComponentId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IReadOnlyCollection<GraphPathDto>> GetDeploymentRiskPathsAsync(Guid deployComponentId)
+    {
+        throw new NotImplementedException();
     }
 }
