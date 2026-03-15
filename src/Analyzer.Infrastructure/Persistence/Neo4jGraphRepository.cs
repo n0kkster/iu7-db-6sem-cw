@@ -29,69 +29,41 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         _queryConfig = new QueryConfig(database: "neo4j");
     }
 
-    public async Task<Guid> AddComponentAsync(ComponentType type, string name, string description)
+    public async Task<IReadOnlyCollection<Component>> GetComponentsBySystemIdAsync(Guid systemId)
     {
-        var guid = Guid.NewGuid();
-        Log.Information($"Создаем компонент типа {type} с именем {name}, GUID: {guid} и описанием {description}");
-        
-        var query = @$"
-            CREATE (:{type} {{
-                name: $Name, 
-                id: $Guid, 
-                desc: $Description
-            }})";
-
-        try
-        {
-            await _driver.ExecutableQuery(query)
-                        .WithConfig(_queryConfig)
-                        .WithParameters(new
-                        {
-                            Name = name,
-                            Guid = guid.ToString(),
-                            Description = description
-                        })
-                        .ExecuteAsync();
-
-        }
-        catch (Exception e)
-        {
-            Log.Error($"Неизвестная ошибка: {e.Message}");
-            throw;
-        }
-        Log.Information($"Создан компонент с GUID: {guid}");
-
-        return guid;
-    }
-
-    public async Task<List<Component>> GetAllComponentsAsync()
-    {
-        Log.Information("Получаем все компоненты..");
+        Log.Information($"Получаем все компоненты системы {systemId}..");
 
         var query = @"
             MATCH (n) 
+            WHERE n.system_id = $SystemId 
             RETURN n.name AS Name, 
                    n.id AS Id, 
-                   n.desc AS Desc, 
+                   n.desc AS Desc,
+                   n.system_id AS SystemId, 
                    labels(n) AS Type";
 
         try
         {
             var (result, _, _) = await _driver.ExecutableQuery(query)
                                           .WithConfig(_queryConfig)
+                                          .WithParameters(new { SystemId = systemId.ToString() })
                                           .ExecuteAsync();
 
-            var components = result.Select(record => new Component(
-                name: record["Name"].As<string>(),
-                desription: record["Desc"].As<string>(),
+            var components = result.Select(record => new Component
+            {
+                Name = record["Name"].As<string>(),
+                Description = record["Desc"].As<string>(),
 
-                type: Enum.TryParse<ComponentType>(record["Type"].As<List<string>>().First(),
+                Type = Enum.TryParse<ComponentType>(record["Type"].As<List<string>>().First(),
                         true, out var type)
                         ? type : ComponentType.Unknown,
 
-                guid: Guid.TryParse(record["Id"].As<string>(), out var guid)
-                        ? guid : throw new KeyNotFoundException("Ошибка парсинга GUID")
-            )).ToList();
+                Id = Guid.TryParse(record["Id"].As<string>(), out var guid)
+                        ? guid : throw new KeyNotFoundException("Ошибка парсинга Id"),
+
+                SystemId = Guid.TryParse(record["SystemId"].As<string>(), out var sysId)
+                        ? sysId : throw new KeyNotFoundException("Ошибка парсинга System Id")
+            }).ToList();
 
             Log.Information("Все компоненты получены.");
             return components;
@@ -117,6 +89,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             WHERE n.id = $Id 
             RETURN n.name AS Name, 
                    n.desc AS Desc, 
+                   n.system_id AS SystemId, 
                    labels(n) AS Type";
 
         try
@@ -126,7 +99,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                                          .WithParameters(new { Id = id.ToString() })
                                          .ExecuteAsync();
 
-            if ((result?.Count ?? 0) == 0)
+            if (!result.Any())
                 // TODO: переделать на норм исключение
                 throw new Exception($"Объект с GUID {id} не найден.");
 
@@ -136,11 +109,21 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                 true, out var t)
                 ? t : ComponentType.Unknown;
 
+            if (!Guid.TryParse(record["SystemId"].As<string>(), out var systemId))
+                throw new KeyNotFoundException("Ошибка парсинга System Id");
+
             var desc = record["Desc"].As<string>();
             var name = record["Name"].As<string>();
 
             Log.Information($"Получен компонент с GUID: {id}.");
-            return new(name, type, desc, id);
+            return new Component
+            {
+                Id = id,
+                Name = name,
+                Type = type,
+                Description = desc,
+                SystemId = systemId
+            };
         }
         catch (KeyNotFoundException e)
         {
@@ -152,6 +135,44 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             Log.Error($"Неизвестная ошибка: {e.Message}");
             throw;
         }
+    }
+
+    public async Task AddComponentAsync(Component component)
+    {
+        Log.Information($@"Добавляем компонент типа 
+                        {component.Type} с именем {component.Name}, 
+                        GUID: {component.Id} и описанием 
+                        {component.Description} для системы 
+                        {component.SystemId}");
+        
+        var query = @$"
+            CREATE (:{component.Type} {{
+                name: $Name, 
+                id: $Guid, 
+                desc: $Description,
+                system_id: $SystemId
+            }})";
+
+        try
+        {
+            await _driver.ExecutableQuery(query)
+                        .WithConfig(_queryConfig)
+                        .WithParameters(new
+                        {
+                            Name = component.Name,
+                            Guid = component.Id.ToString(),
+                            Description = component.Description,
+                            SystemId = component.SystemId.ToString()
+                        })
+                        .ExecuteAsync();
+
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Неизвестная ошибка: {e.Message}");
+            throw;
+        }
+        Log.Information($"Добавлен компонент с GUID: {component.Id}");
     }
 
     public async Task UpdateComponentAsync(Component component)
@@ -208,9 +229,9 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         Log.Information($"Удален компонент с GUID: {id}.");
     }
 
-    public async Task<Guid> AddLinkAsync(Guid sourceId, Guid targetId, LinkSeverity severity, ProtocolType protocol)
+    public async Task AddLinkAsync(Link link)
     {
-        Log.Information($"Создаем связь {sourceId} -> {targetId}..");
+        Log.Information($"Создаем связь {link.SourceId} -> {link.TargetId}..");
         var guid = Guid.NewGuid();
         
         var query = @$"
@@ -229,10 +250,10 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                         .WithParameters(new
                         {
                             Id = guid.ToString(),
-                            SourceId = sourceId.ToString(),
-                            TargetId = targetId.ToString(),
-                            Severity = severity.ToString(),
-                            Protocol = protocol.ToString()
+                            SourceId = link.SourceId.ToString(),
+                            TargetId = link.TargetId.ToString(),
+                            Severity = link.Severity.ToString(),
+                            Protocol = link.Protocol.ToString()
                         })
                         .ExecuteAsync();
 
@@ -243,16 +264,15 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             throw;
         }
         Log.Information($"Создана связь с GUID: {guid}");
-
-        return guid;
     }
 
-    public async Task<List<Link>> GetAllLinksAsync()
+    public async Task<IReadOnlyCollection<Link>> GetLinksBySystemIdAsync(Guid systemId)
     {
         Log.Information("Получаем все связи..");
 
         var query = @"
                 MATCH (source)-[r:DEPENDS_ON]->(target)
+                WHERE source.system_id = $SystemId AND target.system_id = $SystemId
                 RETURN source.id AS SourceId, target.id AS TargetId, 
                     r.severity AS Severity, r.protocol AS Protocol, r.id AS Id";
 
@@ -260,6 +280,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         {
             var (records, _, _) = await _driver.ExecutableQuery(query)
                                                .WithConfig(_queryConfig)
+                                               .WithParameters(new { SystemId = systemId.ToString() })
                                                .ExecuteAsync();
 
             var links = records.Select(record => new Link
@@ -289,17 +310,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             throw;
         }
     }
-
-    public async Task<List<Link>> GetComponentInboundLinksAsync(Guid id)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<List<Link>> GetComponentOutboundLinksAsync(Guid id)
-    {
-        throw new NotImplementedException();
-    }
-
+    
     public async Task DeleteLinkAsync(Guid id)
     {
         Log.Information($"Удаляем связь с GUID: {id}..");
@@ -332,10 +343,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         var query = @"
                 MATCH 
                 (failed {id: $FailedId})<-[:DEPENDS_ON*]-(affected)
-                RETURN affected.name AS Name, 
-                       affected.id AS Id, 
-                       affected.desc AS Desc, 
-                       labels(affected) AS Type";
+                RETURN affected.id AS Id";
 
         try
         {

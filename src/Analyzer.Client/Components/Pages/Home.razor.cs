@@ -64,11 +64,28 @@ public partial class Home : ComponentBase, IDisposable
     private bool _isExportingSystem = false;
     // ===========================
 
+    // Управление системами
+    // ===========================
+    private IReadOnlyCollection<ITSystemDto>? _systems;
+    private Guid? _selectedSystemId;
+    // ===========================
+
+
     // =================================================
     // ИНИЦИАЛИЗАЦИЯ И ЖИЗНЕННЫЙ ЦИКЛ
     // =================================================
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        try
+        {
+            _systems = await Http.GetFromJsonAsync<IReadOnlyCollection<ITSystemDto>>($"api/v1/systems/?teamId={Guid.Empty}");
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Ошибка загрузки списка систем: {e.Message}");
+            Snackbar.Add("Не удалось получить список систем", Severity.Error);
+        }
+
         var options = new BlazorDiagramOptions
         {
             AllowMultiSelection = false,
@@ -89,8 +106,29 @@ public partial class Home : ComponentBase, IDisposable
     {
         if (firstRender)
         {
+            if (_selectedSystemId is not null)
+            {
+                await RefreshGraphAsync();
+                StateHasChanged();        
+            }
+        }
+    }
+
+    private async Task OnSystemSelectedAsync(Guid? systemId)
+    {
+        _selectedSystemId = systemId;
+
+        _isComponentPropertiesPanelOpen = false;
+        _isLinkPropertiesPanelOpen = false;
+
+        if (_selectedSystemId is not null)
+        {
             await RefreshGraphAsync();
-            StateHasChanged();
+        }
+        else
+        {
+            Diagram?.Nodes.Clear();
+            Diagram?.Links.Clear();
         }
     }
 
@@ -216,14 +254,22 @@ public partial class Home : ComponentBase, IDisposable
 
     private async Task OpenAddComponentDialog()
     {
+        if (_selectedSystemId is null)
+            return;
+
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.Small,
             FullWidth = true,
         };
+    
+        var parameters = new DialogParameters
+        {
+            ["SelectedSystemId"] = _selectedSystemId,
+        };
 
-        var dialog = await DialogService.ShowAsync<AddComponentDialog>("Новый компонент", options);
+        var dialog = await DialogService.ShowAsync<AddComponentDialog>("Новый компонент", parameters, options);
 
         var result = await dialog.Result;
 
@@ -247,14 +293,17 @@ public partial class Home : ComponentBase, IDisposable
     // =================================================
     private async Task RefreshGraphAsync()
     {
+        if (_selectedSystemId is null)
+            return;
+
         _isLoadingGraph = true;
         Diagram?.Nodes.Clear();
         Diagram?.Links.Clear();
 
         try
         {
-            var components = await Http.GetFromJsonAsync<List<ComponentDto>>("api/v1/components/") ?? [];
-            var links = await Http.GetFromJsonAsync<List<LinkDto>>("api/v1/links/") ?? [];
+            var components = await Http.GetFromJsonAsync<List<ComponentDto>>($"api/v1/components/?systemId={_selectedSystemId}") ?? [];
+            var links = await Http.GetFromJsonAsync<List<LinkDto>>($"api/v1/links/?systemId={_selectedSystemId}") ?? [];
 
             var compDict = RenderGraph(components);
             RenderLinks(links, compDict);

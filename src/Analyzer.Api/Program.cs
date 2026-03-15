@@ -26,6 +26,8 @@ builder.Services.AddSingleton(sp =>
     GraphDatabase.Driver(neo4jUri, AuthTokens.Basic(neo4jUser, neo4jPass)));
 
 builder.Services.AddScoped<IGraphRepository, Neo4jGraphRepository>();
+builder.Services.AddScoped<ISystemsRepository, SystemsRepository>();
+
 builder.Services.AddScoped<IGraphService, GraphService>();
 builder.Services.AddScoped<IAnalysisService, AnalysisService>();
 builder.Services.AddScoped<ISystemsService, SystemsService>();

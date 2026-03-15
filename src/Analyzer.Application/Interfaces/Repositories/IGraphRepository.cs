@@ -7,17 +7,15 @@ using Analyzer.Shared.DTO;
 public interface IGraphRepository
 {
     // Компоненты
-    Task<Guid> AddComponentAsync(ComponentType type, string name, string description);
+    Task<IReadOnlyCollection<Component>> GetComponentsBySystemIdAsync(Guid systemId);
     Task<Component> GetComponentAsync(Guid id);
+    Task AddComponentAsync(Component component);
     Task UpdateComponentAsync(Component component);
     Task DeleteComponentAsync(Guid id);
-    Task<List<Component>> GetAllComponentsAsync();
 
     // Связи
-    Task<Guid> AddLinkAsync(Guid sourceId, Guid targetId, LinkSeverity severity, ProtocolType protocol);
-    Task<List<Link>> GetAllLinksAsync();
-    Task<List<Link>> GetComponentInboundLinksAsync(Guid id);
-    Task<List<Link>> GetComponentOutboundLinksAsync(Guid id);
+    Task<IReadOnlyCollection<Link>> GetLinksBySystemIdAsync(Guid systemId);
+    Task AddLinkAsync(Link link);
     Task DeleteLinkAsync(Guid id);
 
     // Анализ

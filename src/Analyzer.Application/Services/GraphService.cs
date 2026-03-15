@@ -9,23 +9,13 @@ using Analyzer.Domain.Entities;
 public class GraphService(IGraphRepository repository) : IGraphService
 {
     readonly IGraphRepository _repository = repository;
-    public async Task<Guid> CreateComponentAsync(CreateComponentDto component)
+
+    public async Task<IReadOnlyCollection<ComponentDto>> GetComponentsBySystemIdAsync(Guid systemId)
     {
-        var (type, name, desc) = component;
-        if (string.IsNullOrWhiteSpace(name))
-            throw new InvalidComponentPropertyException("Имя компонента не может быть пустой строкой");
-
-        if (string.IsNullOrWhiteSpace(name))
-            throw new InvalidComponentPropertyException("Описание компонента не может быть пустой строкой");
-
-        return await _repository.AddComponentAsync(type, name, desc);
-    }
-
-    public async Task<List<ComponentDto>> GetAllComponentsAsync()
-    {
-        var components = await _repository.GetAllComponentsAsync();
+        var components = await _repository.GetComponentsBySystemIdAsync(systemId);
         var componentDtos = components.Select(component => new ComponentDto() {
             Id = component.Id,
+            SystemId = component.SystemId,
             Type = component.Type,
             Name = component.Name,
             Description = component.Description
@@ -40,6 +30,7 @@ public class GraphService(IGraphRepository repository) : IGraphService
         ComponentDto componentDto = new()
         {
             Id = component.Id,
+            SystemId = component.SystemId,
             Type = component.Type,
             Name = component.Name,
             Description = component.Description
@@ -48,9 +39,31 @@ public class GraphService(IGraphRepository repository) : IGraphService
         return componentDto;
     }
 
+    public async Task<Guid> CreateComponentAsync(CreateComponentDto dto)
+    {
+        var component = new Component
+        {
+            Type = dto.Type,
+            Name = dto.Name,
+            Description = dto.Description,
+            SystemId = dto.SystemId
+        };
+
+        await _repository.AddComponentAsync(component);
+        return component.Id;
+    }
+
     public async Task UpdateComponentAsync(ComponentDto dto)
     {
-        Component component = new(dto.Name, dto.Type, dto.Description, dto.Id);
+        var component = new Component
+        {
+            Id = dto.Id,
+            Type = dto.Type,
+            Name = dto.Name,
+            Description = dto.Description,
+            SystemId = dto.SystemId
+        };
+
         await _repository.UpdateComponentAsync(component);
     }
 
@@ -62,11 +75,19 @@ public class GraphService(IGraphRepository repository) : IGraphService
     public async Task<Guid> CreateLinkAsync(CreateLinkDto dto)
     {
         var (sourceId, targetId, severity, protocol) = dto;
-        return await _repository.AddLinkAsync(sourceId, targetId, severity, protocol);
+        var link = new Link
+        {
+            SourceId = sourceId,
+            TargetId = targetId,
+            Severity = severity,
+            Protocol = protocol
+        };
+        await _repository.AddLinkAsync(link);
+        return link.Id;
     }
-    public async Task<List<LinkDto>> GetAllLinksAsync()
+    public async Task<IReadOnlyCollection<LinkDto>> GetLinksBySystemIdAsync(Guid systemId)
     {
-        var links = await _repository.GetAllLinksAsync();
+        var links = await _repository.GetLinksBySystemIdAsync(systemId);
         var linkDtos = links.Select(link => new LinkDto() {
             Id = link.Id,
             SourceId = link.SourceId,

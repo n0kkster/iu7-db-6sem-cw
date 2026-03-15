@@ -14,11 +14,7 @@
 
         <MudSpacer />
 
-        <MudSelect T="string" Value="@("System A (E-commerce)")" Variant="Variant.Outlined" Margin="Margin.Dense"
-                   Class="mr-4" Style="max-width: 250px;">
-            <MudSelectItem Value="@("System A (E-commerce)")" />
-            <MudSelectItem Value="@("System B (CRM)")" />
-        </MudSelect>
+        <SectionOutlet SectionName="TopbarSystemSelect" />
 
         <MudIconButton Icon="@(_isDarkMode? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
                        Color="Color.Inherit" OnClick="@ToggleThemeAsync" />
@@ -51,14 +47,15 @@
     }
 </style>
 
-@code {
+@code 
+{
     private bool _drawerOpen = true;
     private bool _isDarkMode = false;
 
     private bool _isThemeTransitioning = false;
 
     private void DrawerToggle() => _drawerOpen = !_drawerOpen;
-
+    
     private async Task ToggleThemeAsync()
     {
         _isThemeTransitioning = true;

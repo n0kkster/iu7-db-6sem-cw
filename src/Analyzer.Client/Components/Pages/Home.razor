@@ -1,29 +1,43 @@
 ﻿@page "/"
 @using Analyzer.Client.Components.Panels
 
+<SectionContent SectionName="TopbarSystemSelect">
+    <MudSelect T="Guid?" Value="@_selectedSystemId" ValueChanged="OnSystemSelectedAsync" 
+               Variant="Variant.Outlined" Margin="Margin.Dense" Class="mr-4" Style="max-width: 250px;" 
+               Placeholder="Выберите систему...">
+        @foreach (var system in _systems ?? [])
+        {
+            <MudSelectItem T="Guid?" Value="@system.Id">@system.Name</MudSelectItem>
+        }
+    </MudSelect>
+</SectionContent>
+
 <div class="dashboard-container">
     @* Верхняя панель инструментов для графа *@
     <div class="toolbar border-b mud-border-lines-default pa-3 d-flex align-center mud-theme-surface">
         
         @if (!_isSimulationMode)
         {
-            <MudButton Variant="Variant.Outlined" 
-                       Color="Color.Primary" 
-                       StartIcon="@Icons.Material.Filled.Update" 
-                       Class="mr-3" OnClick="RefreshGraphAsync">
-                Обновить граф
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" 
-                       Color="Color.Primary" 
-                       StartIcon="@Icons.Material.Filled.AutoAwesomeMosaic" 
-                       Class="mr-3" 
-                       OnClick="AutoArrangeNodesAsync">
-                Авто-раскладка
-            </MudButton>
-                    
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mr-3" OnClick="OpenAddComponentDialog">
-                Добавить компонент
-            </MudButton>
+            @if (_selectedSystemId is not null)
+            {
+                <MudButton Variant="Variant.Outlined" 
+                        Color="Color.Primary" 
+                        StartIcon="@Icons.Material.Filled.Update" 
+                        Class="mr-3" OnClick="RefreshGraphAsync">
+                    Обновить граф
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" 
+                        Color="Color.Primary" 
+                        StartIcon="@Icons.Material.Filled.AutoAwesomeMosaic" 
+                        Class="mr-3" 
+                        OnClick="AutoArrangeNodesAsync">
+                    Авто-раскладка
+                </MudButton>
+                        
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Class="mr-3" OnClick="OpenAddComponentDialog">
+                    Добавить компонент
+                </MudButton>
+            }
 
             <MudFileUpload T="IBrowserFile" Accept=".json" OnFilesChanged="ImportSystemAsync" Style="margin-top: 0;">
                 <ActivatorContent>
@@ -67,7 +81,16 @@
 
     @* Контейнер для графа *@
     <div class="graph-canvas">
-        @if (_isLoadingGraph)
+        @if (_selectedSystemId is null)
+        {
+            @* Красивая заглушка, если система еще не выбрана *@
+            <div class="d-flex flex-column align-center justify-center" style="height: 100%; color: var(--mud-palette-text-secondary);">
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Style="font-size: 4rem;" Class="mb-4" />
+                <MudText Typo="Typo.h5">Система не выбрана</MudText>
+                <MudText Typo="Typo.body1">Выберите систему в верхнем меню для загрузки графа</MudText>
+            </div>
+        }
+        else if (_isLoadingGraph)
         {
             <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="MudBlazor.Size.Large" />
         }

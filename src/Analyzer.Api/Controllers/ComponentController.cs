@@ -12,17 +12,17 @@ public class ComponentController(IGraphService graphService) : ControllerBase
     readonly IGraphService _graphService = graphService;
 
     [HttpGet]
-    public async Task<IActionResult> GetAllComponents()
+    public async Task<IActionResult> GetAllComponentsBySystemId([FromQuery] Guid systemId)
     {
         try
         {
-            var componentDtos = await _graphService.GetAllComponentsAsync();
+            var componentDtos = await _graphService.GetComponentsBySystemIdAsync(systemId);
 
             return Ok(componentDtos);
         }
         catch (KeyNotFoundException)
         {
-            return Problem(detail: "Ошибка получения компонента из базы данных", statusCode: 500);
+            return Problem(detail: "Ошибка получения компонентов из базы данных", statusCode: 500);
         }
         catch
         {

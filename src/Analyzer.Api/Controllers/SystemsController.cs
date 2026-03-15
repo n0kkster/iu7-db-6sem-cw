@@ -3,7 +3,6 @@ namespace Analyzer.Api.Controllers;
 using Analyzer.Application.Interfaces.Services;
 using Analyzer.Shared.DTO;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
 
@@ -13,14 +12,29 @@ public class SystemsController(ISystemsService systemsService) : ControllerBase
 {
     readonly ISystemsService _systemsService = systemsService;
 
-    private record SystemStorage(List<ComponentDto> Components, List<LinkDto> Links);
+    private record SystemStorage(IReadOnlyCollection<ComponentDto> Components, 
+                                 IReadOnlyCollection<LinkDto> Links);
 
-    [HttpGet("export")]
-    public async Task<IActionResult> ExportSystem()
+    [HttpGet]    
+    public async Task<IActionResult> ListSystemsByTeam([FromQuery] Guid teamId)
     {
         try
         {
-            var (components, links) = await _systemsService.ExportSystem();
+            var systems = await _systemsService.GetSystemsByTeamIdAsync(teamId);
+            return Ok(systems);
+        }
+        catch
+        {
+            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
+        }
+    }
+
+    [HttpGet("export")]
+    public async Task<IActionResult> ExportSystem([FromQuery] Guid systemId)
+    {
+        try
+        {
+            var (components, links) = await _systemsService.ExportSystem(systemId);
             var jsonString = JsonSerializer.Serialize(new SystemStorage(components, links));
             var bytes = Encoding.UTF8.GetBytes(jsonString);
             var fileName = $"system-backup-{DateTime.Now:yyyy-MM-dd_HH-mm}.json";
@@ -49,7 +63,7 @@ public class SystemsController(ISystemsService systemsService) : ControllerBase
 
             var (components, links) = result;
 
-            var guid = await _systemsService.ImportSystem(components, links);
+            var guid = await _systemsService.ImportSystem(components, links, "N", "D");
 
             return Ok(guid);
         }

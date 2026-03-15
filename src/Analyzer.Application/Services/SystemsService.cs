@@ -1,25 +1,47 @@
 namespace Analyzer.Application.Services;
 
+using Analyzer.Application.Interfaces.Repositories;
 using Analyzer.Application.Interfaces.Services;
+using Analyzer.Domain.Entities;
 using Analyzer.Shared.DTO;
 
-public class SystemsService(IGraphService graphService) : ISystemsService
+public class SystemsService(IGraphService graphService, ISystemsRepository systemsRepository) : ISystemsService
 {
     readonly IGraphService _graphService = graphService;
+    readonly ISystemsRepository _systemsRepository = systemsRepository;
 
-    public async Task<(List<ComponentDto>, List<LinkDto>)> ExportSystem()
+    public async Task<IReadOnlyCollection<ITSystemDto>> GetSystemsByTeamIdAsync(Guid teamId)
     {
-        var components = await _graphService.GetAllComponentsAsync();
-        var links = await _graphService.GetAllLinksAsync();
+        var systems = await _systemsRepository.GetByTeamIdAsync(teamId);
+        return systems.Select(system => new ITSystemDto(
+            system.Id,
+            system.Name,
+            system.Description,
+            system.CreatedAt,
+            system.UpdatedAt
+        )).ToList();
+    }
+
+    public async Task<(IReadOnlyCollection<ComponentDto>, IReadOnlyCollection<LinkDto>)> ExportSystem(Guid systemId)
+    {
+        var components = await _graphService.GetComponentsBySystemIdAsync(systemId);
+        var links = await _graphService.GetLinksBySystemIdAsync(systemId);
         return (components, links);
     }
 
-    public async Task<Guid> ImportSystem(List<ComponentDto> components, List<LinkDto> links)
+    public async Task<Guid> ImportSystem(IReadOnlyCollection<ComponentDto> components, 
+                                         IReadOnlyCollection<LinkDto> links,
+                                         string name, string description)
     {
         var guidMap = new Dictionary<Guid, Guid>();
+        
+        var newSystem = new ITSystem(name, description);
+        await _systemsRepository.AddAsync(newSystem);
+
         foreach (var component in components)
         {
             var newGuid = await _graphService.CreateComponentAsync(new (
+                newSystem.Id,
                 component.Type,
                 component.Name,
                 component.Description
@@ -43,10 +65,10 @@ public class SystemsService(IGraphService graphService) : ISystemsService
             }
             else
             {
-                Console.WriteLine($"Откуда-то взялась битая ссылка? ({link.SourceId}, {link.TargetId})");
+                Console.WriteLine($"Откуда-то взялась битая ссылка? ({link.SourceId} -> {link.TargetId})");
             }
         }
 
-        return Guid.NewGuid();
+        return newSystem.Id;
     }
 }

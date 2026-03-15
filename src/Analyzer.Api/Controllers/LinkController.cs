@@ -11,11 +11,11 @@ public class LinkController(IGraphService graphService) : ControllerBase
     readonly IGraphService _graphService = graphService;
 
     [HttpGet]
-    public async Task<IActionResult> GetAllLinks()
+    public async Task<IActionResult> GetAllLinksBySystemId([FromQuery] Guid systemId)
     {
         try
         {
-            var componentDtos = await _graphService.GetAllLinksAsync();
+            var componentDtos = await _graphService.GetLinksBySystemIdAsync(systemId);
 
             return Ok(componentDtos);
         }

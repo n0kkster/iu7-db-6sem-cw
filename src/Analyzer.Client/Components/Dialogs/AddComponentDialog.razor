@@ -81,6 +81,9 @@
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = default!;
 
+    [Parameter] 
+    public Guid SelectedSystemId { get; set; }
+
     private string? _name;
     private string? _desription;
     private ComponentType _type;
@@ -100,7 +103,7 @@
 
         try
         {
-            CreateComponentDto dto = new CreateComponentDto(_type, _name ?? "", _desription ?? "");
+            CreateComponentDto dto = new CreateComponentDto(SelectedSystemId, _type, _name ?? "", _desription ?? "");
             var resp = await Http.PostAsJsonAsync<CreateComponentDto>("/api/v1/components/", dto);            
             _createdGuid = await resp.Content.ReadFromJsonAsync<Guid>(); 
         }
