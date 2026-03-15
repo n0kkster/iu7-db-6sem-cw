@@ -1,4 +1,4 @@
-namespace Analyzer.Application.Interfaces;
+namespace Analyzer.Application.Interfaces.Services;
 
 public interface IAnalysisService
 {

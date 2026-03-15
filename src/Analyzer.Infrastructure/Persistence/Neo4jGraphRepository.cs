@@ -1,7 +1,7 @@
 namespace Analyzer.Infrastructure.Persistence;
 
 using System.Diagnostics;
-using Analyzer.Application.Interfaces;
+using Analyzer.Application.Interfaces.Repositories;
 using Analyzer.Domain.Entities;
 using Analyzer.Domain.Enums;
 using Neo4j.Driver;

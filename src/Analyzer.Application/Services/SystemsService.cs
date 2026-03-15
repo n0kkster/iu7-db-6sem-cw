@@ -1,6 +1,6 @@
 namespace Analyzer.Application.Services;
 
-using Analyzer.Application.Interfaces;
+using Analyzer.Application.Interfaces.Services;
 using Analyzer.Shared.DTO;
 
 public class SystemsService(IGraphService graphService) : ISystemsService

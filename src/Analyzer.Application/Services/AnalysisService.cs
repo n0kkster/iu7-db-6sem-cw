@@ -1,6 +1,7 @@
 namespace Analyzer.Application.Services;
 
-using Analyzer.Application.Interfaces;
+using Analyzer.Application.Interfaces.Services;
+using Analyzer.Application.Interfaces.Repositories;
 
 public class AnalysisService(IGraphRepository repository) : IAnalysisService
 {

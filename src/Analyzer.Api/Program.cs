@@ -1,5 +1,6 @@
 using Neo4j.Driver;
-using Analyzer.Application.Interfaces;
+using Analyzer.Application.Interfaces.Repositories;
+using Analyzer.Application.Interfaces.Services;
 using Analyzer.Application.Services;
 using Analyzer.Infrastructure.Persistence;
 using Serilog;

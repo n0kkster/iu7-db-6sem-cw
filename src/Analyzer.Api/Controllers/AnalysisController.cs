@@ -1,6 +1,6 @@
 namespace Analyzer.Api.Controllers;
 
-using Analyzer.Application.Interfaces;
+using Analyzer.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]

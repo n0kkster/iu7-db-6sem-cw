@@ -1,4 +1,4 @@
-namespace Analyzer.Application.Interfaces;
+namespace Analyzer.Application.Interfaces.Services;
 
 using Analyzer.Shared.DTO;
 

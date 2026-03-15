@@ -1,4 +1,4 @@
-namespace Analyzer.Application.Interfaces;
+namespace Analyzer.Application.Interfaces.Repositories;
 
 using Analyzer.Domain.Entities;
 using Analyzer.Domain.Enums;
