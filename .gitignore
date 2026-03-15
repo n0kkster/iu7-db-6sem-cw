@@ -300,3 +300,6 @@ report/out
 
 # Some misc files
 misc/
+
+# draw.io backups
+report/img/*.bkp
