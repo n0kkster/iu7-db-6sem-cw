@@ -303,3 +303,6 @@ misc/
 
 # draw.io backups
 report/img/*.bkp
+
+# Postgres
+.postgres/
