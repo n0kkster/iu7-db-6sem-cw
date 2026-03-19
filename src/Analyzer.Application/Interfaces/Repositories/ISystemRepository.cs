@@ -4,7 +4,7 @@ namespace Analyzer.Application.Interfaces.Repositories;
 
 public interface ISystemRepository
 {
-    Task<ITSystem> GetByIdAsync(Guid systemId);
+    Task<ITSystem?> GetByIdAsync(Guid systemId);
     
     Task<IReadOnlyCollection<ITSystem>> GetByTeamIdAsync(Guid teamId);
     

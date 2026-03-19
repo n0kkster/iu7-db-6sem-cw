@@ -18,7 +18,8 @@ public class SystemService(IGraphService graphService, ISystemRepository systems
             system.Name,
             system.Description,
             system.CreatedAt,
-            system.UpdatedAt
+            system.UpdatedAt,
+            system.TeamId
         )).ToList();
     }
 
@@ -35,14 +36,12 @@ public class SystemService(IGraphService graphService, ISystemRepository systems
     {
         var guidMap = new Dictionary<Guid, Guid>();
         
-        var newSystem = new ITSystem(systemDto.Name, systemDto.Description);
-        await _systemsRepository.AddAsync(newSystem);
+        var newSystemId = await CreateSystemAsync(systemDto);
 
         foreach (var component in components)
         {
             var newGuid = await _graphService.CreateComponentAsync(new (
-                // TODO: change to new system id
-                component.SystemId,
+                newSystemId,
                 component.Type,
                 component.Name,
                 component.Description
@@ -70,26 +69,31 @@ public class SystemService(IGraphService graphService, ISystemRepository systems
             }
         }
 
+        return newSystemId;
+    }
+
+    public async Task<Guid> CreateSystemAsync(CreateITSystemDto dto)
+    {
+        var newSystem = new ITSystem(dto.Name, dto.Description, dto.TeamId);
+        await _systemsRepository.AddAsync(newSystem);
+
         return newSystem.Id;
     }
 
-    public Task<ITSystemDto> GetSystemDetailsAsync(Guid systemId)
+    public async Task UpdateSystemAsync(ITSystemDto dto)
     {
-        throw new NotImplementedException();
+        var system = await _systemsRepository.GetByIdAsync(dto.Id)
+            ?? throw new KeyNotFoundException("Система не найдена");
+
+        system.UpdateDetails(dto.Name, dto.Description);
     }
 
-    public Task<Guid> CreateSystemAsync(CreateITSystemDto dto)
+    public async Task DeleteSystemAsync(Guid systemId)
     {
-        throw new NotImplementedException();
-    }
-
-    public Task UpdateSystemAsync(ITSystemDto dto)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task DeleteSystemAsync(Guid systemId)
-    {
-        throw new NotImplementedException();
+        var components = await _graphService.GetComponentsBySystemIdAsync(systemId);
+        foreach (var component in components)
+            await _graphService.DeleteComponentAsync(component.Id);
+            
+        await _systemsRepository.DeleteAsync(systemId);
     }
 }
