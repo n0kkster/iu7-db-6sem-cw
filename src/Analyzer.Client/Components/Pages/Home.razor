@@ -1,6 +1,8 @@
 ﻿@page "/"
 @using Analyzer.Client.Components.Panels
 
+@attribute [Authorize]
+
 <SectionContent SectionName="TopbarSystemSelect">
     <MudSelect T="Guid?" Value="@_selectedSystemId" ValueChanged="OnSystemSelectedAsync" 
                Variant="Variant.Outlined" Margin="Margin.Dense" Class="mr-4" Style="max-width: 250px;" 

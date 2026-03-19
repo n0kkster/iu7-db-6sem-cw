@@ -1,13 +1,17 @@
 namespace Analyzer.Client.Infrastructure;
 
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
 using MudBlazor;
+using Microsoft.AspNetCore.Components;
 
-public class ErrorHandler(ISnackbar snackbar) : DelegatingHandler
+public class ErrorHandler(ISnackbar snackbar, NavigationManager navManager) : DelegatingHandler
 {
-    private readonly ISnackbar _snackbar = snackbar;
     private record HttpErrorResponse(string Type, string Title, int Status, string Detail, string TraceId);
 
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request, CancellationToken cancellationToken)
     {
         try
         {
@@ -15,14 +19,49 @@ public class ErrorHandler(ISnackbar snackbar) : DelegatingHandler
 
             if (!response.IsSuccessStatusCode)
             {
-                await response.Content.LoadIntoBufferAsync();
-                var errorContent = await response.Content.ReadFromJsonAsync<HttpErrorResponse>(cancellationToken);
-                
-                var errorMessage = errorContent is null 
-                    ? $"Ошибка сервера: {(int)response.StatusCode}" 
-                    : errorContent.Detail;
+                string errorMessage;
 
-                _snackbar.Add(errorMessage, Severity.Error, config =>
+                if (response.StatusCode == HttpStatusCode.Unauthorized) // 401
+                {
+                    errorMessage = "Сессия истекла или вы не авторизованы. Пожалуйста, войдите заново.";
+                    // navManager.NavigateTo($"/login", forceLoad: true);
+                }
+                else if (response.StatusCode == HttpStatusCode.Forbidden) // 403
+                {
+                    errorMessage = "У вас нет прав для выполнения этой операции.";
+                }
+                else
+                {
+                    var mediaType = response.Content.Headers.ContentType?.MediaType;
+                    
+                    if (mediaType is not null && 
+                        (mediaType.Contains("application/json") || mediaType.Contains("problem+json")))
+                    {
+                        try
+                        {
+                            var errorContent = await response.Content
+                                .ReadFromJsonAsync<HttpErrorResponse>(cancellationToken: cancellationToken);
+                            
+                            errorMessage = 
+                                errorContent?.Detail ?? 
+                                errorContent?.Title ?? 
+                                $"Ошибка сервера: {response.StatusCode}";
+                        }
+                        catch (JsonException)
+                        {
+                            errorMessage = $"Ошибка сервера: {response.StatusCode}";
+                        }
+                    }
+                    else
+                    {
+                        var rawContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                        errorMessage = string.IsNullOrWhiteSpace(rawContent) 
+                            ? $"Ошибка сервера: {(int)response.StatusCode}" 
+                            : $"Ошибка {(int)response.StatusCode}: {rawContent}";
+                    }
+                }
+
+                snackbar.Add(errorMessage, Severity.Error, config =>
                 {
                     config.ShowCloseIcon = true;
                     config.RequireInteraction = true;
@@ -33,13 +72,12 @@ public class ErrorHandler(ISnackbar snackbar) : DelegatingHandler
         }
         catch (HttpRequestException)
         {
-            _snackbar.Add("Нет связи с сервером. Проверьте подключение.", Severity.Error);
+            snackbar.Add("Нет связи с сервером. Проверьте подключение.", Severity.Error);
             throw;
         }
         catch (Exception e)
         {
-            Console.WriteLine($"{e.Message}");
-            _snackbar.Add("Неизвестная ошибка", Severity.Error);
+            Console.WriteLine($"[ErrorHandler] Exception: {e.Message}");
             throw;
         }
     }

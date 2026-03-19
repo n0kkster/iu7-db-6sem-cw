@@ -1,0 +1,81 @@
+@page "/login"
+@attribute [AllowAnonymous]
+
+@using Analyzer.Client.Services
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using System.Security.Claims
+@using Analyzer.Shared.DTO
+@using Analyzer.Client.Utils
+
+@inject NavigationManager NavManager
+@inject IAuthService AuthService
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center mud-width-full" Style="height: 100vh;">
+    <MudPaper Elevation="3" Class="pa-8" Width="100%" MaxWidth="500px">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6 font-bold" Color="Color.Primary">Вход в систему</MudText>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_errorMessage</MudAlert>
+        }
+
+        <EditForm method="post" FormName="LoginForm" OnSubmit="HandleLogin" Model="_dto">            
+            <MudTextField @bind-Value="_dto.Username" 
+                          Label="Username" 
+                          Variant="Variant.Outlined" 
+                          Class="mb-4" 
+                          Name="_dto.Username" />
+                          
+            <MudTextField @bind-Value="_dto.Password" 
+                          Label="Пароль" 
+                          InputType="InputType.Password" 
+                          Variant="Variant.Outlined" 
+                          Class="mb-6" 
+                          Name="_dto.Password" />
+            
+            <button type="submit" 
+                    class="mud-button-root mud-button mud-button-filled mud-button-filled-primary mud-button-size-large mud-width-full" 
+                    disabled="@_isSubmitting">
+                Войти
+            </button>
+        </EditForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [CascadingParameter]
+    public HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm(FormName = "LoginForm")]
+    public LoginDto _dto { get; set; } = new();
+
+    private bool _isSubmitting;
+    private string _errorMessage = string.Empty;
+
+    public async Task HandleLogin()
+    {
+        _isSubmitting = true;
+        _errorMessage = string.Empty;
+
+        var result = await AuthService.LoginAsync(_dto);
+
+        if (!result.Success || result.Principal == null)
+        {
+            _errorMessage = result.ErrorMessage ?? "Неизвестная ошибка";
+            _isSubmitting = false;
+            return;
+        }
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            result.Principal,
+            new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
+            });
+
+        NavManager.NavigateTo("/");
+    }
+}
