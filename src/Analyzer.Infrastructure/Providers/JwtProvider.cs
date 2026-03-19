@@ -18,6 +18,7 @@ public class JwtProvider(IConfiguration config) : IJwtProvider
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Name, user.Username),
             new(JwtRegisteredClaimNames.Email, user.Email),
             new(ClaimTypes.Role, role)
         };

@@ -7,6 +7,11 @@ using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 
 using Microsoft.OpenApi;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Analyzer.Application.Interfaces.Providers;
+using Analyzer.Infrastructure.Providers;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(theme: AnsiConsoleTheme.Code)
@@ -25,12 +30,16 @@ var neo4jPass = builder.Configuration["Neo4jSettings:Password"];
 builder.Services.AddSingleton(sp =>
     GraphDatabase.Driver(neo4jUri, AuthTokens.Basic(neo4jUser, neo4jPass)));
 
+builder.Services.AddScoped<IJwtProvider, JwtProvider>();
+
 builder.Services.AddScoped<IGraphRepository, Neo4jGraphRepository>();
-builder.Services.AddScoped<ISystemsRepository, SystemsRepository>();
+builder.Services.AddScoped<ISystemRepository, SystemRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IGraphService, GraphService>();
 builder.Services.AddScoped<IAnalysisService, AnalysisService>();
-builder.Services.AddScoped<ISystemsService, SystemsService>();
+builder.Services.AddScoped<ISystemService, SystemService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -68,6 +77,23 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -86,6 +112,9 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowBlazorHttpsOrigin");
 app.UseCors("AllowBlazorHttpOrigin");
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

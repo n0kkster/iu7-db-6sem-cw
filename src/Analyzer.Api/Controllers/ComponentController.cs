@@ -2,9 +2,11 @@ namespace Analyzer.Api.Controllers;
 
 using Analyzer.Application.Interfaces.Services;
 using Analyzer.Shared.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/components")]
 public class ComponentController(IGraphService graphService) : ControllerBase
@@ -30,6 +32,7 @@ public class ComponentController(IGraphService graphService) : ControllerBase
         }
     }
 
+    [Authorize (Roles = "Architect")]
     [HttpPost]
     public async Task<IActionResult> CreateComponent([FromBody] CreateComponentDto dto)
     {
@@ -57,6 +60,7 @@ public class ComponentController(IGraphService graphService) : ControllerBase
         }
     }
 
+    [Authorize (Roles = "Architect")]
     [HttpPut]
     public async Task<IActionResult> UpdateComponent([FromBody] ComponentDto dto)
     {
@@ -73,6 +77,7 @@ public class ComponentController(IGraphService graphService) : ControllerBase
         }
     }
 
+    [Authorize (Roles = "Architect")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteComponent(Guid id)
     {

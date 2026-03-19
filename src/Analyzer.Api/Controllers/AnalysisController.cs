@@ -1,8 +1,10 @@
 namespace Analyzer.Api.Controllers;
 
 using Analyzer.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/analysis")]
 public class AnalysisController(IAnalysisService analysisService) : ControllerBase

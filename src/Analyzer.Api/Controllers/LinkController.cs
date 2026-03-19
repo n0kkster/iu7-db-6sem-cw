@@ -2,8 +2,10 @@ namespace Analyzer.Api.Controllers;
 
 using Analyzer.Application.Interfaces.Services;
 using Analyzer.Shared.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/links")]
 public class LinkController(IGraphService graphService) : ControllerBase
