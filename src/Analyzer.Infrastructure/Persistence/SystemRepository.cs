@@ -3,7 +3,7 @@ using Analyzer.Domain.Entities;
 
 namespace Analyzer.Infrastructure.Persistence;
 
-public class SystemsRepository : ISystemsRepository
+public class SystemRepository : ISystemRepository
 {
     public async Task AddAsync(ITSystem system)
     {

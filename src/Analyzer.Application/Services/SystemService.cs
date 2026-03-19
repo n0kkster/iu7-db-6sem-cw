@@ -5,10 +5,10 @@ using Analyzer.Application.Interfaces.Services;
 using Analyzer.Domain.Entities;
 using Analyzer.Shared.DTO;
 
-public class SystemsService(IGraphService graphService, ISystemsRepository systemsRepository) : ISystemsService
+public class SystemService(IGraphService graphService, ISystemRepository systemsRepository) : ISystemService
 {
     readonly IGraphService _graphService = graphService;
-    readonly ISystemsRepository _systemsRepository = systemsRepository;
+    readonly ISystemRepository _systemsRepository = systemsRepository;
 
     public async Task<IReadOnlyCollection<ITSystemDto>> GetSystemsByTeamIdAsync(Guid teamId)
     {
@@ -31,17 +31,18 @@ public class SystemsService(IGraphService graphService, ISystemsRepository syste
 
     public async Task<Guid> ImportSystem(IReadOnlyCollection<ComponentDto> components, 
                                          IReadOnlyCollection<LinkDto> links,
-                                         string name, string description)
+                                         CreateITSystemDto systemDto)
     {
         var guidMap = new Dictionary<Guid, Guid>();
         
-        var newSystem = new ITSystem(name, description);
+        var newSystem = new ITSystem(systemDto.Name, systemDto.Description);
         await _systemsRepository.AddAsync(newSystem);
 
         foreach (var component in components)
         {
             var newGuid = await _graphService.CreateComponentAsync(new (
-                newSystem.Id,
+                // TODO: change to new system id
+                component.SystemId,
                 component.Type,
                 component.Name,
                 component.Description
@@ -70,5 +71,25 @@ public class SystemsService(IGraphService graphService, ISystemsRepository syste
         }
 
         return newSystem.Id;
+    }
+
+    public Task<ITSystemDto> GetSystemDetailsAsync(Guid systemId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Guid> CreateSystemAsync(CreateITSystemDto dto)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task UpdateSystemAsync(ITSystemDto dto)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task DeleteSystemAsync(Guid systemId)
+    {
+        throw new NotImplementedException();
     }
 }

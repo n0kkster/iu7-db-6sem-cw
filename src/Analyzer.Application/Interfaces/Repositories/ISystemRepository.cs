@@ -2,7 +2,7 @@ using Analyzer.Domain.Entities;
 
 namespace Analyzer.Application.Interfaces.Repositories;
 
-public interface ISystemsRepository
+public interface ISystemRepository
 {
     Task<ITSystem> GetByIdAsync(Guid systemId);
     
