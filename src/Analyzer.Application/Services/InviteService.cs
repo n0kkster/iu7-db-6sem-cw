@@ -5,14 +5,14 @@ using Analyzer.Shared.DTO;
 
 namespace Analyzer.Application.Services;
 
-public class InviteService(IInviteRepository inviteRepository, ITeamRepository teamRepository) : IInviteService
+public class InviteService(IInviteRepository inviteRepository, ITeamService teamService) : IInviteService
 {
     private readonly IInviteRepository _inviteRepository = inviteRepository;
-    private readonly ITeamRepository _teamRepository = teamRepository;
+    private readonly ITeamService _teamService = teamService;
 
     public async Task<string> GenerateInviteAsync(GenerateInviteDto dto)
     {
-        if (await _teamRepository.GetByIdAsync(dto.TeamId) is null) 
+        if (!await _teamService.ExistsAsync(dto.TeamId)) 
             throw new KeyNotFoundException("Команда не найдена");
 
         var invite = new Invite(dto.Email, dto.ValidForDays, dto.TeamId, dto.Role);
@@ -27,6 +27,8 @@ public class InviteService(IInviteRepository inviteRepository, ITeamRepository t
             ?? throw new KeyNotFoundException("Приглашение не найдено или код неверен");
 
         invite.ActivateUser(user); 
+        await _teamService.AddMemberAsync(invite.TeamId, user);
+        
         await _inviteRepository.UpdateAsync(invite);
     }
 
