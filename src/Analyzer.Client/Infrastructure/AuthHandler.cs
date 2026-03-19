@@ -18,7 +18,7 @@ public class JwtAuthorizationHandler(AuthenticationStateProvider authStateProvid
         var authState = await _authStateProvider.GetAuthenticationStateAsync();
         
         var token = authState.User.FindFirst("jwt-api-token")?.Value;
-        System.Console.WriteLine($"jwt token: {token}");
+
         if (!string.IsNullOrEmpty(token))
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
