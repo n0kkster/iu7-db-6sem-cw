@@ -20,6 +20,8 @@ public class User
 
         Email = string.IsNullOrWhiteSpace(email)
               ? throw new ArgumentException("Email обязателен", nameof(email))
+              : !IsValidEmail(email) 
+              ? throw new ArgumentException("Email невалиден", nameof(email))
               : email;
 
         PasswordHash = string.IsNullOrWhiteSpace(passwordHash)
@@ -33,11 +35,13 @@ public class User
     public void UpdateProfile(string username, string email)
     {
         Username = string.IsNullOrWhiteSpace(username)
-                 ? Username
+                 ? throw new ArgumentException("Имя пользователя обязательно", nameof(username))
                  : username;
 
         Email = string.IsNullOrWhiteSpace(email)
-              ? Email
+              ? throw new ArgumentException("Email обязателен", nameof(email))
+              : !IsValidEmail(email) 
+              ? throw new ArgumentException("Email невалиден", nameof(email))
               : email;
     }
 
@@ -53,7 +57,7 @@ public class User
     {
         if (Role != Role.Unauthorized)
             throw new InvalidOperationException("Роль пользователя уже установлена");
-                    
+
         Role = newRole;
     }
 
@@ -61,7 +65,24 @@ public class User
     {
         if (TeamId != Guid.Empty)
             throw new InvalidOperationException("Пользователь уже находится в команде");
-                    
+
         TeamId = teamId;
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        var trimmedEmail = email.Trim();
+
+        if (trimmedEmail.EndsWith("."))
+            return false; 
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == trimmedEmail;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
