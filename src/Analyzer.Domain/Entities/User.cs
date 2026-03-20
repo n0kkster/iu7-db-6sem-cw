@@ -51,7 +51,7 @@ public class User
 
     internal void SetRole(Role newRole)
     {
-        if (newRole != Role.Unauthorized)
+        if (Role != Role.Unauthorized)
             throw new InvalidOperationException("Роль пользователя уже установлена");
                     
         Role = newRole;
@@ -59,7 +59,7 @@ public class User
 
     internal void AttachToTeam(Guid teamId)
     {
-        if (teamId != Guid.Empty)
+        if (TeamId != Guid.Empty)
             throw new InvalidOperationException("Пользователь уже находится в команде");
                     
         TeamId = teamId;
