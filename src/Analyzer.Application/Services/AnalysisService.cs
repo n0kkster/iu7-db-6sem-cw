@@ -46,7 +46,6 @@ public class AnalysisService(IGraphRepository repository) : IAnalysisService
             ImpactedComponentIds = impactedIds.ToList()
         };
 
-        // Бизнес-логика: формирование рекомендаций
         if (result.IsSafeToDecommission)
         {
             result.Recommendation = "Компонент можно безопасно отключить. От него не зависят другие узлы.";
@@ -62,7 +61,6 @@ public class AnalysisService(IGraphRepository repository) : IAnalysisService
 
     public async Task<DeploymentRiskResultDto> AssessDeploymentRiskAsync(Guid deployComponentId)
     {
-        // Получаем все возможные пути зависимости к обновляемому узлу
         var paths = await _repository.GetDeploymentRiskPathsAsync(deployComponentId);
 
         var result = new DeploymentRiskResultDto
@@ -89,9 +87,9 @@ public class AnalysisService(IGraphRepository repository) : IAnalysisService
             {
                 pathScore += severity switch
                 {
-                    LinkSeverity.High => 10,  // Критичная связь дает огромный риск
+                    LinkSeverity.High => 10,  // Критичная связь дает большой риск
                     LinkSeverity.Mid => 3,    // Средняя связь дает умеренный риск
-                    LinkSeverity.Low => 1,    // Низкая связь (с фоллбеком) почти не дает риска
+                    LinkSeverity.Low => 1,    // Низкая связь почти не дает риска
                     _ => 0
                 };
             }
