@@ -5,4 +5,5 @@
   <Project Path="Analyzer.Domain/Analyzer.Domain.csproj" />
   <Project Path="Analyzer.Infrastructure/Analyzer.Infrastructure.csproj" />
   <Project Path="Analyzer.Shared/Analyzer.Shared.csproj" />
+  <Project Path="Analyzer.Tests/Analyzer.Tests.csproj" />
 </Solution>

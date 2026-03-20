@@ -1,0 +1,184 @@
+using Analyzer.Application.Interfaces.Providers;
+using Analyzer.Application.Interfaces.Repositories;
+using Analyzer.Application.Interfaces.Services;
+using Analyzer.Application.Services;
+using Analyzer.Domain.Entities;
+using Analyzer.Shared.DTO;
+using Moq;
+
+namespace Analyzer.Tests.Services;
+
+public class UserServiceTests
+{
+    private readonly Mock<IUserRepository> _userRepoMock;
+    private readonly Mock<IJwtProvider> _jwtProviderMock;
+    private readonly Mock<IInviteService> _inviteServiceMock;
+    private readonly UserService _userService;
+
+    public UserServiceTests()
+    {
+        _userRepoMock = new Mock<IUserRepository>();
+        _jwtProviderMock = new Mock<IJwtProvider>();
+        _inviteServiceMock = new Mock<IInviteService>();
+        _userService = new UserService(_userRepoMock.Object, _jwtProviderMock.Object, _inviteServiceMock.Object);
+    }
+
+    #region Registration & Login
+
+    [Fact]
+    public async Task RegisterAsync_ValidDto_HashesPasswordAcceptsInviteAndSaves()
+    {
+        // Arrange
+        var dto = new RegisterUserDto("new_user", "test@test.com", "MySecretPass123!", "INVITE_CODE");
+        _userRepoMock.Setup(r => r.ExistsByUsernameAsync(dto.Username)).ReturnsAsync(false);
+
+        // Act
+        var newUserId = await _userService.RegisterAsync(dto);
+
+        // Assert
+        _inviteServiceMock.Verify(i => i.AcceptInviteAsync("INVITE_CODE", It.Is<User>(u =>
+            u.Username == "new_user" &&
+            u.Email == "test@test.com" &&
+            BCrypt.Net.BCrypt.EnhancedVerify("MySecretPass123!", u.PasswordHash))),
+            Times.Once);
+
+        _userRepoMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Once);
+        Assert.NotEqual(Guid.Empty, newUserId);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_UsernameTaken_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var dto = new RegisterUserDto("taken_user", "test@test.com", "pass", "code");
+        _userRepoMock.Setup(r => r.ExistsByUsernameAsync("taken_user")).ReturnsAsync(true);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _userService.RegisterAsync(dto));
+        Assert.Contains("уже зарегистрирован", ex.Message);
+        _userRepoMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task LoginAsync_ValidCredentials_ReturnsJwt()
+    {
+        // Arrange
+        var password = "CorrectPassword";
+        var hash = BCrypt.Net.BCrypt.EnhancedHashPassword(password);
+        var user = new User("test_user", "test@test.com", hash);
+
+        _userRepoMock.Setup(r => r.GetByUsernameAsync("test_user")).ReturnsAsync(user);
+        _jwtProviderMock.Setup(j => j.GenerateToken(user, It.IsAny<string>())).Returns("token_abc_123");
+
+        var dto = new LoginDto { Username = "test_user", Password = password };
+
+        // Act
+        var result = await _userService.LoginAsync(dto);
+
+        // Assert
+        Assert.Equal("token_abc_123", result);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WrongPassword_ThrowsUnauthorizedAccessException()
+    {
+        // Arrange
+        var hash = BCrypt.Net.BCrypt.EnhancedHashPassword("CorrectPassword");
+        var user = new User("test_user", "test@test.com", hash);
+        _userRepoMock.Setup(r => r.GetByUsernameAsync("test_user")).ReturnsAsync(user);
+
+        var dto = new LoginDto { Username = "test_user", Password = "WrongPassword" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _userService.LoginAsync(dto));
+    }
+    [Fact]
+    public async Task LoginAsync_UserNotFound_ThrowsUnauthorizedAccessException()
+    {
+        // Arrange
+        _userRepoMock.Setup(r => r.GetByUsernameAsync("ghost")).ReturnsAsync((User?)null);
+        var dto = new LoginDto { Username = "ghost", Password = "123" };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _userService.LoginAsync(dto));
+    }
+
+    #endregion
+
+    #region Profile Update
+
+    [Fact]
+    public async Task UpdateProfileAsync_ChangeUsernameToAvailable_UpdatesSuccessfully()
+    {
+        // Arrange
+        var user = new User("old_name", "test@test.com", "hash");
+        _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.ExistsByUsernameAsync("new_name")).ReturnsAsync(false);
+
+        var dto = new UpdateProfileDto("new_name", "new_email@test.com");
+
+        // Act
+        await _userService.UpdateProfileAsync(user.Id, dto);
+
+        // Assert
+        Assert.Equal("new_name", user.Username);
+        Assert.Equal("new_email@test.com", user.Email);
+        _userRepoMock.Verify(r => r.UpdateAsync(user), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateProfileAsync_ChangeUsernameToTaken_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var user = new User("old_name", "test@test.com", "hash");
+        _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.ExistsByUsernameAsync("taken_name")).ReturnsAsync(true);
+
+        var dto = new UpdateProfileDto("taken_name", "test@test.com");
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _userService.UpdateProfileAsync(user.Id, dto));
+        Assert.Contains("используется другим пользователем", ex.Message);
+    }
+
+    #endregion
+
+    #region Password Change
+
+    [Fact]
+    public async Task ChangePasswordAsync_ValidOldPassword_UpdatesHash()
+    {
+        // Arrange
+        var oldPass = "OldPass123!";
+        var newPass = "NewPass456!";
+        var oldHash = BCrypt.Net.BCrypt.EnhancedHashPassword(oldPass);
+        var user = new User("test_user", "test@test.com", oldHash);
+
+        _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
+
+        // Act
+        await _userService.ChangePasswordAsync(user.Id, oldPass, newPass);
+
+        // Assert
+        Assert.True(BCrypt.Net.BCrypt.EnhancedVerify(newPass, user.PasswordHash));
+        _userRepoMock.Verify(r => r.UpdateAsync(user), Times.Once);
+    }
+
+    [Fact]
+    public async Task ChangePasswordAsync_WrongOldPassword_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var oldHash = BCrypt.Net.BCrypt.EnhancedHashPassword("RealOldPass");
+        var user = new User("test_user", "test@test.com", oldHash);
+        _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _userService.ChangePasswordAsync(user.Id, "FakeOldPass", "NewPass"));
+
+        Assert.Contains("Текущий пароль указан неверно", ex.Message);
+        _userRepoMock.Verify(r => r.UpdateAsync(It.IsAny<User>()), Times.Never);
+    }
+
+    #endregion
+}
