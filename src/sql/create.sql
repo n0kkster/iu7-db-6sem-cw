@@ -1,8 +1,3 @@
-CREATE TABLE roles (
-    id UUID NOT NULL,
-    name TEXT NOT NULL
-);
-
 CREATE TABLE teams (
     id UUID NOT NULL,
     name TEXT NOT NULL,
@@ -14,7 +9,7 @@ CREATE TABLE users (
     username TEXT NOT NULL,
     email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
-    role_id UUID NOT NULL,
+    role_id INT NOT NULL,
     team_id UUID NOT NULL
 );
 
