@@ -29,4 +29,10 @@ public class Team(string name, string description)
     {
         _memberIds.Remove(userId);
     }
+
+    internal void LoadMembers(IEnumerable<Guid> userIds)
+    {
+        _memberIds.Clear();
+        _memberIds.AddRange(userIds);
+    }
 }
