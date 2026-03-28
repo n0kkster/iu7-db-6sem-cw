@@ -163,6 +163,10 @@ try
     Log.Information("✅ API готов к приему запросов");
     await app.RunAsync();
 }
+catch (HostAbortedException)
+{
+    Log.Information("API был запущен при выполнении миграций, выходим..");
+}
 catch (Exception ex)
 {
     Log.Fatal(ex, "❌ Критическая ошибка при запуске API");
