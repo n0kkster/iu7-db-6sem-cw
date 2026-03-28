@@ -9,15 +9,10 @@ public class AnalyzerDbContext(DbContextOptions<AnalyzerDbContext> options) : Db
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<Invite> Invites => Set<Invite>();
     public DbSet<ITSystem> ITSystems => Set<ITSystem>();
-    public DbSet<Component> Components => Set<Component>();
-    public DbSet<Link> Links => Set<Link>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        modelBuilder.Ignore<Component>();
-        modelBuilder.Ignore<Link>();
 
         modelBuilder.Entity<User>(builder =>
         {
