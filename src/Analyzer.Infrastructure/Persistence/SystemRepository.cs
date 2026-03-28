@@ -10,7 +10,7 @@ public class SystemRepository : ISystemRepository
         await Task.Delay(1000);
     }
 
-    public Task DeleteAsync(Guid systemId)
+    public async Task DeleteAsync(Guid systemId)
     {
         throw new NotImplementedException();
     }
@@ -20,7 +20,7 @@ public class SystemRepository : ISystemRepository
         throw new NotImplementedException();
     }
 
-    public Task<ITSystem> GetByIdAsync(Guid systemId)
+    public async Task<ITSystem?> GetByIdAsync(Guid systemId)
     {
         throw new NotImplementedException();
     }
@@ -28,13 +28,13 @@ public class SystemRepository : ISystemRepository
     public async Task<IReadOnlyCollection<ITSystem>> GetByTeamIdAsync(Guid teamId)
     {
         return [
-            new (Guid.Parse("52b78daa-c9f9-43c1-b3cf-4d671acb989f"), "System A", "Desc A"),
-            new (Guid.Parse("5404d167-8b3f-41c3-9d52-6f401bc76dc5"), "System B", "Desc B"),
-            new (Guid.Parse("e4c872bf-c452-441e-8689-0f86b3eaf2dc"), "System C", "Desc C"),
+            new ("System A", "Desc A", Guid.Parse("52b78daa-c9f9-43c1-b3cf-4d671acb989f")),
+            new ("System B", "Desc B", Guid.Parse("5404d167-8b3f-41c3-9d52-6f401bc76dc5")),
+            new ("System C", "Desc C", Guid.Parse("e4c872bf-c452-441e-8689-0f86b3eaf2dc")),
         ];
     }
 
-    public Task UpdateAsync(ITSystem system)
+    public async Task UpdateAsync(ITSystem system)
     {
         throw new NotImplementedException();
     }
