@@ -4,9 +4,10 @@ using System.Text;
 
 namespace Analyzer.Domain.Entities;
 
-public class Invite(string targetEmail, int validForDays, Guid teamId, Role role)
+public class Invite
 {
     public Guid Id { get; init; } = Guid.NewGuid();
+    
     public InviteStatus Status
     {
         get
@@ -16,24 +17,35 @@ public class Invite(string targetEmail, int validForDays, Guid teamId, Role role
 
             return field;
         }
-     
         private set;
     }
-    public Guid? ActivatedByUserId { get; private set; } = null;
-    public Role Role { get; init; } = role;
+    
+    public Guid? ActivatedByUserId { get; private set; }
+    public Role Role { get; init; }
+    public string Code { get; init; }
+    public DateTimeOffset ExpirationDate { get; private set; }
+    public Guid TeamId { get; init; }
 
-    public string Code { get; init; } = 
-        Convert.ToHexString(
+    // Давим варнинг, потому что данный конструктор нужен только для EF.Core
+#pragma warning disable CS8618
+    private Invite() { }
+#pragma warning restore CS8618
+
+    public Invite(string targetEmail, int validForDays, Guid teamId, Role role)
+    {
+        TeamId = teamId == Guid.Empty ? 
+            throw new ArgumentException("Команда обязательна", nameof(teamId)) : 
+            teamId;
+
+        Role = role;
+        Status = InviteStatus.Pending;
+        
+        Code = Convert.ToHexString(
             SHA256.HashData(
                 Encoding.UTF8.GetBytes(targetEmail)));
 
-    public DateTimeOffset ExpirationDate { get; private set; } = 
-        DateTimeOffset.UtcNow.AddDays(validForDays);
-
-    public Guid TeamId { get; init; } = 
-        teamId == Guid.Empty ? 
-        throw new ArgumentException("Команда обязательна", nameof(teamId)) : 
-        teamId;
+        ExpirationDate = DateTimeOffset.UtcNow.AddDays(validForDays);
+    }
 
     private bool CheckTarget(string targetEmail)
     {
@@ -45,7 +57,7 @@ public class Invite(string targetEmail, int validForDays, Guid teamId, Role role
     public void ActivateUser(User user)
     {
         if (!CheckTarget(user.Email))
-            throw new ArgumentException("Приглашение не предназначен для этого пользователя");
+            throw new ArgumentException("Приглашение не предназначено для этого пользователя");
         
         if (Status == InviteStatus.Expired)
             throw new InvalidOperationException("Приглашение истекло");
@@ -54,13 +66,13 @@ public class Invite(string targetEmail, int validForDays, Guid teamId, Role role
             throw new InvalidOperationException("Приглашение уже активировано");
 
         if (Status == InviteStatus.Revoked)
-            throw new InvalidOperationException("Приглашение был отозвано");
+            throw new InvalidOperationException("Приглашение было отозвано");
 
         Status = InviteStatus.Activated;
         ActivatedByUserId = user.Id;
         
         user.SetRole(Role);
-        user.AttachToTeam(teamId);
+        user.AttachToTeam(TeamId); 
     }
 
     public void Revoke()
