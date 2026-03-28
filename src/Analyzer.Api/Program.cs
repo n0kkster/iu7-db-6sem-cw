@@ -12,6 +12,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Analyzer.Application.Interfaces.Providers;
 using Analyzer.Infrastructure.Providers;
+using Analyzer.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(theme: AnsiConsoleTheme.Code)
@@ -27,6 +29,12 @@ var neo4jUri = builder.Configuration["Neo4jSettings:Uri"];
 var neo4jUser = builder.Configuration["Neo4jSettings:User"];
 var neo4jPass = builder.Configuration["Neo4jSettings:Password"];
 
+builder.Services.AddDbContext<AnalyzerDbContext>(options =>
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PGConnection"));
+    options.UseSnakeCaseNamingConvention();
+});
+
 builder.Services.AddSingleton(sp =>
     GraphDatabase.Driver(neo4jUri, AuthTokens.Basic(neo4jUser, neo4jPass)));
 
@@ -34,11 +42,15 @@ builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 
 builder.Services.AddScoped<IGraphRepository, Neo4jGraphRepository>();
 builder.Services.AddScoped<ISystemRepository, SystemRepository>();
+builder.Services.AddScoped<ITeamRepository, TeamRepository>();
+builder.Services.AddScoped<IInviteRepository, InviteRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IGraphService, GraphService>();
 builder.Services.AddScoped<IAnalysisService, AnalysisService>();
 builder.Services.AddScoped<ISystemService, SystemService>();
+builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<IInviteService, InviteService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddControllers();
