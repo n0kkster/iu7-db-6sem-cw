@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Analyzer.Shared.DTO;
 using Analyzer.Client.Utils;
+using Serilog;
 
 namespace Analyzer.Client.Services;
 
@@ -31,6 +32,7 @@ public class AuthService(HttpClient httpClient) : IAuthService
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "Ошибка авторизации:");
             return new LoginResult(false, $"Ошибка: {ex.Message}", null);
         }
     }
