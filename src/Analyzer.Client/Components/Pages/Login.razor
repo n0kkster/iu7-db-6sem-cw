@@ -48,10 +48,15 @@
     public HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm(FormName = "LoginForm")]
-    public LoginDto _dto { get; set; } = new();
+    public LoginDto _dto { get; set; } = default!;
 
     private bool _isSubmitting;
     private string _errorMessage = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _dto ??= new();
+    }
 
     public async Task HandleLogin()
     {
