@@ -1,32 +1,39 @@
 using Analyzer.Application.Interfaces.Repositories;
 using Analyzer.Domain.Entities;
+using Analyzer.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Analyzer.Infrastructure.Persistence;
 
-public class InviteRepository : IInviteRepository
+public class InviteRepository(AnalyzerDbContext context) : IInviteRepository
 {
-    public Task AddAsync(Invite invite)
+    private readonly AnalyzerDbContext _context = context;
+    public async Task<Invite?> GetByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await _context.Invites.FirstOrDefaultAsync(i => i.Id == id);
     }
 
-    public Task<Invite?> GetByCodeAsync(string code)
+    public async Task<Invite?> GetByCodeAsync(string code)
     {
-        throw new NotImplementedException();
+        return await _context.Invites.FirstOrDefaultAsync(i => i.Code == code);
     }
 
-    public Task<Invite?> GetByIdAsync(Guid id)
+    public async Task<IReadOnlyCollection<Invite>> GetByTeamIdAsync(Guid teamId)
     {
-        throw new NotImplementedException();
+        return await _context.Invites
+            .Where(i => i.TeamId == teamId)
+            .ToListAsync();
     }
 
-    public Task<IReadOnlyCollection<Invite>> GetByTeamIdAsync(Guid teamId)
+    public async Task AddAsync(Invite invite)
     {
-        throw new NotImplementedException();
+        await _context.Invites.AddAsync(invite);
+        await _context.SaveChangesAsync();
     }
 
-    public Task UpdateAsync(Invite invite)
+    public async Task UpdateAsync(Invite invite)
     {
-        throw new NotImplementedException();
+        _context.Invites.Update(invite);
+        await _context.SaveChangesAsync();
     }
 }

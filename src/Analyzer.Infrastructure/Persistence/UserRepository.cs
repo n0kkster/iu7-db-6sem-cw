@@ -1,59 +1,37 @@
 using Analyzer.Application.Interfaces.Repositories;
 using Analyzer.Domain.Entities;
-using BCrypt.Net;
+using Analyzer.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Analyzer.Infrastructure.Persistence;
 
-public class UserRepository : IUserRepository
+public class UserRepository(AnalyzerDbContext context) : IUserRepository
 {
-    public async Task AddAsync(User user)
+    private readonly AnalyzerDbContext _context = context;
+    public async Task<User?> GetByIdAsync(Guid userId)
     {
-        throw new NotImplementedException();
-    }
-
-    public async Task<bool> ExistsByUsernameAsync(string username)
-    {
-        throw new NotImplementedException();
+        return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
     }
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
-        List<User> users = [
-            new(
-                "aboba", 
-                "aboba@aboba.ru", 
-                BCrypt.Net.BCrypt.EnhancedHashPassword("aboba") 
-            ),
-
-            new(
-                "bobs", 
-                "bobs@bobs.ru", 
-                BCrypt.Net.BCrypt.EnhancedHashPassword("bobs") 
-            ),
-
-            new(
-                "bobik", 
-                "bosik@bobik.ru", 
-                BCrypt.Net.BCrypt.EnhancedHashPassword("bobik")
-            ),
-
-            new(
-                "admin", 
-                "admin@admin.ru", 
-                BCrypt.Net.BCrypt.EnhancedHashPassword("admin")
-            ),
-        ];
-
-        return users.Find(user => user.Username == username);
+        return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
     }
 
-    public async Task<User?> GetByIdAsync(Guid userId)
+    public async Task<bool> ExistsByUsernameAsync(string username)
     {
-        throw new NotImplementedException();
+        return await _context.Users.AnyAsync(u => u.Username == username);
+    }
+
+    public async Task AddAsync(User user)
+    {
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
     }
 
     public async Task UpdateAsync(User user)
     {
-        throw new NotImplementedException();
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
     }
 }
