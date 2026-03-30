@@ -30,7 +30,7 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     // ============================================================================
-    // 🗄️ 1. БАЗЫ ДАННЫХ (SQL & GRAPH)
+    // 🗄️ 1. БАЗЫ ДАННЫХ
     // ============================================================================
     
     // PostgreSQL + EF Core
@@ -40,7 +40,7 @@ try
         options.UseSnakeCaseNamingConvention();
     });
 
-    // Neo4j Graph Database
+    // Neo4j
     var neo4jUri = builder.Configuration["Neo4jSettings:Uri"];
     var neo4jUser = builder.Configuration["Neo4jSettings:User"];
     var neo4jPass = builder.Configuration["Neo4jSettings:Password"];
@@ -49,7 +49,7 @@ try
         GraphDatabase.Driver(neo4jUri, AuthTokens.Basic(neo4jUser, neo4jPass)));
 
     // ============================================================================
-    // 🏗️ 2. РЕПОЗИТОРИИ (DATA ACCESS)
+    // 🏗️ 2. РЕПОЗИТОРИИ
     // ============================================================================
     
     builder.Services.AddScoped<IGraphRepository, Neo4jGraphRepository>();
@@ -59,7 +59,7 @@ try
     builder.Services.AddScoped<IUserRepository, UserRepository>();
 
     // ============================================================================
-    // ⚙️ 3. БИЗНЕС-ЛОГИКА (SERVICES)
+    // ⚙️ 3. БИЗНЕС-ЛОГИКА
     // ============================================================================
     
     builder.Services.AddScoped<IJwtProvider, JwtProvider>();
