@@ -10,6 +10,9 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>Analyzer.Infrastructure</_Parameter1>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Analyzer.IntegrationTests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
 </Project>
