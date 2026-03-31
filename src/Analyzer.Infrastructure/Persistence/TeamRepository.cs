@@ -7,13 +7,14 @@ namespace Analyzer.Infrastructure.Persistence;
 
 public class TeamRepository(AnalyzerDbContext context) : ITeamRepository
 {
+    private readonly AnalyzerDbContext _context = context;
     public async Task<Team?> GetByIdAsync(Guid teamId)
     {
-        var team = await context.Teams.FirstOrDefaultAsync(t => t.Id == teamId);
+        var team = await _context.Teams.FirstOrDefaultAsync(t => t.Id == teamId);
         
         if (team is not null)
         {
-            var userIds = await context.Users
+            var userIds = await _context.Users
                 .Where(u => u.TeamId == teamId)
                 .Select(u => u.Id)
                 .ToListAsync();
@@ -26,9 +27,9 @@ public class TeamRepository(AnalyzerDbContext context) : ITeamRepository
 
     public async Task<IReadOnlyCollection<Team>> GetAllTeamsAsync()
     {
-        var teams = await context.Teams.ToListAsync();
+        var teams = await _context.Teams.ToListAsync();
         
-        var teamUserMap = await context.Users
+        var teamUserMap = await _context.Users
             .Where(u => u.TeamId != Guid.Empty)
             .GroupBy(u => u.TeamId)
             .ToDictionaryAsync(g => g.Key, g => g.Select(u => u.Id).ToList());
@@ -46,23 +47,23 @@ public class TeamRepository(AnalyzerDbContext context) : ITeamRepository
 
     public async Task AddAsync(Team team)
     {
-        await context.Teams.AddAsync(team);
-        await context.SaveChangesAsync();
+        await _context.Teams.AddAsync(team);
+        await _context.SaveChangesAsync();
     }
 
     public async Task UpdateAsync(Team team)
     {
-        context.Teams.Update(team);
-        await context.SaveChangesAsync();
+        _context.Teams.Update(team);
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(Guid teamId)
     {
-        var team = await context.Teams.FindAsync(teamId);
-        if (team != null)
+        var team = await _context.Teams.FindAsync(teamId);
+        if (team is not null)
         {
-            context.Teams.Remove(team);
-            await context.SaveChangesAsync();
+            _context.Teams.Remove(team);
+            await _context.SaveChangesAsync();
         }
     }
 }
