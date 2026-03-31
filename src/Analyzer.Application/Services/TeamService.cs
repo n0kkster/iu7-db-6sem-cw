@@ -14,6 +14,20 @@ public class TeamService(
     private readonly ISystemRepository _systemRepository = systemRepository;
     private readonly IUserRepository _userRepository = userRepository;
 
+    public async Task<IReadOnlyCollection<TeamDto>> GetAllTeamsAsync()
+    {
+        var teams = await _teamRepository.GetAllTeamsAsync();
+        return teams.Select(team =>
+            new TeamDto 
+            {
+                Id = team.Id,
+                Name = team.Name,
+                Description = team.Description,
+                Members = team.MemberIds
+            }
+        ).ToList();
+    }
+
     public async Task AddMemberAsync(Guid teamId, User user)
     {
         var team = await _teamRepository.GetByIdAsync(teamId)
