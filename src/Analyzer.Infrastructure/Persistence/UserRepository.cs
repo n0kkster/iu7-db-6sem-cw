@@ -18,6 +18,11 @@ public class UserRepository(AnalyzerDbContext context) : IUserRepository
         return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
     }
 
+    public async Task<IReadOnlyCollection<User>> GetAllUsersAsync()
+    {
+        return await _context.Users.ToListAsync();
+    }
+
     public async Task<bool> ExistsByUsernameAsync(string username)
     {
         return await _context.Users.AnyAsync(u => u.Username == username);
@@ -33,5 +38,15 @@ public class UserRepository(AnalyzerDbContext context) : IUserRepository
     {
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(Guid userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user is not null)
+        {
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+        }
     }
 }

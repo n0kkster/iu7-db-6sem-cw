@@ -6,10 +6,13 @@ public interface IUserRepository
 {
     Task<User?> GetByIdAsync(Guid userId);
     Task<User?> GetByUsernameAsync(string username);
+    Task<IReadOnlyCollection<User>> GetAllUsersAsync();
     
     Task<bool> ExistsByUsernameAsync(string username); 
     
     Task AddAsync(User user);
     
     Task UpdateAsync(User user); 
+
+    Task DeleteAsync(Guid userId);
 }
