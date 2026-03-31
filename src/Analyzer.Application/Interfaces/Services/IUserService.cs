@@ -8,6 +8,9 @@ public interface IUserService
     Task<string> LoginAsync(LoginDto dto);
     
     Task<UserDto> GetProfileAsync(Guid userId);
+    Task<IReadOnlyCollection<UserDto>> GetAllUsersAsync();
     Task UpdateProfileAsync(Guid userId, UpdateProfileDto dto);
     Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword);
+    Task DeleteAsync(Guid userId);
+
 }

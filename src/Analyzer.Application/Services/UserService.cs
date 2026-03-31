@@ -6,8 +6,8 @@ using Analyzer.Application.Interfaces.Providers;
 
 namespace Analyzer.Application.Services;
 
-public class UserService(IUserRepository userRepository, 
-    IJwtProvider jwtProvider, 
+public class UserService(IUserRepository userRepository,
+    IJwtProvider jwtProvider,
     IInviteService inviteService) : IUserService
 {
     private readonly IUserRepository _userRepository = userRepository;
@@ -24,7 +24,7 @@ public class UserService(IUserRepository userRepository,
         var user = new User(dto.Username, dto.Email, passwordHash);
 
         await _inviteService.AcceptInviteAsync(dto.InviteCode, user);
-        
+
         await _userRepository.AddAsync(user);
 
         return user.Id;
@@ -34,7 +34,7 @@ public class UserService(IUserRepository userRepository,
     {
         var user = await _userRepository.GetByUsernameAsync(dto.Username);
 
-        if (user is null || !BCrypt.Net.BCrypt.EnhancedVerify(dto.Password, user.PasswordHash) )
+        if (user is null || !BCrypt.Net.BCrypt.EnhancedVerify(dto.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Неверный Email или пароль");
 
         string role = user.Role.ToString();
@@ -46,6 +46,20 @@ public class UserService(IUserRepository userRepository,
     {
         var user = await GetUserOrThrowAsync(userId);
         return new UserDto(user.Id, user.Username, user.Email, user.Role, user.TeamId);
+    }
+
+    public async Task<IReadOnlyCollection<UserDto>> GetAllUsersAsync()
+    {
+        var users = await _userRepository.GetAllUsersAsync();
+        return users.Select(user =>
+            new UserDto(
+                user.Id, 
+                user.Username, 
+                user.Email, 
+                user.Role, 
+                user.TeamId
+            )
+        ).ToList();
     }
 
     public async Task UpdateProfileAsync(Guid userId, UpdateProfileDto dto)
@@ -69,17 +83,25 @@ public class UserService(IUserRepository userRepository,
             throw new InvalidOperationException("Текущий пароль указан неверно.");
 
         string newHash = BCrypt.Net.BCrypt.EnhancedHashPassword(newPassword);
-        
+
         user.ChangePassword(newHash);
 
         await _userRepository.UpdateAsync(user);
     }
-    
+
     private async Task<User> GetUserOrThrowAsync(Guid userId)
     {
-        var user = await _userRepository.GetByIdAsync(userId) 
+        var user = await _userRepository.GetByIdAsync(userId)
                  ?? throw new KeyNotFoundException($"Пользователь с ID {userId} не найден.");
 
         return user;
+    }
+
+    public async Task DeleteAsync(Guid userId)
+    {
+        var _ = await _userRepository.GetByIdAsync(userId)
+                 ?? throw new KeyNotFoundException($"Пользователь с ID {userId} не найден.");
+                 
+        await _userRepository.DeleteAsync(userId);
     }
 }
