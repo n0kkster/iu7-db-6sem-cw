@@ -1,4 +1,4 @@
-namespace Analyzer.Client.Components.Pages;
+namespace Analyzer.Client.Components.Pages.User;
 
 using Microsoft.AspNetCore.Components;
 using Blazor.Diagrams;

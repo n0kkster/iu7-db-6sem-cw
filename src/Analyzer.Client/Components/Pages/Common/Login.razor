@@ -22,13 +22,13 @@
 
         <EditForm method="post" FormName="LoginForm" OnSubmit="HandleLogin" Model="_dto">            
             <MudTextField @bind-Value="_dto.Username" 
-                          Label="Username" 
+                          Placeholder="Username" 
                           Variant="Variant.Outlined" 
                           Class="mb-4" 
                           Name="_dto.Username" />
                           
             <MudTextField @bind-Value="_dto.Password" 
-                          Label="Пароль" 
+                          Placeholder="Пароль" 
                           InputType="InputType.Password" 
                           Variant="Variant.Outlined" 
                           Class="mb-6" 
