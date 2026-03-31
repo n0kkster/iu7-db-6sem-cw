@@ -18,7 +18,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.4" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
     <ProjectReference Include="../Analyzer.Application/Analyzer.Application.csproj" />
     <ProjectReference Include="../Analyzer.Infrastructure/Analyzer.Infrastructure.csproj" />
