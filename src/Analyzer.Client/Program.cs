@@ -169,7 +169,7 @@ try
         .AddInteractiveServerRenderMode();
 
     // Эндпоинт для логаута
-    app.MapPost("/logout", async (HttpContext ctx) =>
+    app.MapGet("/logout", async (HttpContext ctx) =>
     {
         await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return Results.Redirect("/login");
