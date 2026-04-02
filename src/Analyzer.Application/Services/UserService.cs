@@ -14,7 +14,7 @@ public class UserService(IUserRepository userRepository,
     private readonly IJwtProvider _jwtProvider = jwtProvider;
     private readonly IInviteService _inviteService = inviteService;
 
-    public async Task<Guid> RegisterAsync(RegisterUserDto dto)
+    public async Task<Guid> RegisterAsync(RegisterDto dto)
     {
         if (await _userRepository.ExistsByUsernameAsync(dto.Username))
             throw new InvalidOperationException("Пользователь с таким именем уже зарегистрирован.");
@@ -35,7 +35,7 @@ public class UserService(IUserRepository userRepository,
         var user = await _userRepository.GetByUsernameAsync(dto.Username);
 
         if (user is null || !BCrypt.Net.BCrypt.EnhancedVerify(dto.Password, user.PasswordHash))
-            throw new UnauthorizedAccessException("Неверный Email или пароль");
+            throw new UnauthorizedAccessException("Неверный логин или пароль");
 
         string role = user.Role.ToString();
 

@@ -4,7 +4,7 @@ namespace Analyzer.Application.Interfaces.Services;
 
 public interface IUserService
 {
-    Task<Guid> RegisterAsync(RegisterUserDto dto);
+    Task<Guid> RegisterAsync(RegisterDto dto);
     Task<string> LoginAsync(LoginDto dto);
     
     Task<UserDto> GetProfileAsync(Guid userId);

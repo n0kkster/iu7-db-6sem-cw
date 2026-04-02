@@ -7,7 +7,7 @@ public interface ITeamService
 {
     public Task<IReadOnlyCollection<TeamDto>> GetAllTeamsAsync();
 
-    public Task<Guid> CreateTeamAsync(CreateTeamDto dto);
+    public Task<TeamDto> CreateTeamAsync(CreateTeamDto dto);
     public Task UpdateTeamAsync(Guid teamId, CreateTeamDto dto);
     public Task DeleteTeamAsync(Guid teamId);
     public Task<bool> ExistsAsync(Guid teamId); 

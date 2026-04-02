@@ -17,15 +17,7 @@ public class TeamService(
     public async Task<IReadOnlyCollection<TeamDto>> GetAllTeamsAsync()
     {
         var teams = await _teamRepository.GetAllTeamsAsync();
-        return teams.Select(team =>
-            new TeamDto 
-            {
-                Id = team.Id,
-                Name = team.Name,
-                Description = team.Description,
-                Members = team.MemberIds
-            }
-        ).ToList();
+        return teams.Select(MapToDto).ToList();
     }
 
     public async Task AddMemberAsync(Guid teamId, User user)
@@ -36,11 +28,11 @@ public class TeamService(
         team.AddMember(user.Id);
     }
 
-    public async Task<Guid> CreateTeamAsync(CreateTeamDto dto)
+    public async Task<TeamDto> CreateTeamAsync(CreateTeamDto dto)
     {
         var team = new Team(dto.Name, dto.Description);
         await _teamRepository.AddAsync(team);
-        return team.Id;
+        return MapToDto(team);
     }
 
     public async Task DeleteTeamAsync(Guid teamId)
@@ -100,5 +92,16 @@ public class TeamService(
             user.Role,
             user.TeamId
         );
+    }
+
+    private TeamDto MapToDto(Team team)
+    {
+        return new TeamDto
+        {
+            Id = team.Id, 
+            Name = team.Name,
+            Description = team.Description,
+            Members = team.MemberIds
+        };
     }
 }
