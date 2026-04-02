@@ -9,14 +9,21 @@
     <div class="d-flex align-center justify-space-between mb-6">
         <div>
             <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-bold">Команды</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Управление рабочими пространствами и приглашениями</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Управление рабочими пространствами и приглашениями
+            </MudText>
         </div>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateTeamDialog">
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Add" 
+                   OnClick="OpenCreateTeamDialog">
             Создать команду
         </MudButton>
     </div>
 
-    <MudTable Items="@_teams" Loading="@_isLoading" Elevation="0" Outlined="true" Hover="true" Dense="true" Class="mud-theme-surface rounded-lg">
+    <MudTable Items="@_teams" Loading="@_isLoading" 
+              Elevation="0" Outlined="true" Hover="true" 
+              Dense="true" Class="mud-theme-surface rounded-lg">
         <HeaderContent>
             <MudTh Style="width: 50px;"></MudTh> 
             <MudTh>Название команды</MudTh>
@@ -26,18 +33,24 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd>
-                <MudIconButton Icon="@(context.ShowDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" 
+                <MudIconButton Icon="@(context.ShowDetails ? 
+                                       Icons.Material.Filled.ExpandLess : 
+                                       Icons.Material.Filled.ExpandMore)" 
                                OnClick="@(() => context.ShowDetails = !context.ShowDetails)" />
             </MudTd>
             <MudTd DataLabel="Название" Class="font-bold">@context.Name</MudTd>
             <MudTd DataLabel="Описание">@context.Description</MudTd>
             <MudTd DataLabel="Участники">
-                <MudChip T="string" Color="Color.Default" Size="MudBlazor.Size.Small" Icon="@Icons.Material.Filled.People">
+                <MudChip T="string" Color="Color.Default" 
+                         Size="MudBlazor.Size.Small" 
+                         Icon="@Icons.Material.Filled.People">
                     @context.MembersCount
                 </MudChip>
             </MudTd>
             <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="MudBlazor.Size.Small" OnClick="@(() => DeleteTeam(context))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                               Color="Color.Error" Size="MudBlazor.Size.Small" 
+                               OnClick="@(() => DeleteTeam(context))" />
             </MudTd>
         </RowTemplate>
         
@@ -49,8 +62,10 @@
                     <MudCard Elevation="0" Outlined="true" Class="pa-4">
                         <div class="d-flex align-center justify-space-between mb-4">
                             <MudText Typo="Typo.h6">Активные инвайты команды</MudText>
-                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Link" 
-                                    OnClick="@(() => GenerateInvite(context.Id))">
+                            <MudButton Variant="Variant.Outlined" 
+                                       Color="Color.Primary" 
+                                       StartIcon="@Icons.Material.Filled.Link" 
+                                       OnClick="@(() => GenerateInvite(context.Id))">
                                 Создать приглашение
                             </MudButton>
                         </div>
@@ -64,26 +79,50 @@
                                         <div class="d-flex align-center justify-space-between w-100">
                                             
                                             <div class="d-flex align-center">
-                                                <MudIcon Icon="@Icons.Material.Filled.Email" Size="MudBlazor.Size.Small" Color="Color.Default" Class="mr-2" />
-                                                <MudText Typo="Typo.body2" Class="font-bold mr-3">
+                                                <MudIcon Icon="@Icons.Material.Filled.Email" 
+                                                         Size="MudBlazor.Size.Small" 
+                                                         Color="Color.Default" 
+                                                         Class="mr-2" />
+                                                <MudText Typo="Typo.body2" 
+                                                         Class="font-bold mr-3">
                                                     @invite.TargetEmail
                                                 </MudText>
                                                 
-                                                <MudChip T="string" Color="Color.Info" Size="MudBlazor.Size.Small" Variant="Variant.Text" Class="mr-3">
+                                                <MudChip T="string" 
+                                                         Color="Color.Info" 
+                                                         Size="MudBlazor.Size.Small" 
+                                                         Variant="Variant.Text">
                                                     @invite.Role
                                                 </MudChip>
-                                                
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-monospace">
-                                                    Код: @invite.Code
-                                                </MudText>
                                             </div>
 
-                                            <div class="d-flex align-center">
-                                                <MudChip T="string" Color="Color.Warning" Size="MudBlazor.Size.Small" Class="mr-2">
+                                            <div class="d-flex align-center flex-grow-1 mx-4">
+                                                <MudTextField T="string"
+                                                            Value="@invite.Code"
+                                                            Label="Код"
+                                                            ReadOnly="true"
+                                                            Variant="Variant.Outlined"
+                                                            Margin="Margin.Dense"
+                                                            Class="invite-code-field"
+                                                            Adornment="Adornment.End"
+                                                            AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+                                                            OnAdornmentClick="@(() => CopyAsync(invite.Code))"
+                                                            AdornmentColor="Color.Primary" />
+                                            </div>
+
+                                            <div class="d-flex align-center" 
+                                                 Style="justify-content: flex-end;">
+                                                <MudChip T="string" 
+                                                         Color="Color.Warning" 
+                                                         Size="MudBlazor.Size.Small" 
+                                                         Class="mr-2">
                                                     До @invite.ExpirationDate.ToString("dd.MM.yyyy")
                                                 </MudChip>
-                                                <MudIconButton Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="MudBlazor.Size.Small" 
-                                                            OnClick="@(() => RevokeInvite(context, invite.Id))" Title="Отозвать" />
+
+                                                <MudIconButton Icon="@Icons.Material.Filled.Cancel" 
+                                                               Color="Color.Error" Size="MudBlazor.Size.Small" 
+                                                               OnClick="@(() => RevokeInvite(context, invite.Id))" 
+                                                               Title="Отозвать" />
                                             </div>
 
                                         </div>
@@ -102,3 +141,18 @@
     </ChildRowContent>
     </MudTable>
 </MudContainer>
+
+<style>
+    .invite-code-field input {
+        pointer-events: none !important;
+        user-select: none !important;
+        color: var(--mud-palette-text-primary) !important; 
+        font-family: monospace;
+    }
+
+    .invite-code-field .mud-input-adornment {
+        color: var(--mud-palette-text-primary) !important; 
+        pointer-events: auto !important;
+        cursor: pointer;
+    }
+</style>

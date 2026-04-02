@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+
 using MudBlazor;
 using Serilog;
 
@@ -19,6 +21,9 @@ public partial class AdminTeams : ComponentBase
     [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
 
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+
     public class TeamViewModel : TeamDto
     {
         public bool ShowDetails { get; set; }
@@ -28,6 +33,9 @@ public partial class AdminTeams : ComponentBase
 
     private List<TeamViewModel> _teams = [];
     private bool _isLoading = true;
+
+    private string _icon = Icons.Material.Filled.ContentCopy;
+    private Color _iconColor = Color.Default;
 
     protected override async Task OnInitializedAsync()
     {
@@ -163,5 +171,19 @@ public partial class AdminTeams : ComponentBase
             _teams.Remove(team);
             Snackbar.Add("Команда удалена", Severity.Success);
         }
+    }
+
+    private async Task CopyAsync(string text)
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        
+        _icon = Icons.Material.Filled.Check;
+        _iconColor = Color.Success;
+        StateHasChanged();
+
+        await Task.Delay(2000);
+        
+        _icon = Icons.Material.Filled.ContentCopy;
+        _iconColor = Color.Default;
     }
 }
