@@ -10,12 +10,9 @@ public class GenerateInviteDto
     public Role Role { get; set; }
 }
 
-public class InviteDto
-{
-    public Guid Id { get; set; }
-    public string Code { get; set; } = string.Empty;
-    public DateTimeOffset ExpirationDate { get; set; }
-    public InviteStatus Status { get; set; }
-    public Guid TeamId { get; set; }
-    public Guid? ActivatedByUserId { get; set; }
-}
+public record InviteDto(Guid Id, 
+                        Role Role, 
+                        string TargetEmail,
+                        string Code, 
+                        DateTimeOffset ExpirationDate, 
+                        InviteStatus Status);

@@ -7,7 +7,7 @@ namespace Analyzer.Domain.Entities;
 public class Invite
 {
     public Guid Id { get; init; } = Guid.NewGuid();
-    
+
     public InviteStatus Status
     {
         get
@@ -19,12 +19,13 @@ public class Invite
         }
         private set;
     }
-    
-    public Guid? ActivatedByUserId { get; private set; }
+
+    public string TargetEmail { get; init; }
     public Role Role { get; init; }
     public string Code { get; init; }
     public DateTimeOffset ExpirationDate { get; private set; }
     public Guid TeamId { get; init; }
+    public Guid? ActivatedByUserId { get; private set; }
 
     // Давим варнинг, потому что данный конструктор нужен только для EF.Core
 #pragma warning disable CS8618
@@ -33,13 +34,19 @@ public class Invite
 
     public Invite(string targetEmail, int validForDays, Guid teamId, Role role)
     {
-        TeamId = teamId == Guid.Empty ? 
-            throw new ArgumentException("Команда обязательна", nameof(teamId)) : 
+        TeamId = teamId == Guid.Empty ?
+            throw new ArgumentException("Команда обязательна", nameof(teamId)) :
             teamId;
+
+        TargetEmail = string.IsNullOrWhiteSpace(targetEmail)
+              ? throw new ArgumentException("Email обязателен", nameof(targetEmail))
+              : !IsValidEmail(targetEmail) 
+              ? throw new ArgumentException("Email невалиден", nameof(targetEmail))
+              : targetEmail;
 
         Role = role;
         Status = InviteStatus.Pending;
-        
+
         Code = Convert.ToHexString(
             SHA256.HashData(
                 Encoding.UTF8.GetBytes(targetEmail)));
@@ -58,7 +65,7 @@ public class Invite
     {
         if (!CheckTarget(user.Email))
             throw new ArgumentException("Приглашение не предназначено для этого пользователя");
-        
+
         if (Status == InviteStatus.Expired)
             throw new InvalidOperationException("Приглашение истекло");
 
@@ -70,9 +77,9 @@ public class Invite
 
         Status = InviteStatus.Activated;
         ActivatedByUserId = user.Id;
-        
+
         user.SetRole(Role);
-        user.AttachToTeam(TeamId); 
+        user.AttachToTeam(TeamId);
     }
 
     public void Revoke()
@@ -81,5 +88,22 @@ public class Invite
             throw new InvalidOperationException("Нельзя отозвать уже принятое приглашение");
 
         Status = InviteStatus.Revoked;
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        var trimmedEmail = email.Trim();
+
+        if (trimmedEmail.EndsWith("."))
+            return false; 
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == trimmedEmail;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

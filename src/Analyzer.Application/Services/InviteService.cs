@@ -10,7 +10,7 @@ public class InviteService(IInviteRepository inviteRepository, ITeamService team
     private readonly IInviteRepository _inviteRepository = inviteRepository;
     private readonly ITeamService _teamService = teamService;
 
-    public async Task<string> GenerateInviteAsync(GenerateInviteDto dto)
+    public async Task<InviteDto> GenerateInviteAsync(GenerateInviteDto dto)
     {
         if (!await _teamService.ExistsAsync(dto.TeamId)) 
             throw new KeyNotFoundException("Команда не найдена");
@@ -18,7 +18,7 @@ public class InviteService(IInviteRepository inviteRepository, ITeamService team
         var invite = new Invite(dto.Email, dto.ValidForDays, dto.TeamId, dto.Role);
         await _inviteRepository.AddAsync(invite);
 
-        return invite.Code;
+        return MapToDto(invite);
     }
 
     public async Task AcceptInviteAsync(string code, User user)
@@ -51,14 +51,13 @@ public class InviteService(IInviteRepository inviteRepository, ITeamService team
 
     private InviteDto MapToDto(Invite invite)
     {
-        return new InviteDto
-        {
-            Id = invite.Id,
-            Code = invite.Code,
-            ExpirationDate = invite.ExpirationDate,
-            Status = invite.Status,
-            TeamId = invite.TeamId,
-            ActivatedByUserId = invite.ActivatedByUserId
-        };
+        return new InviteDto(
+            invite.Id, 
+            invite.Role,
+            invite.TargetEmail,
+            invite.Code,
+            invite.ExpirationDate,
+            invite.Status
+        );
     }
 }
