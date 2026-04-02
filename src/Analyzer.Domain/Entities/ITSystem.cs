@@ -4,7 +4,7 @@ public class ITSystem(string name, string description, Guid teamId)
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
     public string Name { get; private set; } = string.IsNullOrWhiteSpace(name)
-            ? throw new ArgumentException("Имя системы обязательно", nameof(name))
+            ? throw new ArgumentException("Имя системы обязательно")
             : name;
     public string Description { get; private set; } = description;
 
@@ -16,7 +16,7 @@ public class ITSystem(string name, string description, Guid teamId)
     public void UpdateDetails(string name, string description)
     {
         Name = string.IsNullOrWhiteSpace(name)
-            ? throw new ArgumentException("Имя системы обязательно", nameof(name))
+            ? throw new ArgumentException("Имя системы обязательно")
             : name;
         Description = description;
 

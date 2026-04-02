@@ -15,17 +15,17 @@ public class User
     {
         Id = Guid.NewGuid();
         Username = string.IsNullOrWhiteSpace(username)
-                 ? throw new ArgumentException("Имя пользователя обязательно", nameof(username))
+                 ? throw new ArgumentException("Имя пользователя обязательно")
                  : username;
 
         Email = string.IsNullOrWhiteSpace(email)
-              ? throw new ArgumentException("Email обязателен", nameof(email))
+              ? throw new ArgumentException("Email обязателен")
               : !IsValidEmail(email) 
-              ? throw new ArgumentException("Email невалиден", nameof(email))
+              ? throw new ArgumentException("Email невалиден")
               : email;
 
         PasswordHash = string.IsNullOrWhiteSpace(passwordHash)
-                     ? throw new ArgumentException("Хэш пароля обязателен", nameof(passwordHash))
+                     ? throw new ArgumentException("Хэш пароля обязателен")
                      : passwordHash;
 
         TeamId = Guid.Empty;
@@ -35,13 +35,13 @@ public class User
     public void UpdateProfile(string username, string email)
     {
         Username = string.IsNullOrWhiteSpace(username)
-                 ? throw new ArgumentException("Имя пользователя обязательно", nameof(username))
+                 ? throw new ArgumentException("Имя пользователя обязательно")
                  : username;
 
         Email = string.IsNullOrWhiteSpace(email)
-              ? throw new ArgumentException("Email обязателен", nameof(email))
+              ? throw new ArgumentException("Email обязателен")
               : !IsValidEmail(email) 
-              ? throw new ArgumentException("Email невалиден", nameof(email))
+              ? throw new ArgumentException("Email невалиден")
               : email;
     }
 

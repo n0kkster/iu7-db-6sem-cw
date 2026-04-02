@@ -35,13 +35,13 @@ public class Invite
     public Invite(string targetEmail, int validForDays, Guid teamId, Role role)
     {
         TeamId = teamId == Guid.Empty ?
-            throw new ArgumentException("Команда обязательна", nameof(teamId)) :
+            throw new ArgumentException("Команда обязательна") :
             teamId;
 
         TargetEmail = string.IsNullOrWhiteSpace(targetEmail)
-              ? throw new ArgumentException("Email обязателен", nameof(targetEmail))
+              ? throw new ArgumentException("Email обязателен")
               : !IsValidEmail(targetEmail) 
-              ? throw new ArgumentException("Email невалиден", nameof(targetEmail))
+              ? throw new ArgumentException("Email невалиден")
               : targetEmail;
 
         Role = role;
