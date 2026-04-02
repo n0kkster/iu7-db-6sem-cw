@@ -11,39 +11,80 @@
 @inject NavigationManager NavManager
 @inject IAuthService AuthService
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center mud-width-full" Style="height: 100vh;">
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center mud-width-full"
+              Style="height: 100vh;">
     <MudPaper Elevation="3" Class="pa-8" Width="100%" MaxWidth="500px">
-        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6 font-bold" Color="Color.Primary">Вход в систему</MudText>
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6 font-bold" Color="Color.Primary">Вход в систему
+        </MudText>
 
-        @if (!string.IsNullOrEmpty(_errorMessage))
-        {
-            <MudAlert Severity="Severity.Error" Class="mb-4">@_errorMessage</MudAlert>
-        }
-
-        <EditForm method="post" FormName="LoginForm" OnSubmit="HandleLogin" Model="_dto">            
+        <EditForm method="post" FormName="LoginForm" OnSubmit="HandleLogin" Model="_dto">
             <MudTextField @bind-Value="_dto.Username" 
-                          Placeholder="Username" 
+                          Placeholder="Логин" 
                           Variant="Variant.Outlined" 
-                          Class="mb-4" 
+                          Class="mb-4"
                           Name="_dto.Username" />
                           
             <MudTextField @bind-Value="_dto.Password" 
                           Placeholder="Пароль" 
-                          InputType="InputType.Password" 
+                          InputType="InputType.Password"
                           Variant="Variant.Outlined" 
                           Class="mb-6" 
                           Name="_dto.Password" />
             
-            <button type="submit" 
-                    class="mud-button-root mud-button mud-button-filled mud-button-filled-primary mud-button-size-large mud-width-full" 
+            <button type="submit"
+                    class="mud-button-root 
+                           mud-button mud-button-filled 
+                           mud-button-filled-primary 
+                           mud-button-size-large 
+                           mud-width-full"
                     disabled="@_isSubmitting">
                 Войти
             </button>
         </EditForm>
+        <MudText Typo="Typo.subtitle2" 
+                 Align="Align.Center" 
+                 Class="mt-7 font-bold" 
+                 Color="Color.Dark">
+            Нет аккаунта? 
+            <MudLink Underline="Underline.None" 
+                     Typo="Typo.subtitle2" 
+                     class="center-underline"
+                     Href="/register">
+                Регистрация
+            </MudLink>
+        </MudText>
     </MudPaper>
 </MudContainer>
 
-@code {
+<style>
+    .center-underline {
+        position: relative;
+        text-decoration: none;
+        color: #000;
+        font-weight: 500;
+    }
+
+    .center-underline::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 1.5px;
+        bottom: -1.5px;
+        left: 0;
+        background-color: var(--mud-palette-primary) !important;
+    
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform 0.2s ease;
+    }
+
+    .center-underline:hover::after {
+        transform: scaleX(1);
+    }
+</style>
+
+@code
+{
     [CascadingParameter]
     public HttpContext HttpContext { get; set; } = default!;
 
@@ -61,26 +102,27 @@
     public async Task HandleLogin()
     {
         _isSubmitting = true;
-        _errorMessage = string.Empty;
 
-        var result = await AuthService.LoginAsync(_dto);
+        var principal = await AuthService.LoginAsync(_dto);
 
-        if (!result.Success || result.Principal == null)
+        if (principal is null)
         {
-            _errorMessage = result.ErrorMessage ?? "Неизвестная ошибка";
             _isSubmitting = false;
             return;
         }
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
-            result.Principal,
+            principal,
             new AuthenticationProperties
             {
                 IsPersistent = true,
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
             });
 
-        NavManager.NavigateTo("/");
+        if (principal.IsInRole("Admin"))
+            NavManager.NavigateTo("/admin/users");
+        else
+            NavManager.NavigateTo("/");
     }
 }

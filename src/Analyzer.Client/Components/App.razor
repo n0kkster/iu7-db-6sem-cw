@@ -32,7 +32,8 @@
     private HttpContext HttpContext { get; set; } = default!;
 
     private Microsoft.AspNetCore.Components.IComponentRenderMode? PageRenderMode =>
-        HttpContext.Request.Path.StartsWithSegments("/login") 
+        (HttpContext.Request.Path.StartsWithSegments("/login") ||
+         HttpContext.Request.Path.StartsWithSegments("/register")) 
             ? null 
             : Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer;
 }

@@ -1,8 +1,10 @@
+using System.Security.Claims;
 using Analyzer.Shared.DTO;
 
 namespace Analyzer.Client.Services;
 
 public interface IAuthService
 {
-    Task<LoginResult> LoginAsync(LoginDto dto);
+    Task<ClaimsPrincipal?> LoginAsync(LoginDto dto);
+    Task<bool> RegisterAsync(RegisterDto dto);
 }
