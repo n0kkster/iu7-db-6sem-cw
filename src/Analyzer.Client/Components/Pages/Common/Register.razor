@@ -70,7 +70,10 @@
 
         var registerSuccessful = await AuthService.RegisterAsync(_dto);
         if (!registerSuccessful)
+        {
+            _isSubmitting = false;
             return;
+        }
 
         LoginDto loginDto = new()
         {
@@ -94,6 +97,8 @@
                 IsPersistent = true,
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(2)
             });
+
+        _isSubmitting = false;
 
         NavManager.NavigateTo("/");
     }
