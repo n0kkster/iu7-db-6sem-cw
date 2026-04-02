@@ -19,6 +19,9 @@ public class UserService(IUserRepository userRepository,
         if (await _userRepository.ExistsByUsernameAsync(dto.Username))
             throw new InvalidOperationException("Пользователь с таким именем уже зарегистрирован.");
 
+        if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 8)
+            throw new ArgumentException("Пароль должен содержать не менее 8 символов");
+
         string passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.Password);
 
         var user = new User(dto.Username, dto.Email, passwordHash);
@@ -35,7 +38,7 @@ public class UserService(IUserRepository userRepository,
         var user = await _userRepository.GetByUsernameAsync(dto.Username);
 
         if (user is null || !BCrypt.Net.BCrypt.EnhancedVerify(dto.Password, user.PasswordHash))
-            throw new UnauthorizedAccessException("Неверный логин или пароль");
+            throw new InvalidOperationException("Неверный логин или пароль");
 
         string role = user.Role.ToString();
 
