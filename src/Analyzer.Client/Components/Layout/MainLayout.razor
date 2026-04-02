@@ -6,44 +6,75 @@
 <MudPopoverProvider />
 
 <MudLayout Class="@(_isThemeTransitioning ? "theme-transition" : "")">
-    <MudAppBar Elevation="0" Style="backdrop-filter: blur(8px);" Class="border-b mud-border-lines-default">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
-                       OnClick="@((e) => DrawerToggle())" />
+    <MudAppBar Elevation="0" 
+               Style="backdrop-filter: blur(8px);" 
+               Class="border-b mud-border-lines-default">
 
-        <MudText Typo="Typo.h6" Class="ml-2 font-bold" Color="Color.Primary">FaultAnalyzer</MudText>
+        <AuthorizeView>
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+                           Color="Color.Inherit" 
+                           Edge="Edge.Start"
+                           OnClick="@((e) => DrawerToggle())" />
+        </AuthorizeView>
 
+        <MudText Typo="Typo.h6" 
+                 Class="ml-2 font-bold" 
+                 Color="Color.Primary">FaultAnalyzer</MudText>
+        
         <MudSpacer />
 
         <SectionOutlet SectionName="TopbarSystemSelect" />
 
-        <MudIconButton Icon="@(_isDarkMode? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
-                       Color="Color.Inherit" OnClick="@ToggleThemeAsync" />
-        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Class="ml-4">U</MudAvatar>
+        <MudIconButton Icon="@(_isDarkMode? 
+                               Icons.Material.Filled.LightMode : 
+                               Icons.Material.Filled.DarkMode)"
+                       Color="Color.Inherit" 
+                       OnClick="@ToggleThemeAsync" />
+
+        <MudAvatar Color="Color.Primary" 
+                   Variant="Variant.Filled" 
+                   Class="ml-4">
+            <MudIcon Icon="@Icons.Material.Filled.AccountCircle" 
+                     Size="MudBlazor.Size.Large"/>
+        </MudAvatar>
     </MudAppBar>
 
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="0" Variant="@DrawerVariant.Mini"
-               Class="border-r mud-border-lines-default">
-        <MudNavMenu>
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Дашборд</MudNavLink>
-            <MudNavLink Href="/systems" Icon="@Icons.Material.Filled.AccountTree">Мои системы</MudNavLink>
-            <MudNavLink Href="/team" Icon="@Icons.Material.Filled.People">Команда</MudNavLink>
-            <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">Настройки</MudNavLink>
-        </MudNavMenu>
-    </MudDrawer>
+    <AuthorizeView Context="NavMenuContext">
+        <MudDrawer @bind-Open="_drawerOpen" 
+                   Elevation="0" 
+                   Variant="@DrawerVariant.Mini"
+                   Class="border-r mud-border-lines-default">
+            <MudNavMenu>
+                <MudNavLink Href="/" 
+                            Match="NavLinkMatch.All" 
+                            Icon="@Icons.Material.Filled.Dashboard">
+                    Дашборд
+                </MudNavLink>
 
-    <MudMainContent Class="d-flex flex-column" Style="height: 100vh; overflow: hidden;">
+                <MudNavLink Href="/team" 
+                            Icon="@Icons.Material.Filled.People">
+                    Команда
+                </MudNavLink>
+            </MudNavMenu>
+        </MudDrawer>
+    </AuthorizeView>
+
+    <MudMainContent Class="d-flex flex-column" 
+                    Style="height: 100vh; overflow: hidden;">
         @Body
     </MudMainContent>
 </MudLayout>
 
 <style>
-    .theme-transition,
-    .theme-transition * {
-        transition: background-color 0.4s ease-in-out,
-            color 0.4s ease-in-out,
-            border-color 0.4s ease-in-out,
-            fill 0.4s ease-in-out,
-            box-shadow 0.4s ease-in-out !important;
+    .theme-transition .mud-appbar,
+    .theme-transition .mud-drawer,
+    .theme-transition .mud-main-content,
+    .theme-transition .mud-paper,
+    .theme-transition .mud-theme-surface,
+    .theme-transition .graph-canvas {
+        transition-property: background-color, background, color, border-color, fill, box-shadow !important;
+        transition-duration: 0.4s !important;
+        transition-timing-function: ease !important;
     }
 </style>
 
@@ -61,7 +92,7 @@
         _isThemeTransitioning = true;
         _isDarkMode = !_isDarkMode; 
 
-        await Task.Delay(400);
+        await Task.Delay(450);
 
         _isThemeTransitioning = false;
     }
@@ -112,8 +143,6 @@
         LayoutProperties = new LayoutProperties()
         {
             DefaultBorderRadius = "8px",
-            @* AppbarElevation = 0, *@
-            @* DrawerElevation = 0 *@
         }
     };
 }
