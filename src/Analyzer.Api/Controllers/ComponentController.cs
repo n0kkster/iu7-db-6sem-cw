@@ -4,7 +4,6 @@ using Analyzer.Application.Interfaces.Services;
 using Analyzer.Shared.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 
 [Authorize]
 [ApiController]

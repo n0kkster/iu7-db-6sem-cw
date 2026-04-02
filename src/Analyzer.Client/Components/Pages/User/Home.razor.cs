@@ -611,8 +611,9 @@ public partial class Home : ComponentBase, IDisposable
         _isExportingSystem = false;
     }
 
-    // Вспомогательные методы
-    // ===================================
+    // =================================================
+    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
+    // =================================================
     private void ApplyLinkStyles(LinkModel linkModel,
         LinkSeverity severity, ProtocolType protocol)
     {
