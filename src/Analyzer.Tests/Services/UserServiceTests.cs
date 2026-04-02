@@ -29,7 +29,13 @@ public class UserServiceTests
     public async Task RegisterAsync_ValidDto_HashesPasswordAcceptsInviteAndSaves()
     {
         // Arrange
-        var dto = new RegisterUserDto("new_user", "test@test.com", "MySecretPass123!", "INVITE_CODE");
+        var dto = new RegisterDto
+        {
+            Username = "new_user",
+            Email = "test@test.com",
+            Password = "MySecretPass123!",
+            InviteCode = "INVITE_CODE"
+        };
         _userRepoMock.Setup(r => r.ExistsByUsernameAsync(dto.Username)).ReturnsAsync(false);
 
         // Act
@@ -50,12 +56,36 @@ public class UserServiceTests
     public async Task RegisterAsync_UsernameTaken_ThrowsInvalidOperationException()
     {
         // Arrange
-        var dto = new RegisterUserDto("taken_user", "test@test.com", "pass", "code");
+        var dto = new RegisterDto
+        {
+            Username = "taken_user",
+            Email = "test@test.com",
+            Password = "password",
+            InviteCode = "code"
+        };
         _userRepoMock.Setup(r => r.ExistsByUsernameAsync("taken_user")).ReturnsAsync(true);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _userService.RegisterAsync(dto));
         Assert.Contains("уже зарегистрирован", ex.Message);
+        _userRepoMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_InvalidPassword_ThrowsArgumentException()
+    {
+        // Arrange
+        var dto = new RegisterDto
+        {
+            Username = "taken_user",
+            Email = "test@test.com",
+            Password = "2shrt",
+            InviteCode = "code"
+        };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => _userService.RegisterAsync(dto));
+        Assert.Contains("должен содержать не менее", ex.Message);
         _userRepoMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Never);
     }
 
@@ -80,7 +110,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task LoginAsync_WrongPassword_ThrowsUnauthorizedAccessException()
+    public async Task LoginAsync_WrongPassword_ThrowsInvalidOperationException()
     {
         // Arrange
         var hash = BCrypt.Net.BCrypt.EnhancedHashPassword("CorrectPassword");
@@ -90,17 +120,18 @@ public class UserServiceTests
         var dto = new LoginDto { Username = "test_user", Password = "WrongPassword" };
 
         // Act & Assert
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _userService.LoginAsync(dto));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _userService.LoginAsync(dto));
     }
+
     [Fact]
-    public async Task LoginAsync_UserNotFound_ThrowsUnauthorizedAccessException()
+    public async Task LoginAsync_UserNotFound_ThrowsInvalidOperationException()
     {
         // Arrange
         _userRepoMock.Setup(r => r.GetByUsernameAsync("ghost")).ReturnsAsync((User?)null);
         var dto = new LoginDto { Username = "ghost", Password = "123" };
 
         // Act & Assert
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _userService.LoginAsync(dto));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _userService.LoginAsync(dto));
     }
 
     #endregion

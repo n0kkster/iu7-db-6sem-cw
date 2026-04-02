@@ -31,10 +31,10 @@ public class TeamServiceTests
         var dto = new CreateTeamDto { Name = "Backend Team", Description = "Go/C# Devs" };
 
         // Act
-        var resultId = await _teamService.CreateTeamAsync(dto);
+        var team = await _teamService.CreateTeamAsync(dto);
 
         // Assert
-        Assert.NotEqual(Guid.Empty, resultId);
+        Assert.NotEqual(Guid.Empty, team.Id);
         _teamRepoMock.Verify(r => r.AddAsync(It.Is<Team>(t => t.Name == "Backend Team" && t.Description == "Go/C# Devs")), Times.Once);
     }
 

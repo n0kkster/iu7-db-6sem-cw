@@ -29,10 +29,10 @@ public class InviteServiceTests
         _teamServiceMock.Setup(t => t.ExistsAsync(dto.TeamId)).ReturnsAsync(true);
 
         // Act
-        var code = await _inviteService.GenerateInviteAsync(dto);
+        var invite = await _inviteService.GenerateInviteAsync(dto);
 
         // Assert
-        Assert.NotEmpty(code);
+        Assert.NotEmpty(invite.Code);
         _inviteRepoMock.Verify(r => r.AddAsync(It.Is<Invite>(i => i.TeamId == dto.TeamId && i.Role == dto.Role)), Times.Once);
     }
 
