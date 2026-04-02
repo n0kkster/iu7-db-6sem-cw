@@ -23,20 +23,43 @@
         
         <MudSpacer />
 
-        <SectionOutlet SectionName="TopbarSystemSelect" />
+        <AuthorizeView>
+            <SectionOutlet SectionName="TopbarSystemSelect" />
 
-        <MudIconButton Icon="@(_isDarkMode? 
-                               Icons.Material.Filled.LightMode : 
-                               Icons.Material.Filled.DarkMode)"
-                       Color="Color.Inherit" 
-                       OnClick="@ToggleThemeAsync" />
+            <MudIconButton Icon="@(_isDarkMode? 
+                                Icons.Material.Filled.LightMode : 
+                                Icons.Material.Filled.DarkMode)"
+                        Color="Color.Inherit" 
+                        OnClick="@ToggleThemeAsync" />
 
-        <MudAvatar Color="Color.Primary" 
-                   Variant="Variant.Filled" 
-                   Class="ml-4">
-            <MudIcon Icon="@Icons.Material.Filled.AccountCircle" 
-                     Size="MudBlazor.Size.Large"/>
-        </MudAvatar>
+            <MudMenu AnchorOrigin="Origin.BottomRight" 
+                    TransformOrigin="Origin.TopRight" 
+                    Class="ml-4"
+                    ListClass="pa-1">
+                <ActivatorContent>
+                    <MudAvatar Color="Color.Primary" 
+                            Variant="Variant.Filled" 
+                            Style="cursor: pointer;">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountCircle" 
+                                Size="MudBlazor.Size.Large"/>
+                    </MudAvatar>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Href="/me" 
+                                Icon="@Icons.Material.Filled.Person">
+                        Мой профиль
+                    </MudMenuItem>
+                    
+                    <MudDivider Class="my-1" />
+                    
+                    <MudMenuItem Href="/logout" 
+                                Icon="@Icons.Material.Filled.Logout" 
+                                IconColor="Color.Error">
+                        Выйти
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </AuthorizeView>
     </MudAppBar>
 
     <AuthorizeView Context="NavMenuContext">
