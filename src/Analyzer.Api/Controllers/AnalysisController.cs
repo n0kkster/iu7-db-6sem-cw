@@ -14,19 +14,7 @@ public class AnalysisController(IAnalysisService analysisService) : ControllerBa
     [HttpGet("simulate/{failedComponentId}")]
     public async Task<IActionResult> GetImpactedComponents(Guid failedComponentId)
     {
-        try
-        {
-            var componentDtos = await _analysisService.GetImpactedComponentsAsync(failedComponentId);
-
-            return Ok(componentDtos);
-        }
-        catch (KeyNotFoundException)
-        {
-            return Problem(detail: "Ошибка получения критического пути", statusCode: 500);
-        }
-        catch
-        {
-            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
-        }
+        var componentDtos = await _analysisService.GetImpactedComponentsAsync(failedComponentId);
+        return Ok(componentDtos);
     }
 }

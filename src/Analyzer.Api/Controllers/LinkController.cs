@@ -15,53 +15,21 @@ public class LinkController(IGraphService graphService) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllLinksBySystemId([FromQuery] Guid systemId)
     {
-        try
-        {
-            var componentDtos = await _graphService.GetLinksBySystemIdAsync(systemId);
-
-            return Ok(componentDtos);
-        }
-        catch (KeyNotFoundException)
-        {
-            return Problem(detail: "Ошибка получения связей из базы данных", statusCode: 500);
-        }
-        catch
-        {
-            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
-        }
+        var componentDtos = await _graphService.GetLinksBySystemIdAsync(systemId);
+        return Ok(componentDtos);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateLink([FromBody] CreateLinkDto linkDto)
     {
-        try
-        {
-            var guid = await _graphService.CreateLinkAsync(linkDto);
-
-            return Ok(guid);
-        }
-        catch
-        {
-            return Problem(detail: "Ошибка создания связи", statusCode: 500);
-        }
+        var guid = await _graphService.CreateLinkAsync(linkDto);
+        return Ok(guid);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteLink(Guid id)
     {
-        try
-        {
-            await _graphService.DeleteLinkAsync(id);
-
-            return Ok();
-        }
-        catch (KeyNotFoundException)
-        {
-            return Problem(detail: "Ошибка удаления связи из базы данных", statusCode: 500);
-        }
-        catch
-        {
-            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
-        }
+        await _graphService.DeleteLinkAsync(id);
+        return Ok();
     }
 }

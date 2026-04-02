@@ -16,20 +16,8 @@ public class ComponentController(IGraphService graphService) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllComponentsBySystemId([FromQuery] Guid systemId)
     {
-        try
-        {
-            var componentDtos = await _graphService.GetComponentsBySystemIdAsync(systemId);
-
-            return Ok(componentDtos);
-        }
-        catch (KeyNotFoundException)
-        {
-            return Problem(detail: "Ошибка получения компонентов из базы данных", statusCode: 500);
-        }
-        catch
-        {
-            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
-        }
+        var componentDtos = await _graphService.GetComponentsBySystemIdAsync(systemId);
+        return Ok(componentDtos);
     }
 
     [Authorize (Roles = "Architect")]
@@ -37,63 +25,29 @@ public class ComponentController(IGraphService graphService) : ControllerBase
     public async Task<IActionResult> CreateComponent([FromBody] CreateComponentDto dto)
     {
         var guid = await _graphService.CreateComponentAsync(dto);
-
         return Ok(guid);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetComponentDetails(Guid id)
     {
-        try
-        {
-            var componentDto = await _graphService.GetComponentDetailsAsync(id);
-
-            return Ok(componentDto);
-        }
-        catch (KeyNotFoundException)
-        {
-            return Problem(detail: "Ошибка получения компонента из базы данных", statusCode: 500);
-        }
-        catch
-        {
-            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
-        }
+        var componentDto = await _graphService.GetComponentDetailsAsync(id);
+        return Ok(componentDto);
     }
 
     [Authorize (Roles = "Architect")]
     [HttpPut]
     public async Task<IActionResult> UpdateComponent([FromBody] ComponentDto dto)
     {
-        try
-        {
-            await _graphService.UpdateComponentAsync(dto);
-
-            return Ok();
-        }
-        catch (Exception e)
-        {
-            Log.Error($"Ошибка обновления компонента: {e.Message}");
-            return Problem(detail: $"Ошибка обновления компонента: {e.Message}", statusCode: 500);
-        }
+        await _graphService.UpdateComponentAsync(dto);
+        return Ok();
     }
 
     [Authorize (Roles = "Architect")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteComponent(Guid id)
     {
-        try
-        {
-            await _graphService.DeleteComponentAsync(id);
-
-            return Ok();
-        }
-        catch (KeyNotFoundException)
-        {
-            return Problem(detail: "Ошибка удаления компонента из базы данных", statusCode: 500);
-        }
-        catch
-        {
-            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
-        }
+        await _graphService.DeleteComponentAsync(id);
+        return Ok();
     }
 }

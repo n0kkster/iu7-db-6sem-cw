@@ -1,4 +1,5 @@
 using System.Text;
+using Analyzer.Api.Middlewares;
 using Analyzer.Application.Interfaces.Providers;
 using Analyzer.Application.Interfaces.Repositories;
 using Analyzer.Application.Interfaces.Services;
@@ -125,14 +126,22 @@ try
     });
 
     // ============================================================================
+    // ❌ 6. ИСКЛЮЧЕНИЯ
+    // ============================================================================
+    
+    builder.Services.AddProblemDetails();
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+    
+    // ============================================================================
     // 🚀 BUILD & CONFIGURE APP
     // ============================================================================
     
     var app = builder.Build();
 
     // ============================================================================
-    // 🔐 6. MIDDLEWARE PIPELINE
+    // 🔐 7. MIDDLEWARE PIPELINE
     // ============================================================================
+    app.UseExceptionHandler(); 
     
     if (app.Environment.IsDevelopment())
     {
@@ -157,7 +166,7 @@ try
     app.MapControllers();
 
     // ============================================================================
-    // 7. Инициализация первого админа, если база пуста
+    // 8. Инициализация первого админа, если база пуста
     // ============================================================================
 
     await DatabaseInitializer.InitializeAsync(app.Services, app.Configuration);

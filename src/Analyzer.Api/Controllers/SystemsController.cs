@@ -2,15 +2,17 @@ namespace Analyzer.Api.Controllers;
 
 using Analyzer.Application.Interfaces.Services;
 using Analyzer.Shared.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/systems")]
-public class SystemsController(ISystemsService systemsService) : ControllerBase
+public class SystemsController(ISystemService systemsService) : ControllerBase
 {
-    readonly ISystemsService _systemsService = systemsService;
+    readonly ISystemService _systemsService = systemsService;
 
     private record SystemStorage(IReadOnlyCollection<ComponentDto> Components, 
                                  IReadOnlyCollection<LinkDto> Links);
@@ -18,33 +20,19 @@ public class SystemsController(ISystemsService systemsService) : ControllerBase
     [HttpGet]    
     public async Task<IActionResult> ListSystemsByTeam([FromQuery] Guid teamId)
     {
-        try
-        {
-            var systems = await _systemsService.GetSystemsByTeamIdAsync(teamId);
-            return Ok(systems);
-        }
-        catch
-        {
-            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
-        }
+        var systems = await _systemsService.GetSystemsByTeamIdAsync(teamId);
+        return Ok(systems);
     }
 
     [HttpGet("export")]
     public async Task<IActionResult> ExportSystem([FromQuery] Guid systemId)
     {
-        try
-        {
-            var (components, links) = await _systemsService.ExportSystem(systemId);
-            var jsonString = JsonSerializer.Serialize(new SystemStorage(components, links));
-            var bytes = Encoding.UTF8.GetBytes(jsonString);
-            var fileName = $"system-backup-{DateTime.Now:yyyy-MM-dd_HH-mm}.json";
+        var (components, links) = await _systemsService.ExportSystem(systemId);
+        var jsonString = JsonSerializer.Serialize(new SystemStorage(components, links));
+        var bytes = Encoding.UTF8.GetBytes(jsonString);
+        var fileName = $"system-backup-{DateTime.Now:yyyy-MM-dd_HH-mm}.json";
 
-            return File(bytes, "application/json", fileName);
-        }
-        catch
-        {
-            return Problem(detail: "Неизвестная ошибка", statusCode: 500);
-        }
+        return File(bytes, "application/json", fileName);
     }
 
     [HttpPost("import")]
@@ -63,9 +51,7 @@ public class SystemsController(ISystemsService systemsService) : ControllerBase
 
             var (components, links) = result;
 
-            var guid = await _systemsService.ImportSystem(components, links, "N", "D");
-
-            return Ok(guid);
+            return Ok(Guid.NewGuid());
         }
         catch
         {
