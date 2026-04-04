@@ -67,21 +67,21 @@ public static class CypherQueryFactory
         RETURN affected.id AS Id";
 
     public static string GetCyclicDependencies() => @"
-        MATCH path = (c:Component {system_id: $SystemId})-[:DEPENDS_ON*]->(c)
+        MATCH path = (c {system_id: $SystemId})-[:DEPENDS_ON*]->(c)
         RETURN [node in nodes(path) | node.id] AS CycleIds";
 
     public static string GetSinglePointsOfFailure() => @"
-        MATCH (c:Component {system_id: $SystemId})<-[:DEPENDS_ON*]-(dependent:Component)
+        MATCH (c {system_id: $SystemId})<-[:DEPENDS_ON*]-(dependent)
         WITH c, count(DISTINCT dependent) AS ImpactCount
         WHERE ImpactCount >= $Threshold
         RETURN c.id AS Id, ImpactCount";
 
     public static string GetDecommissioningImpact() => @"
-        MATCH (target:Component {id: $TargetId})<-[:DEPENDS_ON*]-(impacted:Component)
+        MATCH (target {id: $TargetId})<-[:DEPENDS_ON*]-(impacted)
         RETURN DISTINCT impacted.id AS Id";
 
     public static string GetDeploymentRiskPaths() => @"
-        MATCH path = (dependent:Component)-[:DEPENDS_ON*]->(target:Component {id: $TargetId})
+        MATCH path = (dependent)-[:DEPENDS_ON*]->(target {id: $TargetId})
         RETURN[node in nodes(path) | node.id] AS PathIds";
 
     #endregion
