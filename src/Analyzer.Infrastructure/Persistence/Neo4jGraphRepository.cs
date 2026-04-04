@@ -210,7 +210,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         Log.Information($"Создаем связь {link.SourceId} -> {link.TargetId}..");
         var guid = Guid.NewGuid();
         
-        var query = CypherQueryFactory.DeleteLink();
+        var query = CypherQueryFactory.AddLink();
 
         try
         {
