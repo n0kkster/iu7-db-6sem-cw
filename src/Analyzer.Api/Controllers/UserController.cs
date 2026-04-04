@@ -3,6 +3,7 @@ using Analyzer.Application.Interfaces.Services;
 using Analyzer.Shared.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace Analyzer.Api.Controllers;
 
@@ -31,9 +32,21 @@ public class UsersController(IUserService userService) : ControllerBase
     public async Task<IActionResult> GetMyProfile()
     {
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var userId = Guid.Parse(userIdString!);
+    
+        if (string.IsNullOrEmpty(userIdString) || 
+            !Guid.TryParse(userIdString, out var userId))
+        {
+            Log.Error("Не найден Claim, содержащий User Id.");
+            return Unauthorized("Ошибка получения информации о профиле.");
+        }
 
         var profile = await _userService.GetProfileAsync(userId);
+        if (profile is null)
+        {
+            Log.Error($"Профиль пользователя {userId} не найден.");
+            return NotFound("Ошибка получения информации о профиле.");
+        }
+
         return Ok(profile);
     }
 

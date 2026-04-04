@@ -70,6 +70,10 @@ public partial class Home : ComponentBase, IDisposable
     private Guid? _selectedSystemId;
     // ===========================
 
+    // Пользователь, которому принадлежит текущая сессия
+    // ===========================
+    private UserDto _loggedUser = default!;
+    // ===========================
 
     // =================================================
     // ИНИЦИАЛИЗАЦИЯ И ЖИЗНЕННЫЙ ЦИКЛ
@@ -78,7 +82,17 @@ public partial class Home : ComponentBase, IDisposable
     {
         try
         {
-            _systems = await Http.GetFromJsonAsync<IReadOnlyCollection<ITSystemDto>>($"api/v1/systems/?teamId={Guid.Empty}");
+            var user = await Http.GetFromJsonAsync<UserDto>("api/v1/users/me");
+            if (user is null)
+            {
+                Log.Error("Ошибка получения профиля пользователя.");
+                NavManager.NavigateTo("/logout", forceLoad: true);
+                return;
+            }
+            _loggedUser = user;
+
+            _systems = await Http.GetFromJsonAsync<IReadOnlyCollection<ITSystemDto>>(
+                $"api/v1/systems/?teamId={_loggedUser.TeamId}");
         }
         catch (Exception e)
         {
