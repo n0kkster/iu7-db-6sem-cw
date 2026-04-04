@@ -24,6 +24,21 @@ public class SystemsController(ISystemService systemsService) : ControllerBase
         return Ok(systems);
     }
 
+    [HttpPost]    
+    public async Task<IActionResult> AddSystem([FromBody] CreateITSystemDto dto)
+    {
+        var createdId = await _systemsService.CreateSystemAsync(dto);
+        return Ok(createdId);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteSystem(Guid id)
+    {
+        await _systemsService.DeleteSystemAsync(id);
+        return Ok();
+    }
+
+
     [HttpGet("export")]
     public async Task<IActionResult> ExportSystem([FromQuery] Guid systemId)
     {

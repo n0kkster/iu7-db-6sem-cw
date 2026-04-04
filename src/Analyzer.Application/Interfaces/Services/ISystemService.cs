@@ -10,7 +10,8 @@ public interface ISystemService
                             CreateITSystemDto systemDto);
 
     Task<IReadOnlyCollection<ITSystemDto>> GetSystemsByTeamIdAsync(Guid teamId);
-
+    
+    public Task<Guid> CreateSystemAsync(CreateITSystemDto dto); 
     public Task UpdateSystemAsync(ITSystemDto dto);
     public Task DeleteSystemAsync(Guid systemId);
 }

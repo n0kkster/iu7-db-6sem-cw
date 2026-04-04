@@ -78,6 +78,14 @@
                             Icon="@Icons.Material.Filled.People">
                     Команда
                 </MudNavLink>
+
+                @if (NavMenuContext.User.IsInRole(Role.Architect.ToString()))
+                {
+                    <MudNavLink Href="/systems" 
+                            Icon="@Icons.Material.Filled.BubbleChart">
+                        Системы
+                    </MudNavLink>
+                }
             </MudNavMenu>
         </MudDrawer>
     </AuthorizeView>

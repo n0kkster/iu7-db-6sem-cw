@@ -41,34 +41,6 @@
                     Добавить компонент
                 </MudButton>
             }
-
-            <MudFileUpload T="IBrowserFile" Accept=".json" OnFilesChanged="ImportSystemAsync" Style="margin-top: 0;">
-                <ActivatorContent>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Upload" Class="mr-3">
-                        @if (_isImportingSystem)
-                        {
-                            <MudProgressCircular Class="ms-n1" Size="MudBlazor.Size.Small" Indeterminate="true"/>
-                            <MudText Class="ms-2">Загрузка...</MudText>
-                        }
-                        else
-                        {
-                            <MudText>Импорт</MudText>
-                        }
-                    </MudButton>
-                </ActivatorContent>
-            </MudFileUpload>
-
-            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" Class="mr-3" OnClick="ExportSystemAsync">
-                @if (_isExportingSystem)
-                {
-                    <MudProgressCircular Class="ms-n1" Size="MudBlazor.Size.Small" Indeterminate="true"/>
-                    <MudText Class="ms-2">Сохранение...</MudText>
-                }
-                else
-                {
-                    <MudText>Экспорт</MudText>
-                }
-            </MudButton>
         }
         else
         {

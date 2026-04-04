@@ -5,7 +5,8 @@ using Analyzer.Application.Interfaces.Services;
 using Analyzer.Domain.Entities;
 using Analyzer.Shared.DTO;
 
-public class SystemService(IGraphService graphService, ISystemRepository systemsRepository) : ISystemService
+public class SystemService(IGraphService graphService, 
+                           ISystemRepository systemsRepository) : ISystemService
 {
     readonly IGraphService _graphService = graphService;
     readonly ISystemRepository _systemsRepository = systemsRepository;
@@ -13,13 +14,23 @@ public class SystemService(IGraphService graphService, ISystemRepository systems
     public async Task<IReadOnlyCollection<ITSystemDto>> GetSystemsByTeamIdAsync(Guid teamId)
     {
         var systems = await _systemsRepository.GetByTeamIdAsync(teamId);
+        var tasks = systems.Select(async system =>
+        {
+            var components = await _graphService.GetComponentsBySystemIdAsync(system.Id);
+            return new { system.Id, Count = components.Count() };
+        });
+
+        var results = await Task.WhenAll(tasks);
+        var systemsComponentsCount = results.ToDictionary(x => x.Id, x => x.Count);
+
         return systems.Select(system => new ITSystemDto(
             system.Id,
             system.Name,
             system.Description,
             system.CreatedAt,
             system.UpdatedAt,
-            system.TeamId
+            system.TeamId,
+            systemsComponentsCount[system.Id]
         )).ToList();
     }
 
@@ -30,17 +41,17 @@ public class SystemService(IGraphService graphService, ISystemRepository systems
         return (components, links);
     }
 
-    public async Task<Guid> ImportSystem(IReadOnlyCollection<ComponentDto> components, 
+    public async Task<Guid> ImportSystem(IReadOnlyCollection<ComponentDto> components,
                                          IReadOnlyCollection<LinkDto> links,
                                          CreateITSystemDto systemDto)
     {
         var guidMap = new Dictionary<Guid, Guid>();
-        
+
         var newSystemId = await CreateSystemAsync(systemDto);
 
         foreach (var component in components)
         {
-            var newGuid = await _graphService.CreateComponentAsync(new (
+            var newGuid = await _graphService.CreateComponentAsync(new(
                 newSystemId,
                 component.Type,
                 component.Name,
@@ -55,9 +66,9 @@ public class SystemService(IGraphService graphService, ISystemRepository systems
                 guidMap.TryGetValue(link.TargetId, out var newTargetId))
             {
                 var newLink = new CreateLinkDto(
-                    newSourceId, 
-                    newTargetId, 
-                    link.Severity, 
+                    newSourceId,
+                    newTargetId,
+                    link.Severity,
                     link.Protocol
                 );
 
@@ -93,7 +104,7 @@ public class SystemService(IGraphService graphService, ISystemRepository systems
         var components = await _graphService.GetComponentsBySystemIdAsync(systemId);
         foreach (var component in components)
             await _graphService.DeleteComponentAsync(component.Id);
-            
+
         await _systemsRepository.DeleteAsync(systemId);
     }
 }

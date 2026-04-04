@@ -580,51 +580,6 @@ public partial class Home : ComponentBase, IDisposable
     }
     // ===================================
 
-    private async Task ImportSystemAsync(InputFileChangeEventArgs e)
-    {
-        try
-        {
-            var file = e.File;
-            if (file is null)
-                return;
-
-            _isImportingSystem = true;
-
-            long maxFileSize = 10 * 1024 * 1024;
-
-            using var stream = file.OpenReadStream(maxFileSize);
-            using var content = new MultipartFormDataContent();
-
-            var fileContent = new StreamContent(stream);
-            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-            content.Add(fileContent, "file", file.Name);
-
-            var response = await Http.PostAsync("api/v1/systems/import", content);
-            response.EnsureSuccessStatusCode();
-
-            Snackbar.Add("Система успешно импортирована", Severity.Success);
-
-            await RefreshGraphAsync();
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"Ошибка импорта: {ex.Message}");
-            Snackbar.Add("Не удалось импортировать систему", Severity.Error);
-        }
-        finally
-        {
-            _isImportingSystem = false;
-        }
-    }
-
-    private async Task ExportSystemAsync()
-    {
-        // а где хранить активную систему? на фронте наверное все таки
-        _isExportingSystem = true;
-        NavManager.NavigateTo("http://localhost:1555/api/v1/systems/export", forceLoad: true);
-        _isExportingSystem = false;
-    }
-
     // =================================================
     // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
     // =================================================
