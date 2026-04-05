@@ -14,17 +14,17 @@ public class SystemsController(ISystemService systemsService) : ControllerBase
 {
     readonly ISystemService _systemsService = systemsService;
 
-    private record SystemStorage(IReadOnlyCollection<ComponentDto> Components, 
+    private record SystemStorage(IReadOnlyCollection<ComponentDto> Components,
                                  IReadOnlyCollection<LinkDto> Links);
 
-    [HttpGet]    
+    [HttpGet]
     public async Task<IActionResult> ListSystemsByTeam([FromQuery] Guid teamId)
     {
         var systems = await _systemsService.GetSystemsByTeamIdAsync(teamId);
         return Ok(systems);
     }
 
-    [HttpPost]    
+    [HttpPost]
     public async Task<IActionResult> AddSystem([FromBody] CreateITSystemDto dto)
     {
         var createdId = await _systemsService.CreateSystemAsync(dto);
@@ -42,7 +42,7 @@ public class SystemsController(ISystemService systemsService) : ControllerBase
     [HttpGet("export")]
     public async Task<IActionResult> ExportSystem([FromQuery] Guid systemId)
     {
-        var (components, links) = await _systemsService.ExportSystem(systemId);
+        var (components, links) = await _systemsService.ExportSystemAsync(systemId);
         var jsonString = JsonSerializer.Serialize(new SystemStorage(components, links));
         var bytes = Encoding.UTF8.GetBytes(jsonString);
         var fileName = $"system-backup-{DateTime.Now:yyyy-MM-dd_HH-mm}.json";
@@ -51,12 +51,20 @@ public class SystemsController(ISystemService systemsService) : ControllerBase
     }
 
     [HttpPost("import")]
-    public async Task<IActionResult> ImportSystem([FromForm] IFormFile file)
+    public async Task<IActionResult> ImportSystem([FromForm] IFormFile file, [FromForm] string importData)
     {
         try
         {
             if (file is null || file.Length == 0)
-                return Problem("Ошибка получения файла", statusCode: 500);
+                return BadRequest("Ошибка получения файла");
+
+            var dto = JsonSerializer.Deserialize<CreateITSystemDto>(
+                importData,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+
+            if (dto is null)
+                return BadRequest("Некорректные данные импорта");
 
             using var stream = file.OpenReadStream();
             var result = await JsonSerializer.DeserializeAsync<SystemStorage>(stream);
@@ -66,7 +74,9 @@ public class SystemsController(ISystemService systemsService) : ControllerBase
 
             var (components, links) = result;
 
-            return Ok(Guid.NewGuid());
+            var newSystemId = await _systemsService.ImportSystemAsync(components, links, dto);
+
+            return Ok(newSystemId);
         }
         catch
         {
