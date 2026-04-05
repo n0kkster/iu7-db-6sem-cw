@@ -4,10 +4,8 @@
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(Program).Assembly">
         <Found Context="routeData">
-            @* AuthorizeRouteView автоматически требует авторизацию для ВСЕХ страниц *@
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <NotAuthorized>
-                    @* Если юзер не авторизован - перекидываем его на страницу Login *@
                     <RedirectToLogin />
                 </NotAuthorized>
             </AuthorizeRouteView>
