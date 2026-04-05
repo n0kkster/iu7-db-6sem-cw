@@ -10,7 +10,7 @@
                Style="backdrop-filter: blur(8px);" 
                Class="border-b mud-border-lines-default">
 
-        <AuthorizeView>
+        <AuthorizeView Roles="@(Role.Architect.ToString())">
             <MudIconButton Icon="@Icons.Material.Filled.Menu" 
                            Color="Color.Inherit" 
                            Edge="Edge.Start"
@@ -62,7 +62,8 @@
         </AuthorizeView>
     </MudAppBar>
 
-    <AuthorizeView Context="NavMenuContext">
+    <AuthorizeView Roles="@(Role.Architect.ToString())" 
+                   Context="NavMenuContext">
         <MudDrawer @bind-Open="_drawerOpen" 
                    Elevation="0" 
                    Variant="@DrawerVariant.Mini"
@@ -74,18 +75,10 @@
                     Дашборд
                 </MudNavLink>
 
-                <MudNavLink Href="/team" 
-                            Icon="@Icons.Material.Filled.People">
-                    Команда
+                <MudNavLink Href="/systems" 
+                        Icon="@Icons.Material.Filled.BubbleChart">
+                    Системы
                 </MudNavLink>
-
-                @if (NavMenuContext.User.IsInRole(Role.Architect.ToString()))
-                {
-                    <MudNavLink Href="/systems" 
-                            Icon="@Icons.Material.Filled.BubbleChart">
-                        Системы
-                    </MudNavLink>
-                }
             </MudNavMenu>
         </MudDrawer>
     </AuthorizeView>
