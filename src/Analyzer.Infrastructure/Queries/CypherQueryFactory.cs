@@ -2,7 +2,7 @@ namespace Analyzer.Infrastructure.Queries;
 
 public static class CypherQueryFactory
 {
-    #region Компоненты (Components)
+    #region Компоненты
 
     public static string GetComponentsBySystemId() => @"
         MATCH (n) 
@@ -40,7 +40,7 @@ public static class CypherQueryFactory
 
     #endregion
 
-    #region Связи (Links)
+    #region Связи
 
     public static string AddLink() => @"
         MATCH (s { id: $SourceId })
@@ -60,29 +60,54 @@ public static class CypherQueryFactory
 
     #endregion
 
-    #region Аналитика отказоустойчивости (Resilience Analysis)
+    #region Аналитика отказоустойчивости
 
     public static string GetCascadingFailureImpact() => @"
-        MATCH (failed {id: $FailedId})<-[:DEPENDS_ON*]-(affected)
+        MATCH (failed {id: $FailedId})
+        CALL apoc.path.subgraphNodes(failed, {
+            relationshipFilter: '<DEPENDS_ON',
+            minLevel: 1
+        }) YIELD node AS affected
         RETURN affected.id AS Id";
 
     public static string GetCyclicDependencies() => @"
-        MATCH path = (c {system_id: $SystemId})-[:DEPENDS_ON*]->(c)
-        RETURN [node in nodes(path) | node.id] AS CycleIds";
+        MATCH (c {system_id: $SystemId})
+        CALL apoc.path.expandConfig(c, {
+            relationshipFilter: 'DEPENDS_ON>',
+            terminatorNodes: [c],
+            minLevel: 1,
+            uniqueness: 'RELATIONSHIP_PATH'
+        }) YIELD path
+        WITH [node in nodes(path)[0..-1] | node.id] AS cycleMembers
+        WITH apoc.coll.sort(cycleMembers) AS sortedCycle
+        RETURN DISTINCT sortedCycle AS CycleIds";
 
     public static string GetSinglePointsOfFailure() => @"
-        MATCH (c {system_id: $SystemId})<-[:DEPENDS_ON*]-(dependent)
-        WITH c, count(DISTINCT dependent) AS ImpactCount
+        MATCH (c {system_id: $SystemId})
+        CALL apoc.path.subgraphNodes(c, {
+            relationshipFilter: '<DEPENDS_ON',
+            minLevel: 1
+        }) YIELD node AS dependent
+        WITH c, count(dependent) AS ImpactCount
         WHERE ImpactCount >= $Threshold
         RETURN c.id AS Id, ImpactCount";
 
     public static string GetDecommissioningImpact() => @"
-        MATCH (target {id: $TargetId})<-[:DEPENDS_ON*]-(impacted)
-        RETURN DISTINCT impacted.id AS Id";
+        MATCH (target {id: $TargetId})
+        CALL apoc.path.subgraphNodes(target, {
+            relationshipFilter: '<DEPENDS_ON',
+            minLevel: 1
+        }) YIELD node AS impacted
+        RETURN impacted.id AS Id";
 
     public static string GetDeploymentRiskPaths() => @"
-        MATCH path = (dependent)-[:DEPENDS_ON*]->(target {id: $TargetId})
-        RETURN[node in nodes(path) | node.id] AS PathIds";
+        MATCH (target {id: $TargetId})
+        CALL apoc.path.expandConfig(target, {
+            relationshipFilter: '<DEPENDS_ON',
+            minLevel: 1,
+            uniqueness: 'NODE_PATH'
+        }) YIELD path
+        RETURN [node in reverse(nodes(path)) | node.id] AS PathIds";
 
     #endregion
 }
