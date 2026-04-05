@@ -19,7 +19,6 @@ using Blazor.Diagrams.Core.Geometry;
 
 using BlazorLinkModel = Blazor.Diagrams.Core.Models.LinkModel;
 using LinkModel = Models.LinkModel;
-using Microsoft.AspNetCore.Components.Forms;
 using Blazor.Diagrams.Core.Anchors;
 
 public partial class Home : ComponentBase, IDisposable
@@ -56,12 +55,6 @@ public partial class Home : ComponentBase, IDisposable
     // Состояние симуляции
     // ===========================
     private bool _isSimulationMode = false;
-    // ===========================
-
-    // Состояние импорта и экспорта
-    // ===========================
-    private bool _isImportingSystem = false;
-    private bool _isExportingSystem = false;
     // ===========================
 
     // Управление системами
