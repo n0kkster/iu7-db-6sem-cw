@@ -34,14 +34,15 @@ public class SystemService(IGraphService graphService,
         )).ToList();
     }
 
-    public async Task<(IReadOnlyCollection<ComponentDto>, IReadOnlyCollection<LinkDto>)> ExportSystem(Guid systemId)
+    public async Task<(IReadOnlyCollection<ComponentDto>, IReadOnlyCollection<LinkDto>)> ExportSystemAsync(
+        Guid systemId)
     {
         var components = await _graphService.GetComponentsBySystemIdAsync(systemId);
         var links = await _graphService.GetLinksBySystemIdAsync(systemId);
         return (components, links);
     }
 
-    public async Task<Guid> ImportSystem(IReadOnlyCollection<ComponentDto> components,
+    public async Task<Guid> ImportSystemAsync(IReadOnlyCollection<ComponentDto> components,
                                          IReadOnlyCollection<LinkDto> links,
                                          CreateITSystemDto systemDto)
     {

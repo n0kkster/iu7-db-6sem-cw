@@ -125,7 +125,7 @@ public class SystemServiceTests
         _graphServiceMock.Setup(s => s.GetLinksBySystemIdAsync(systemId)).ReturnsAsync(links);
 
         // Act
-        var (resultComponents, resultLinks) = await _systemService.ExportSystem(systemId);
+        var (resultComponents, resultLinks) = await _systemService.ExportSystemAsync(systemId);
 
         // Assert
         Assert.Single(resultComponents);
@@ -163,7 +163,7 @@ public class SystemServiceTests
             .ReturnsAsync(newCompId2);
 
         // Act
-        var resultSystemId = await _systemService.ImportSystem(components, links, dto);
+        var resultSystemId = await _systemService.ImportSystemAsync(components, links, dto);
 
         // Assert
         Assert.NotEqual(Guid.Empty, resultSystemId);

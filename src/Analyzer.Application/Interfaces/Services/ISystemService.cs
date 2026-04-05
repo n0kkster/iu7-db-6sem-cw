@@ -4,8 +4,8 @@ using Analyzer.Shared.DTO;
 
 public interface ISystemService
 {
-    Task<(IReadOnlyCollection<ComponentDto>, IReadOnlyCollection<LinkDto>)> ExportSystem(Guid systemId);
-    Task<Guid> ImportSystem(IReadOnlyCollection<ComponentDto> components, 
+    Task<(IReadOnlyCollection<ComponentDto>, IReadOnlyCollection<LinkDto>)> ExportSystemAsync(Guid systemId);
+    Task<Guid> ImportSystemAsync(IReadOnlyCollection<ComponentDto> components, 
                             IReadOnlyCollection<LinkDto> links,
                             CreateITSystemDto systemDto);
 
