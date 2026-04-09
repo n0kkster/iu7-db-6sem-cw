@@ -24,15 +24,16 @@
     <div class="toolbar border-b mud-border-lines-default pa-3 d-flex align-center mud-theme-surface"
          style="background-color: var(--mud-palette-background);">
         
-        @if (!_isSimulationMode)
+        @if (!_isAnalysisMode)
         {
             @if (_selectedSystemId is not null)
             {
                 <MudButton Variant="Variant.Outlined" 
                            Color="Color.Primary" 
                            StartIcon="@Icons.Material.Filled.Update" 
-                           Class="mr-3" OnClick="RefreshGraphAsync">
-                    Обновить граф
+                           Class="mr-3" 
+                           OnClick="RefreshGraphAsync">
+                    Обновить
                 </MudButton>
                 <MudButton Variant="Variant.Outlined" 
                            Color="Color.Primary" 
@@ -41,11 +42,29 @@
                            OnClick="AutoArrangeNodesAsync">
                     Авто-раскладка
                 </MudButton>
+                
+                <AuthorizeView Roles="Architect, SRE">
+                    <MudButton Variant="Variant.Filled" 
+                                Color="Color.Secondary" 
+                                StartIcon="@Icons.Material.Filled.Loop" 
+                                Class="mr-3" 
+                                OnClick="RunCycleAnalysisAsync">
+                        Поиск циклов
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" 
+                                Color="Color.Error" 
+                                StartIcon="@Icons.Material.Filled.CrisisAlert" 
+                                Class="mr-3" 
+                                OnClick="RunSpofAnalysisAsync">
+                        SPOF Анализ
+                    </MudButton>
+                </AuthorizeView>
                         
+                <MudSpacer />
+                
                 <MudButton Variant="Variant.Filled" 
                            Color="Color.Primary" 
                            StartIcon="@Icons.Material.Filled.Add" 
-                           Class="mr-3" 
                            OnClick="OpenAddComponentDialog">
                     Добавить компонент
                 </MudButton>
@@ -56,18 +75,13 @@
             <MudButton Variant="Variant.Filled" 
                        Color="Color.Warning" 
                        StartIcon="@Icons.Material.Filled.Close" 
-                       Class="mr-3" 
-                       OnClick="ResetSimulation">
-                Выйти из режима симуляции
+                       Class="mr-3" OnClick="ResetAnalysisMode">
+                Выйти из режима анализа
             </MudButton>
             
-            <MudText Typo="Typo.subtitle1" 
-                     Color="Color.Error" 
-                     Class="font-bold ml-4">
-                <MudIcon Icon="@Icons.Material.Filled.Warning" 
-                         Size="MudBlazor.Size.Small" 
-                         Class="mr-2" />
-                Отображение каскадного отказа
+            <MudText Typo="Typo.subtitle1" Color="Color.Warning" Class="font-bold ml-4">
+                <MudIcon Icon="@Icons.Material.Filled.Analytics" Size="MudBlazor.Size.Small" Class="mr-2" />
+                Отображение результатов анализа
             </MudText>
         }
     </div>
@@ -103,7 +117,9 @@
     ComponentModel="@_selectedComponentModel" 
     OnClose="@(() => _isComponentPropertiesPanelOpen = false)"
     OnGraphChanged="RefreshGraphAsync" 
-    OnSimulateFailure="RunSimulationAsync" />
+    OnSimulateFailure="RunSimulationAsync" 
+    OnPlanDecommissioning="RunDecommissioningAsync" 
+    OnAssessDeploymentRisk="RunDeploymentRiskAsync" />
 
 <LinkPropertiesPanel 
     IsOpen="@_isLinkPropertiesPanelOpen" 

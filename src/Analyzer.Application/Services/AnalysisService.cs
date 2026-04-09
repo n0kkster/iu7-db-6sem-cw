@@ -75,14 +75,12 @@ public class AnalysisService(IGraphRepository repository) : IAnalysisService
             return result;
         }
 
-        // БИЗНЕС-ЛОГИКА СКОРИНГА (Оценка риска)
         int totalScore = 0;
 
         foreach (var path in paths)
         {
             int pathScore = 0;
 
-            // Оцениваем каждую связь в цепочке
             foreach (var severity in path.LinkSeverities)
             {
                 pathScore += severity switch

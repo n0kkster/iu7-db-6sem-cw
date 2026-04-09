@@ -54,7 +54,7 @@ public partial class Home : ComponentBase, IDisposable
 
     // Состояние симуляции
     // ===========================
-    private bool _isSimulationMode = false;
+    private bool _isAnalysisMode = false;
     // ===========================
 
     // Управление системами
@@ -375,7 +375,7 @@ public partial class Home : ComponentBase, IDisposable
         var nodes = Diagram.Nodes.OfType<ComponentModel>().ToList();
         var links = Diagram.Links.OfType<LinkModel>().ToList();
 
-        if (nodes.Count < 2) 
+        if (nodes.Count < 2)
             return;
 
         double oldCenterX = nodes.Average(n => n.Position.X);
@@ -414,7 +414,7 @@ public partial class Home : ComponentBase, IDisposable
 
             for (int i = 0; i < iterations; i++)
             {
-                foreach (var node in connectedNodes) 
+                foreach (var node in connectedNodes)
                     disp[node.ComponentId] = new PointD(0, 0);
 
                 // Отталкивание
@@ -446,7 +446,7 @@ public partial class Home : ComponentBase, IDisposable
 
                     double force = distance * distance / k;
 
-                    if (degree[source] == 1 || degree[target] == 1) 
+                    if (degree[source] == 1 || degree[target] == 1)
                         force *= tailForce;
 
                     double dxForce = dx / distance * force * aspectX;
@@ -553,7 +553,7 @@ public partial class Home : ComponentBase, IDisposable
 
         foreach (var link in Diagram.Links)
         {
-            if (link is LinkModel linkModel) 
+            if (link is LinkModel linkModel)
                 UpdateDynamicPorts(linkModel);
         }
 
@@ -579,7 +579,7 @@ public partial class Home : ComponentBase, IDisposable
                 return;
             }
 
-            _isSimulationMode = true;
+            _isAnalysisMode = true;
 
             var allFailedIds = result.ToHashSet();
             allFailedIds.Add(initialFailedComponentId);
@@ -641,9 +641,182 @@ public partial class Home : ComponentBase, IDisposable
         }
     }
 
-    private void ResetSimulation()
+    private async Task RunCycleAnalysisAsync()
     {
-        _isSimulationMode = false;
+        _isLoadingGraph = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<CycleAnalysisResultDto>(
+                $"api/v1/analysis/cycles/{_selectedSystemId}");
+            if (result is null || !result.Cycles.Any())
+            {
+                Snackbar.Add("Циклические зависимости не обнаружены.", Severity.Success);
+                return;
+            }
+
+            _isAnalysisMode = true;
+            var allNodesInCycles = result.Cycles.SelectMany(x => x).ToHashSet();
+
+            foreach (var node in Diagram!.Nodes.OfType<ComponentModel>())
+            {
+                node.IsDimmed = !allNodesInCycles.Contains(node.ComponentId);
+                node.Refresh();
+            }
+
+            foreach (var link in Diagram.Links.OfType<LinkModel>())
+            {
+                var sId = (link.Source.Model as PortModel)?.GetParent<ComponentModel>().ComponentId ?? Guid.Empty;
+                var tId = (link.Target.Model as PortModel)?.GetParent<ComponentModel>().ComponentId ?? Guid.Empty;
+
+                if (result.Cycles.Any(c => c.Contains(sId) && c.Contains(tId)))
+                {
+                    link.Color = "#9c27b0";
+                    link.Width = 4;
+                    link.IsDimmed = false;
+                }
+                else
+                {
+                    link.IsDimmed = true;
+                }
+                link.Refresh();
+            }
+
+            Snackbar.Add($"Найдено {result.Cycles.Count} циклов в системе", Severity.Warning);
+        }
+        catch (Exception) 
+        { 
+            Snackbar.Add("Ошибка анализа циклов", Severity.Error); 
+        }
+        finally 
+        { 
+            _isLoadingGraph = false; 
+        }
+    }
+
+    private async Task RunSpofAnalysisAsync()
+    {
+        _isLoadingGraph = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<SpofAnalysisResultDto>(
+                $"api/v1/analysis/spof/{_selectedSystemId}?threshold=3");
+            if (result is null || !result.CriticalNodes.Any())
+            {
+                Snackbar.Add("Критичные единые точки отказа не найдены.", Severity.Success);
+                return;
+            }
+
+            _isAnalysisMode = true;
+
+            foreach (var node in Diagram!.Nodes.OfType<ComponentModel>())
+            {
+                if (result.CriticalNodes.ContainsKey(node.ComponentId))
+                {
+                    node.IsFailed = true;
+                    node.IsDimmed = false;
+                }
+                else
+                {
+                    node.IsFailed = false;
+                    node.IsDimmed = true;
+                }
+                node.Refresh();
+            }
+
+            foreach (var link in Diagram.Links.OfType<LinkModel>())
+            {
+                link.IsDimmed = true;
+                link.Refresh();
+            }
+
+            Snackbar.Add($"Найдено {result.CriticalNodes.Count} узлов SPOF", Severity.Error);
+        }
+        catch (Exception) 
+        { 
+            Snackbar.Add("Ошибка анализа SPOF", Severity.Error); 
+        }
+        finally 
+        { 
+            _isLoadingGraph = false; 
+        }
+    }
+
+    public async Task RunDecommissioningAsync(Guid targetId)
+    {
+        _isComponentPropertiesPanelOpen = false;
+        _isLoadingGraph = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<DecommissioningResultDto>(
+                $"api/v1/analysis/decommission/{targetId}");
+
+            _isAnalysisMode = true;
+            var impacted = result!.ImpactedComponentIds.ToHashSet();
+
+            foreach (var node in Diagram!.Nodes.OfType<ComponentModel>())
+            {
+                if (node.ComponentId == targetId)
+                {
+                    node.IsDimmed = false;
+                }
+                else if (impacted.Contains(node.ComponentId))
+                {
+                    node.IsFailed = true;
+                    node.IsDimmed = false;
+                }
+                else
+                {
+                    node.IsDimmed = true;
+                    node.IsFailed = false;
+                }
+                node.Refresh();
+            }
+
+            Severity msgSeverity = impacted.Any() ? Severity.Error : Severity.Success;
+            Snackbar.Add(result.Recommendation, msgSeverity);
+        }
+        catch (Exception) 
+        { 
+            Snackbar.Add("Ошибка анализа вывода", Severity.Error); 
+        }
+        finally 
+        { 
+            _isLoadingGraph = false; 
+        }
+    }
+
+    public async Task RunDeploymentRiskAsync(Guid targetId)
+    {
+        _isComponentPropertiesPanelOpen = false;
+        _isLoadingGraph = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<DeploymentRiskResultDto>(
+                $"api/v1/analysis/deployment-risk/{targetId}");
+
+            Severity severity = result!.RiskLevel switch
+            {
+                "Critical" => Severity.Error,
+                "High" => Severity.Warning,
+                "Medium" => Severity.Info,
+                _ => Severity.Success
+            };
+
+            Snackbar.Add($"Риск: {result.RiskLevel}. Очки: {result.RiskScore}. {result.Summary}", severity);
+        }
+        catch (Exception) 
+        { 
+            Snackbar.Add("Ошибка оценки риска", Severity.Error); 
+        }
+        finally 
+        { 
+            _isLoadingGraph = false; 
+        }
+    }
+
+    private void ResetAnalysisMode()
+    {
+        _isAnalysisMode = false;
 
         foreach (var node in Diagram!.Nodes)
         {

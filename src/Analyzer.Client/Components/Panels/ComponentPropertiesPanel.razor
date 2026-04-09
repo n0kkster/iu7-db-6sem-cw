@@ -61,14 +61,34 @@
                 }
             </MudButton>
 
-            <MudButton Color="Color.Error" 
-                       Variant="Variant.Filled" 
-                       OnClick="RunSimulationAsync"
-                       FullWidth="true" 
-                       Class="mt-6"
-                       StartIcon="@Icons.Material.Filled.PowerOff">
-                Сымитировать падение
-            </MudButton>
+            <AuthorizeView Roles="Architect, SRE">
+                <MudButton Color="Color.Error" 
+                        Variant="Variant.Filled" 
+                        OnClick="RunSimulationAsync"
+                        FullWidth="true" 
+                        Class="mt-6"
+                        StartIcon="@Icons.Material.Filled.PowerOff">
+                    Сымитировать падение
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" 
+                           Color="Color.Error" 
+                           FullWidth="true" 
+                           Class="mt-6"
+                           OnClick="@(() => OnPlanDecommissioning.InvokeAsync(_component.Id))">
+                    План вывода
+                </MudButton>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Developer">
+                <MudButton Variant="Variant.Outlined" 
+                           Color="Color.Info" 
+                           FullWidth="true" 
+                           Class="mt-6"
+                           OnClick="@(() => OnAssessDeploymentRisk.InvokeAsync(_component.Id))">
+                    Оценка риска развертывания
+                </MudButton>
+            </AuthorizeView>
+
         }
     </div>
 </MudDrawer>
@@ -88,6 +108,8 @@
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnGraphChanged { get; set; }
     [Parameter] public EventCallback<Guid> OnSimulateFailure { get; set; }
+    [Parameter] public EventCallback<Guid> OnPlanDecommissioning { get; set; }
+    [Parameter] public EventCallback<Guid> OnAssessDeploymentRisk { get; set; }
 
     private ComponentDto? _component;
     private bool _isLoading = false;

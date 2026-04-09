@@ -29,7 +29,7 @@ public class DecommissioningResultDto
 
 public class DeploymentRiskResultDto
 {
-    public string RiskLevel { get; set; } = "Low"; // Low, Medium, High, Critical
+    public string RiskLevel { get; set; } = string.Empty; // Low, Medium, High, Critical
     public int RiskScore { get; set; }
     public int TotalAffectedPaths { get; set; }
     public string Summary { get; set; } = string.Empty;
