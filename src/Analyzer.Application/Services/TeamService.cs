@@ -85,13 +85,14 @@ public class TeamService(
 
     private UserDto MapToDto(User user)
     {
-        return new UserDto(
-            user.Id, 
-            user.Username,
-            user.Email,
-            user.Role,
-            user.TeamId
-        );
+        return new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role,
+            TeamId = user.TeamId
+        };
     }
 
     private TeamDto MapToDto(Team team)

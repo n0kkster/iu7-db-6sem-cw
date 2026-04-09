@@ -9,6 +9,7 @@ public interface IUserRepository
     Task<IReadOnlyCollection<User>> GetAllUsersAsync();
     
     Task<bool> ExistsByUsernameAsync(string username); 
+    Task<bool> ExistsByEmailAsync(string email); 
     
     Task AddAsync(User user);
     

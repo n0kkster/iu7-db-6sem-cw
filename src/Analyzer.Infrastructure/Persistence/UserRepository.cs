@@ -28,6 +28,11 @@ public class UserRepository(AnalyzerDbContext context) : IUserRepository
         return await _context.Users.AnyAsync(u => u.Username == username);
     }
 
+    public async Task<bool> ExistsByEmailAsync(string email)
+    {
+        return await _context.Users.AnyAsync(u => u.Email == email);
+    }
+
     public async Task AddAsync(User user)
     {
         await _context.Users.AddAsync(user);

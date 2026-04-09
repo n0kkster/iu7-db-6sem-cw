@@ -2,8 +2,14 @@ using Analyzer.Domain.Enums;
 
 namespace Analyzer.Shared.DTO;
 
-public record UserDto(Guid Id, string Username, string Email,
-                      Role Role, Guid TeamId);
+public class UserDto
+{
+    public Guid Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public Role Role { get; set; }
+    public Guid TeamId { get; set; }
+}
 
 public class RegisterDto
 {
@@ -19,4 +25,8 @@ public class LoginDto
     public string Password { get; set; } = string.Empty;
 }
 
-public record UpdateProfileDto(string Username, string Email);
+public class UpdateProfileDto
+{
+    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+}

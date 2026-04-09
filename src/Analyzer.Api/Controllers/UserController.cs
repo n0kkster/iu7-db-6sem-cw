@@ -50,6 +50,25 @@ public class UsersController(IUserService userService) : ControllerBase
         return Ok(profile);
     }
 
+    [Authorize]
+    [HttpPut("me/profile")]
+    public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateProfileDto dto)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _userService.UpdateProfileAsync(userId, dto);
+        return Ok();
+        
+    }
+
+    [Authorize]
+    [HttpPut("me/password")]
+    public async Task<IActionResult> ChangeMyPassword([FromBody] ChangePasswordRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _userService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword);
+        return Ok();
+    }
+
     [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetAllUsers()
@@ -64,5 +83,11 @@ public class UsersController(IUserService userService) : ControllerBase
     {
         await _userService.DeleteAsync(id);
         return Ok();
+    }
+
+    public class ChangePasswordRequest
+    {
+        public string OldPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

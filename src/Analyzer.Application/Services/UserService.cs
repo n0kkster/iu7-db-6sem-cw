@@ -48,21 +48,13 @@ public class UserService(IUserRepository userRepository,
     public async Task<UserDto> GetProfileAsync(Guid userId)
     {
         var user = await GetUserOrThrowAsync(userId);
-        return new UserDto(user.Id, user.Username, user.Email, user.Role, user.TeamId);
+        return MapToDto(user);
     }
 
     public async Task<IReadOnlyCollection<UserDto>> GetAllUsersAsync()
     {
         var users = await _userRepository.GetAllUsersAsync();
-        return users.Select(user =>
-            new UserDto(
-                user.Id, 
-                user.Username, 
-                user.Email, 
-                user.Role, 
-                user.TeamId
-            )
-        ).ToList();
+        return users.Select(MapToDto).ToList();
     }
 
     public async Task UpdateProfileAsync(Guid userId, UpdateProfileDto dto)
@@ -72,6 +64,11 @@ public class UserService(IUserRepository userRepository,
         if (!string.Equals(user.Username, dto.Username, StringComparison.OrdinalIgnoreCase))
             if (await _userRepository.ExistsByUsernameAsync(dto.Username))
                 throw new InvalidOperationException("Это имя пользователя уже используется другим пользователем.");
+
+        if (!string.Equals(user.Email, dto.Email, StringComparison.OrdinalIgnoreCase))
+            if (await _userRepository.ExistsByEmailAsync(dto.Email))
+                throw new InvalidOperationException("Данная почта уже используется другим пользователем.");
+
 
         user.UpdateProfile(dto.Username, dto.Email);
 
@@ -106,5 +103,17 @@ public class UserService(IUserRepository userRepository,
                  ?? throw new KeyNotFoundException($"Пользователь с ID {userId} не найден.");
                  
         await _userRepository.DeleteAsync(userId);
+    }
+
+    private UserDto MapToDto(User user)
+    {
+        return new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role,
+            TeamId = user.TeamId
+        };
     }
 }
