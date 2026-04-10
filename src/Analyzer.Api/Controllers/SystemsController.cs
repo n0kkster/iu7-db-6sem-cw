@@ -14,7 +14,7 @@ public class SystemsController(ISystemService systemsService) : ControllerBase
 {
     readonly ISystemService _systemsService = systemsService;
 
-    private record SystemStorage(IReadOnlyCollection<ComponentDto> Components,
+    public record SystemStorage(IReadOnlyCollection<ComponentDto> Components,
                                  IReadOnlyCollection<LinkDto> Links);
 
     [HttpGet]
@@ -40,9 +40,10 @@ public class SystemsController(ISystemService systemsService) : ControllerBase
 
 
     [HttpGet("export")]
-    public async Task<IActionResult> ExportSystem([FromQuery] Guid systemId)
+    public async Task<IActionResult> ExportSystem([FromQuery] Guid id)
     {
-        var (components, links) = await _systemsService.ExportSystemAsync(systemId);
+        Console.WriteLine("export called");
+        var (components, links) = await _systemsService.ExportSystemAsync(id);
         var jsonString = JsonSerializer.Serialize(new SystemStorage(components, links));
         var bytes = Encoding.UTF8.GetBytes(jsonString);
         var fileName = $"system-backup-{DateTime.Now:yyyy-MM-dd_HH-mm}.json";
@@ -51,7 +52,7 @@ public class SystemsController(ISystemService systemsService) : ControllerBase
     }
 
     [HttpPost("import")]
-    public async Task<IActionResult> ImportSystem([FromForm] IFormFile file, [FromForm] string importData)
+    public async Task<IActionResult> ImportSystem(IFormFile file, [FromForm] string importData)
     {
         try
         {
