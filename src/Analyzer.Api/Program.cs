@@ -138,13 +138,12 @@ try
 
         options.CustomSchemaIds(type => type.FullName);
 
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
         {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
             Description = "Введите JWT токен: Bearer {token}",
-            Name = "Authorization",
-            In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey,
-            Scheme = "Bearer"
         });
 
         options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
