@@ -43,7 +43,7 @@
                     Авто-раскладка
                 </MudButton>
                 
-                <AuthorizeView Roles="Architect, SRE">
+                <AuthorizeView Roles="@($"{Role.Architect.ToString()}, {Role.SRE.ToString()}")">
                     <MudButton Variant="Variant.Filled" 
                                 Color="Color.Secondary" 
                                 StartIcon="@Icons.Material.Filled.Loop" 
@@ -62,7 +62,7 @@
                         
                 <MudSpacer />
                 
-                <AuthorizeView Roles="Architect">
+                <AuthorizeView Roles="@(Role.Architect.ToString())">
                     <MudButton Variant="Variant.Filled" 
                                Color="Color.Primary" 
                                StartIcon="@Icons.Material.Filled.Add" 
