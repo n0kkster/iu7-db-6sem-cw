@@ -43,25 +43,27 @@
                 }
             </MudButton>
 
-            <MudButton Color="Color.Error" 
-                       Variant="Variant.Filled" 
-                       OnClick="DeleteAsync" 
-                       Disabled="@_isDeleting"
-                       FullWidth="true" 
-                       Class="mt-6" 
-                       StartIcon="@Icons.Material.Filled.Delete">
-                @if (_isDeleting)
-                {
-                    <MudProgressCircular Class="ms-n1" Size="MudBlazor.Size.Small" Indeterminate="true" />
-                    <MudText Class="ms-2">Удаление...</MudText>
-                }
-                else
-                {
-                    <MudText>Удалить компонент</MudText>
-                }
-            </MudButton>
+            <AuthorizeView Roles="@(Role.Architect.ToString())">
+                <MudButton Color="Color.Error" 
+                        Variant="Variant.Filled" 
+                        OnClick="DeleteAsync" 
+                        Disabled="@_isDeleting"
+                        FullWidth="true" 
+                        Class="mt-6" 
+                        StartIcon="@Icons.Material.Filled.Delete">
+                    @if (_isDeleting)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="MudBlazor.Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">Удаление...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Удалить компонент</MudText>
+                    }
+                </MudButton>
+            </AuthorizeView>
 
-            <AuthorizeView Roles="Architect, SRE">
+            <AuthorizeView Roles="@($"{Role.Architect.ToString()}, {Role.SRE.ToString()}")">
                 <MudButton Color="Color.Error" 
                         Variant="Variant.Filled" 
                         OnClick="RunSimulationAsync"
@@ -79,7 +81,7 @@
                 </MudButton>
             </AuthorizeView>
 
-            <AuthorizeView Roles="Developer">
+            <AuthorizeView Roles="@(Role.Developer.ToString())">
                 <MudButton Variant="Variant.Outlined" 
                            Color="Color.Info" 
                            FullWidth="true" 
