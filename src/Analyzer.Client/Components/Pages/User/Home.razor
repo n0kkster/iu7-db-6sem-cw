@@ -62,12 +62,15 @@
                         
                 <MudSpacer />
                 
-                <MudButton Variant="Variant.Filled" 
-                           Color="Color.Primary" 
-                           StartIcon="@Icons.Material.Filled.Add" 
-                           OnClick="OpenAddComponentDialog">
-                    Добавить компонент
-                </MudButton>
+                <AuthorizeView Roles="Architect">
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary" 
+                               StartIcon="@Icons.Material.Filled.Add" 
+                               OnClick="OpenAddComponentDialog">
+                        Добавить компонент
+                    </MudButton>
+                </AuthorizeView>
+
             }
         }
         else
