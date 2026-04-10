@@ -85,6 +85,35 @@ public class UsersController(IUserService userService) : ControllerBase
         return Ok();
     }
 
+    [HttpPost("swagger-login")]
+    [Consumes("application/x-www-form-urlencoded")]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<IActionResult> SwaggerLogin([FromForm] string username, [FromForm] string password)
+    {
+        try
+        {
+            var token = await _userService.LoginAsync(new()
+            {
+                Username = username,
+                Password = password
+            });
+            
+            return Ok(new 
+            { 
+                access_token = token, 
+                token_type = "Bearer" 
+            });
+        }
+        catch (Exception)
+        {
+            return BadRequest(new 
+            { 
+                error = "invalid_grant", 
+                error_description = "Неверный логин или пароль" 
+            });
+        }
+    }
+
     public class ChangePasswordRequest
     {
         public string OldPassword { get; set; } = string.Empty;

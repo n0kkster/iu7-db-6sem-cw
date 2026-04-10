@@ -138,17 +138,21 @@ try
 
         options.CustomSchemaIds(type => type.FullName);
 
-        options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+        options.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
         {
-            Type = SecuritySchemeType.Http,
-            Scheme = "bearer",
-            BearerFormat = "JWT",
-            Description = "Введите JWT токен: Bearer {token}",
+            Type = SecuritySchemeType.OAuth2,
+            Flows = new OpenApiOAuthFlows
+            {
+                Password = new OpenApiOAuthFlow
+                {
+                    TokenUrl = new Uri("/api/v1/users/swagger-login", UriKind.Relative) 
+                }
+            }
         });
 
         options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
         {
-            [new OpenApiSecuritySchemeReference("bearer", document)] = []
+            [new OpenApiSecuritySchemeReference("OAuth2", document)] = []
         });
     });
 
