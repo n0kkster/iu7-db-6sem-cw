@@ -31,6 +31,7 @@ public class SystemServiceTests
         var system = new ITSystem("Billing", "Payment processing", teamId);
 
         _systemsRepoMock.Setup(r => r.GetByTeamIdAsync(teamId)).ReturnsAsync([system]);
+        _graphServiceMock.Setup(r => r.GetComponentsBySystemIdAsync(system.Id)).ReturnsAsync([]);
 
         // Act
         var result = await _systemService.GetSystemsByTeamIdAsync(teamId);
@@ -41,13 +42,19 @@ public class SystemServiceTests
         Assert.Equal(system.Id, dto.Id);
         Assert.Equal("Billing", dto.Name);
         Assert.Equal(teamId, dto.TeamId);
+        Assert.Equal(0, dto.ComponentsCount);
     }
 
     [Fact]
     public async Task CreateSystemAsync_AddsToRepo_AndReturnsId()
     {
         // Arrange
-        var dto = new CreateITSystemDto("CRM", "Customer relations", Guid.NewGuid());
+        var dto = new CreateITSystemDto()
+        {
+            Name = "CRM",
+            Description = "Customer relations",
+            TeamId = Guid.NewGuid()
+        };
 
         // Act
         var resultId = await _systemService.CreateSystemAsync(dto);
@@ -65,7 +72,7 @@ public class SystemServiceTests
         var system = new ITSystem("Old Name", "Old Desc", Guid.NewGuid());
         _systemsRepoMock.Setup(r => r.GetByIdAsync(systemId)).ReturnsAsync(system);
 
-        var dto = new ITSystemDto(systemId, "New Name", "New Desc", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, Guid.NewGuid());
+        var dto = new ITSystemDto(systemId, "New Name", "New Desc", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, Guid.NewGuid(), 0);
 
         // Act
         await _systemService.UpdateSystemAsync(dto);
@@ -80,7 +87,7 @@ public class SystemServiceTests
     {
         // Arrange
         _systemsRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((ITSystem?)null);
-        var dto = new ITSystemDto(Guid.NewGuid(), "Name", "Desc", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, Guid.NewGuid());
+        var dto = new ITSystemDto(Guid.NewGuid(), "Name", "Desc", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, Guid.NewGuid(), 0);
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _systemService.UpdateSystemAsync(dto));
@@ -153,7 +160,12 @@ public class SystemServiceTests
             new() { Id = Guid.NewGuid(), SourceId = oldCompId1, TargetId = oldCompId2, Severity = LinkSeverity.High, Protocol = ProtocolType.TCP }
         };
 
-        var dto = new CreateITSystemDto("Imported System", "Imported Desc", teamId);
+        var dto = new CreateITSystemDto()
+        {
+            Name = "Imported System", 
+            Description = "Imported Desc", 
+            TeamId = teamId
+        };
 
         var newCompId1 = Guid.NewGuid();
         var newCompId2 = Guid.NewGuid();

@@ -146,7 +146,11 @@ public class UserServiceTests
         _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
         _userRepoMock.Setup(r => r.ExistsByUsernameAsync("new_name")).ReturnsAsync(false);
 
-        var dto = new UpdateProfileDto("new_name", "new_email@test.com");
+        var dto = new UpdateProfileDto()
+        {
+            Username = "new_name", 
+            Email = "new_email@test.com"
+        };
 
         // Act
         await _userService.UpdateProfileAsync(user.Id, dto);
@@ -165,7 +169,11 @@ public class UserServiceTests
         _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
         _userRepoMock.Setup(r => r.ExistsByUsernameAsync("taken_name")).ReturnsAsync(true);
 
-        var dto = new UpdateProfileDto("taken_name", "test@test.com");
+        var dto = new UpdateProfileDto()
+        {
+            Username = "taken_name", 
+            Email = "test@test.com"
+        };
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _userService.UpdateProfileAsync(user.Id, dto));
