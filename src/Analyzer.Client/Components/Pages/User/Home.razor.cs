@@ -699,7 +699,7 @@ public partial class Home : ComponentBase, IDisposable
         try
         {
             var result = await Http.GetFromJsonAsync<SpofAnalysisResultDto>(
-                $"api/v1/analysis/spof/{_selectedSystemId}?threshold=3");
+                $"api/v1/analysis/spof/{_selectedSystemId}?threshold={Diagram?.Nodes.Count - 1 ?? 3}");
             if (result is null || !result.CriticalNodes.Any())
             {
                 Snackbar.Add("Критичные единые точки отказа не найдены.", Severity.Success);
