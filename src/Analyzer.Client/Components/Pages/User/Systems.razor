@@ -4,6 +4,7 @@
 @using Analyzer.Client.Components.Dialogs
 @using System.Net.Http.Headers
 @using System.Text.Json
+@using System.Security.Claims
 
 @attribute [Authorize(Roles = "Architect")]
 
@@ -95,6 +96,9 @@
 
 @code 
 {
+    [CascadingParameter]
+    private Task<AuthenticationState> authStateTask { get; set; } = default!;
+
     private bool _isLoading = true;
     private string _searchString = "";
     private List<ITSystemDto> _systems = [];
@@ -183,7 +187,8 @@
     private async Task ImportSystemAsync(InputFileChangeEventArgs e)
     {
         var file = e.File;
-        if (file is null) return;
+        if (file is null) 
+            return;
 
         var systemDto = await GetImportDtoFromDialogAsync();
         if (systemDto is null) 
@@ -259,6 +264,12 @@
 
     private async Task ExportSystemAsync(Guid id)
     {
-        NavManager.NavigateTo($"http://localhost:1555/api/v1/systems/export?id={id}", forceLoad: true);
+        var authState = await authStateTask;
+        var user = authState.User;
+        var token = user.FindFirst("jwt-api-token")?.Value;
+
+        NavManager.NavigateTo(
+            $"http://localhost:1555/api/v1/systems/export?id={id}&access_token={token}", 
+            forceLoad: true);
     }
 }

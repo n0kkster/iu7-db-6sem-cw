@@ -33,7 +33,7 @@ try
     // ============================================================================
     // 🗄️ 1. БАЗЫ ДАННЫХ
     // ============================================================================
-    
+
     // PostgreSQL + EF Core
     builder.Services.AddDbContext<AnalyzerDbContext>(options =>
     {
@@ -52,7 +52,7 @@ try
     // ============================================================================
     // 🏗️ 2. РЕПОЗИТОРИИ
     // ============================================================================
-    
+
     builder.Services.AddScoped<IGraphRepository, Neo4jGraphRepository>();
     builder.Services.AddScoped<ISystemRepository, SystemRepository>();
     builder.Services.AddScoped<ITeamRepository, TeamRepository>();
@@ -62,7 +62,7 @@ try
     // ============================================================================
     // ⚙️ 3. БИЗНЕС-ЛОГИКА
     // ============================================================================
-    
+
     builder.Services.AddScoped<IJwtProvider, JwtProvider>();
     builder.Services.AddScoped<IGraphService, GraphService>();
     builder.Services.AddScoped<IAnalysisService, AnalysisService>();
@@ -74,7 +74,7 @@ try
     // ============================================================================
     // 🔐 4. АУТЕНТИФИКАЦИЯ И БЕЗОПАСНОСТЬ
     // ============================================================================
-    
+
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
@@ -89,6 +89,19 @@ try
                 IssuerSigningKey = new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
             };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/v1/systems/export"))
+                        context.Token = accessToken; 
+                    
+                    return Task.CompletedTask;
+                }
+            };
         });
 
     builder.Services.AddAuthorization();
@@ -99,7 +112,7 @@ try
         options.AddPolicy("BlazorClientPolicy", policy =>
         {
             policy.WithOrigins(
-                    "https://localhost:1337", 
+                    "https://localhost:1337",
                     "https://localhost:1777")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
@@ -110,44 +123,58 @@ try
     // ============================================================================
     // 📖 5. API, КОНТРОЛЛЕРЫ И SWAGGER
     // ============================================================================
-    
+
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddOpenApi();
 
     builder.Services.AddSwaggerGen(options =>
     {
-        options.SwaggerDoc("v1", new OpenApiInfo 
-        { 
-            Title = "FaultAnalyzer API", 
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "FaultAnalyzer API",
             Version = "v1",
             Description = "API для анализа отказоустойчивости систем на базе микросервисной архитектуры"
+        });
+
+        options.CustomSchemaIds(type => type.FullName);
+
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description = "Введите JWT токен: Bearer {token}",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("bearer", document)] = []
         });
     });
 
     // ============================================================================
     // ❌ 6. ИСКЛЮЧЕНИЯ
     // ============================================================================
-    
+
     builder.Services.AddProblemDetails();
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-    
+
     // ============================================================================
     // 🚀 BUILD & CONFIGURE APP
     // ============================================================================
-    
+
     var app = builder.Build();
 
     // ============================================================================
     // 🔐 7. MIDDLEWARE PIPELINE
     // ============================================================================
-    app.UseExceptionHandler(); 
-    
+    app.UseExceptionHandler();
+
     if (app.Environment.IsDevelopment())
     {
-        app.MapOpenApi();
         app.UseSwagger();
-        app.UseSwaggerUI(options => 
+        app.UseSwaggerUI(options =>
         {
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "FaultAnalyzer API v1");
             options.RoutePrefix = string.Empty;
@@ -174,7 +201,7 @@ try
     // ============================================================================
     // 🚀 RUN
     // ============================================================================
-    
+
     Log.Information("✅ API готов к приему запросов");
     await app.RunAsync();
 }
