@@ -14,18 +14,21 @@ using Microsoft.AspNetCore.Authentication;
 // ============================================================================
 // 🔐 НАСТРОЙКА ЛОГГЕРА
 // ============================================================================
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-    .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
-    .WriteTo.Console(theme: AnsiConsoleTheme.Code)
-    .CreateLogger();
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(AppContext.BaseDirectory)
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"}.json", true)
+    .Build();
 
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
 try
 {
     Log.Information("🚀 Запуск приложения Analyzer.Client");
 
     var builder = WebApplication.CreateBuilder(args);
+    builder.Services.AddSerilog();
 
     // ============================================================================
     // 🔐 1. БАЗОВЫЕ СЕРВИСЫ
@@ -104,7 +107,7 @@ try
 
         return new HttpClient(errorHandler)
         {
-            BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:1555"),
+            BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "http://localhost:1555"),
             Timeout = TimeSpan.FromSeconds(30)
         };
     });
