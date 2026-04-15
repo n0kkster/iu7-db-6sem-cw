@@ -53,7 +53,7 @@ public class ErrorHandler(ISnackbar snackbar, NavigationManager navManager) : De
                         }
                         catch (JsonException ex)
                         {
-                            Log.Error(ex, "Ошибка парсинга ответа: ");
+                            Log.Error(ex, "Ошибка парсинга ответа.");
                             errorMessage = $"Ошибка сервера: {response.StatusCode}";
                         }
                     }

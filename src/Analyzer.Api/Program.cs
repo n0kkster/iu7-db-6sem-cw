@@ -13,15 +13,19 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Neo4j.Driver;
 using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
 
 // ============================================================================
 // 🔐 НАСТРОЙКА ЛОГГЕРА
 // ============================================================================
+
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"}.json", true)
+    .Build();
+
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-    .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+    .ReadFrom.Configuration(configuration)
     .CreateLogger();
 
 try
@@ -29,6 +33,7 @@ try
     Log.Information("🚀 Запуск API-сервиса FaultAnalyzer");
 
     var builder = WebApplication.CreateBuilder(args);
+    builder.Services.AddSerilog();
 
     // ============================================================================
     // 🗄️ 1. БАЗЫ ДАННЫХ
@@ -37,7 +42,14 @@ try
     // PostgreSQL + EF Core
     builder.Services.AddDbContext<AnalyzerDbContext>(options =>
     {
-        options.UseNpgsql(builder.Configuration.GetConnectionString("PGConnection"));
+        options.UseNpgsql(builder.Configuration.GetConnectionString("PGConnection"),
+            npgsqlOptions => 
+            {
+                npgsqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(10),
+                    errorCodesToAdd: null);
+            });
         options.UseSnakeCaseNamingConvention();
     });
 

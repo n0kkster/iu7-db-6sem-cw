@@ -87,9 +87,9 @@ public partial class Home : ComponentBase, IDisposable
             _systems = await Http.GetFromJsonAsync<IReadOnlyCollection<ITSystemDto>>(
                 $"api/v1/systems/?teamId={_loggedUser.TeamId}");
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Log.Error($"Ошибка загрузки списка систем: {e.Message}");
+            Log.Error(ex, "Ошибка загрузки списка систем.");
             Snackbar.Add("Не удалось получить список систем", Severity.Error);
         }
 
@@ -315,9 +315,9 @@ public partial class Home : ComponentBase, IDisposable
             var compDict = RenderGraph(components);
             RenderLinks(links, compDict);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Log.Error($"Ошибка во время выполнения запроса: {e.Message}");
+            Log.Error(ex, $"Ошибка во время выполнения запроса");
         }
         finally
         {

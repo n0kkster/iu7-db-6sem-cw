@@ -6,30 +6,42 @@ services:
       - "7474:7474" # HTTP
       - "7687:7687" # Bolt
     environment:
-      - NEO4J_AUTH=${NEO4J_LOGIN}/${NEO4J_PASSWORD}
+      NEO4J_AUTH: "${NEO4J_LOGIN}/${NEO4J_PASSWORD}"
 
-      - NEO4J_PLUGINS=["apoc"] 
-      - NEO4J_apoc_export_file_enabled=true
-      - NEO4J_apoc_import_file_enabled=true
-      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      NEO4J_PLUGINS: '["apoc"]' 
+      NEO4J_apoc_export_file_enabled: true
+      NEO4J_apoc_import_file_enabled: true
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
     volumes:
       - ./.neo4j/data:/data
       - ./.neo4j/logs:/logs
-    restart: no
+    restart: unless-stopped
   postgres:
     image: postgres:17
     container_name: postgres-cw
     environment:
-      - POSTGRES_USER=${POSTGRES_LOGIN}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB_NAME}
+      POSTGRES_USER: "${POSTGRES_LOGIN}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB_NAME}"
     ports:
       - "5434:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./.postgres/data:/data
-    restart: no
+    restart: unless-stopped
+  seq:
+    image: datalust/seq:latest
+    container_name: seq-cw
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: true
+    ports:
+      - "5341:80"
+    volumes:
+      - seq-data:/data
+    restart: unless-stopped
 
 volumes:
   postgres-data:
     name: postgres-cw-data
+  seq-data:
