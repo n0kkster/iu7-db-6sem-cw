@@ -306,3 +306,6 @@ report/img/*.bkp
 
 # Postgres
 .postgres/
+
+# Dotnet settings
+appsettings*.json
