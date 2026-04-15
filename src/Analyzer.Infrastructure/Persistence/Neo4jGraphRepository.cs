@@ -126,8 +126,8 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
     public async Task AddComponentAsync(Component component)
     {
-        Log.Information(@"Добавляем компонент {@Component}...", component);
-        
+        Log.Information("Добавляем компонент {@Component}...", component);
+
         var query = CypherQueryFactory.AddComponent(component.Type.ToString());
 
         try
@@ -182,7 +182,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     public async Task DeleteComponentAsync(Guid id)
     {
         Log.Information("Удаляем компонент с GUID: {id}..", id);
-        
+
         var query = CypherQueryFactory.DeleteComponent();
         try
         {
@@ -202,11 +202,11 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
     public async Task AddLinkAsync(Link link)
     {
-        Log.Information("Создаем связь {source} -> {target}..", 
-                         link.SourceId, 
+        Log.Information("Создаем связь {source} -> {target}..",
+                         link.SourceId,
                          link.TargetId);
         var guid = Guid.NewGuid();
-        
+
         var query = CypherQueryFactory.AddLink();
 
         try
@@ -272,13 +272,13 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             throw;
         }
     }
-    
+
     public async Task DeleteLinkAsync(Guid id)
     {
         Log.Information("Удаляем связь с GUID: {id}...", id);
 
         var query = CypherQueryFactory.DeleteLink();
-        
+
         try
         {
             await _driver.ExecutableQuery(query)
@@ -297,9 +297,10 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
     public async Task<IReadOnlyCollection<Guid>> GetCascadingFailureImpactAsync(Guid failedComponentId)
     {
-        Log.Information(@"Запуск поиска критического 
-                          пути для компонента: {failedComponentId}...", 
-                          failedComponentId);
+        Log.Information("""
+                        Запуск поиска критического 
+                        пути для компонента: {failedComponentId}...
+                        """, failedComponentId);
 
         var query = CypherQueryFactory.GetCascadingFailureImpact();
 
@@ -313,7 +314,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                          .ExecuteAsync();
             stopWatch.Stop();
 
-            var components = result.Select(record =>    
+            var components = result.Select(record =>
                         Guid.TryParse(record["Id"].As<string>(), out var guid)
                         ? guid : throw new KeyNotFoundException("Ошибка парсинга GUID")
             ).ToList();
@@ -330,14 +331,15 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         {
             Log.Error(ex, "Неизвестная ошибка.");
             throw;
-        }        
+        }
     }
 
     public async Task<IReadOnlyCollection<IReadOnlyCollection<Guid>>> GetCyclicDependenciesAsync(Guid systemId)
     {
-        Log.Information(@"Запуск поиска циклических 
-                          зависимостей для системы: {systemId}...", 
-                          systemId);
+        Log.Information("""
+                        Запуск поиска циклических 
+                        зависимостей для системы: {systemId}...
+                        """, systemId);
 
         var query = CypherQueryFactory.GetCyclicDependencies();
 
@@ -359,10 +361,10 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             foreach (var record in result)
             {
                 var stringIds = record["CycleIds"].As<List<string>>();
-                
-                var ids = stringIds.Select(idStr => 
-                    Guid.TryParse(idStr, out var guid) 
-                        ? guid 
+
+                var ids = stringIds.Select(idStr =>
+                    Guid.TryParse(idStr, out var guid)
+                        ? guid
                         : throw new KeyNotFoundException("Ошибка парсинга GUID узла в цикле")
                 ).ToList();
 
@@ -373,11 +375,13 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                 }
             }
 
-            Log.Information(@"Поиск циклов завершен. 
-                              Найдено уникальных циклов: {count}. 
-                              Время исполнения: {time} мс", 
-                              cycles.Count,
-                              stopWatch.ElapsedMilliseconds);
+            Log.Information("""
+                            Поиск циклов завершен. 
+                            Найдено уникальных циклов: {count}. 
+                            Время исполнения: {time} мс
+                            """,
+                            cycles.Count,
+                            stopWatch.ElapsedMilliseconds);
             return cycles;
         }
         catch (Exception ex)
@@ -387,14 +391,16 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         }
     }
 
-    public async Task<Dictionary<Guid, int>> GetSinglePointsOfFailureAsync(Guid systemId, 
+    public async Task<Dictionary<Guid, int>> GetSinglePointsOfFailureAsync(Guid systemId,
         int threshold = 3)
     {
-        Log.Information(@"Запуск поиска единых точек отказа 
-                          для системы: {systemId} с 
-                          порогом {threshold}..",
-                          systemId,
-                          threshold);
+        Log.Information("""
+                        Запуск поиска единых точек отказа 
+                        для системы: {systemId} с 
+                        порогом {threshold}...
+                        """, 
+                        systemId, 
+                        threshold);
 
         var query = CypherQueryFactory.GetSinglePointsOfFailure();
 
@@ -411,7 +417,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             stopWatch.Stop();
 
             var spofDict = new Dictionary<Guid, int>();
-            
+
             foreach (var record in result)
             {
                 if (!Guid.TryParse(record["Id"].As<string>(), out var guid))
@@ -421,11 +427,13 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                 spofDict[guid] = count;
             }
 
-            Log.Information(@"Поиск SPOF завершен. 
-                              Найдено узких мест: {count}. 
-                              Время исполнения: {time} мс",
-                              spofDict.Count,
-                              stopWatch.ElapsedMilliseconds);
+            Log.Information("""
+                            Поиск SPOF завершен. 
+                            Найдено узких мест: {count}. 
+                            Время исполнения: {time} мс
+                            """,
+                            spofDict.Count,
+                            stopWatch.ElapsedMilliseconds);
             return spofDict;
         }
         catch (Exception ex)
@@ -437,9 +445,10 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
     public async Task<IReadOnlyCollection<Guid>> GetDecommissioningImpactAsync(Guid targetComponentId)
     {
-        Log.Information(@"Запуск оценки вывода из 
-                          эксплуатации для компонента: {targetComponentId}...",
-                          targetComponentId);
+        Log.Information("""
+                        Запуск оценки вывода из 
+                        эксплуатации для компонента: {targetComponentId}...
+                        """, targetComponentId);
 
         var query = CypherQueryFactory.GetDecommissioningImpact();
 
@@ -455,17 +464,19 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
             stopWatch.Stop();
 
-            var components = result.Select(record =>    
+            var components = result.Select(record =>
                 Guid.TryParse(record["Id"].As<string>(), out var guid)
-                    ? guid 
+                    ? guid
                     : throw new KeyNotFoundException("Ошибка парсинга GUID зависимого компонента")
             ).ToList();
 
-            Log.Information(@"Оценка вывода из эксплуатации завершена. 
-                              Затронуто сервисов: {count}. 
-                              Время исполнения: {time} мс",
-                              components.Count,
-                              stopWatch.ElapsedMilliseconds);
+            Log.Information("""
+                            Оценка вывода из эксплуатации завершена.   
+                            Затронуто сервисов: {count}. 
+                            Время исполнения: {time} мс
+                            """,
+                            components.Count,
+                            stopWatch.ElapsedMilliseconds);
             return components;
         }
         catch (Exception ex)
@@ -477,9 +488,10 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
     public async Task<IReadOnlyCollection<GraphPathDto>> GetDeploymentRiskPathsAsync(Guid deployComponentId)
     {
-        Log.Information(@"Запуск поиска путей рисков 
-                          развертывания для компонента: {id}...",
-                          deployComponentId);
+        Log.Information("""
+                        Запуск поиска путей рисков 
+                        развертывания для компонента: {id}...
+                        """, deployComponentId);
 
         var query = CypherQueryFactory.GetDeploymentRiskPaths();
 
@@ -500,21 +512,23 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             foreach (var record in result)
             {
                 var stringIds = record["PathIds"].As<List<string>>();
-                
-                var ids = stringIds.Select(idStr => 
-                    Guid.TryParse(idStr, out var guid) 
-                        ? guid 
+
+                var ids = stringIds.Select(idStr =>
+                    Guid.TryParse(idStr, out var guid)
+                        ? guid
                         : throw new KeyNotFoundException("Ошибка парсинга GUID узла в пути")
                 ).ToList();
 
                 paths.Add(new GraphPathDto { NodeIds = ids });
             }
 
-            Log.Information(@"Поиск путей рисков завершен. 
-                              Найдено цепочек: {count}. 
-                              Время исполнения: {time} мс",
-                              paths.Count,
-                              stopWatch.ElapsedMilliseconds);
+            Log.Information("""
+                            Поиск путей рисков завершен. 
+                            Найдено цепочек: {count}. 
+                            Время исполнения: {time} мс
+                            """,
+                            paths.Count,
+                            stopWatch.ElapsedMilliseconds);
             return paths;
         }
         catch (Exception ex)
