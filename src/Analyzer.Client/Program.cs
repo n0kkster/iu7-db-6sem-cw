@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
 using Analyzer.Client.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 
