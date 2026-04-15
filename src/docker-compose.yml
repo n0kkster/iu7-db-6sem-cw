@@ -16,8 +16,9 @@ services:
       - ./.neo4j/data:/data
       - ./.neo4j/logs:/logs
     restart: unless-stopped
+
   postgres:
-    image: postgres:17
+    image: postgres:17-alpine
     container_name: postgres-cw
     environment:
       POSTGRES_USER: "${POSTGRES_LOGIN}"
@@ -29,6 +30,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./.postgres/data:/data
     restart: unless-stopped
+
   seq:
     image: datalust/seq:latest
     container_name: seq-cw
@@ -39,6 +41,34 @@ services:
       - "5341:80"
     volumes:
       - seq-data:/data
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Analyzer.Api/Dockerfile
+    container_name: analyzer-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Docker" 
+    ports:
+      - "1555:8080" 
+    depends_on:
+      - postgres
+      - neo4j_db
+      - seq
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Analyzer.Client/Dockerfile
+    container_name: analyzer-web
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Docker"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
     restart: unless-stopped
 
 volumes:
