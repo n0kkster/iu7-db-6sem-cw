@@ -182,7 +182,7 @@ try
     // ============================================================================
     
     Log.Information("✅ Приложение готово к запуску на {Url}", 
-        builder.Configuration["ApiBaseUrl"] ?? "http://localhost:1555");
+        builder.Configuration["Urls"] ?? "http://localhost:1777");
     
     await app.RunAsync();
 }
