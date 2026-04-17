@@ -75,7 +75,6 @@ public partial class AdminTeams : ComponentBase
         catch (Exception ex)
         {
             Log.Error(ex, "Ошибка загрузки данных.");
-            Snackbar.Add("Ошибка загрузки данных", Severity.Error);
         }
         finally
         {

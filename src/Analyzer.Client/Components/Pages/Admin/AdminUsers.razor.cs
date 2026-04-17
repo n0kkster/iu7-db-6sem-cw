@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using Serilog;
 
 using Analyzer.Shared.DTO;
 using Analyzer.Domain.Enums;
@@ -39,6 +40,10 @@ public partial class AdminUsers : ComponentBase
             _teams = await teamsTask ?? [];
             
             _filteredUsers = _allUsers;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Ошибка загрузки данных.");
         }
         finally 
         { 
