@@ -40,7 +40,7 @@ try
     // 🔐 2. АУТЕНТИФИКАЦИЯ И АВТОРИЗАЦИЯ
     // ============================================================================
     
-    // Cookie-аутентификация для Blazor UI (Interactive Server)
+    // Cookie-аутентификация для Blazor UI
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(options =>
         {
@@ -136,7 +136,7 @@ try
     var app = builder.Build();
 
     // ============================================================================
-    // 🔐 6. MIDDLEWARE PIPELINE (ПОРЯДОК ВАЖЕН!)
+    // 🔐 6. MIDDLEWARE PIPELINE
     // ============================================================================
     
     if (!app.Environment.IsDevelopment())
@@ -147,7 +147,7 @@ try
 
     app.UseHttpsRedirection();
     
-    // Статические файлы (если есть)
+    // Статические файлы
     app.MapStaticAssets();
     
     // 🔹 Routing должен быть ДО сессии и аутентификации
@@ -195,5 +195,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
-record AuthResponse(string Token);
