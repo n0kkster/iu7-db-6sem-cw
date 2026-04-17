@@ -37,48 +37,43 @@ public partial class AdminTeams : ComponentBase
     private string _icon = Icons.Material.Filled.ContentCopy;
     private Color _iconColor = Color.Default;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _isLoading = true;
+        if (!firstRender)
+            return;
         try
         {
             var teams = await Http.GetFromJsonAsync<List<TeamDto>>("api/v1/teams") ?? [];
-            _teams = teams.Select(team =>
-                new TeamViewModel 
-                {
-                    Id = team.Id,
-                    Name = team.Name,
-                    Description = team.Description,
-                    MembersCount = team.Members.Count
-                }
-            ).ToList();
+            
+            _teams = teams.Select(team => new TeamViewModel 
+            {
+                Id = team.Id,
+                Name = team.Name,
+                Description = team.Description,
+                MembersCount = team.Members?.Count ?? 0
+            }).ToList();
 
-            var inviteTasks = _teams.Select(async team => 
+            foreach (var team in _teams)
             {
                 try 
                 {
-                    var invites = await Http.GetFromJsonAsync<List<InviteDto>>(
-                        $"api/v1/invites/{team.Id}") ?? [];
+                    var invites = await Http.GetFromJsonAsync<List<InviteDto>>($"api/v1/invites/{team.Id}") ?? [];
 
-                    team.ActiveInvites = invites.Where(
-                        i => i.Status == InviteStatus.Pending
-                    ).ToList();
+                    team.ActiveInvites = invites
+                        .Where(i => i.Status == InviteStatus.Pending)
+                        .ToList();
                 }
                 catch 
                 { 
                     team.ActiveInvites = []; 
+                    break; 
                 }
-            });
-
-            await Task.WhenAll(inviteTasks);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Ошибка загрузки данных.");
+            }
         }
         finally
         {
             _isLoading = false;
+            StateHasChanged(); 
         }
     }
 

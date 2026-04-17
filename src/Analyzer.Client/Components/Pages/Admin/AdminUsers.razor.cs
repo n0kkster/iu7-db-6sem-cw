@@ -26,28 +26,21 @@ public partial class AdminUsers : ComponentBase
     
     private Role? _selectedRoleFilter = null;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _isLoading = true;
+        if (!firstRender)
+            return;
         try 
         {
-            var usersTask = Http.GetFromJsonAsync<List<UserDto>>("api/v1/users");
-            var teamsTask = Http.GetFromJsonAsync<List<TeamDto>>("api/v1/teams");
-
-            await Task.WhenAll(usersTask, teamsTask);
-
-            _allUsers = await usersTask ?? [];
-            _teams = await teamsTask ?? [];
+            _allUsers = await Http.GetFromJsonAsync<List<UserDto>>("api/v1/users") ?? [];
+            _teams = await Http.GetFromJsonAsync<List<TeamDto>>("api/v1/teams") ?? [];
             
             _filteredUsers = _allUsers;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Ошибка загрузки данных.");
         }
         finally 
         { 
             _isLoading = false; 
+            StateHasChanged(); 
         }
     }
 
