@@ -3,12 +3,12 @@ services:
     image: neo4j:latest
     container_name: neo4j
     ports:
-      - "7474:7474" # HTTP
-      - "7687:7687" # Bolt
+      - "${PORT_NEO4J_HTTP}:7474"
+      - "${PORT_NEO4J_BOLT}:7687"
     environment:
       NEO4J_AUTH: "${NEO4J_LOGIN}/${NEO4J_PASSWORD}"
 
-      NEO4J_PLUGINS: '["apoc"]' 
+      NEO4J_PLUGINS: '["apoc"]'
       NEO4J_apoc_export_file_enabled: true
       NEO4J_apoc_import_file_enabled: true
       NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
@@ -25,7 +25,7 @@ services:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_DB: "${POSTGRES_DB_NAME}"
     ports:
-      - "5434:5432"
+      - "${PORT_POSTGRES}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./.postgres/data:/data
@@ -38,7 +38,7 @@ services:
       ACCEPT_EULA: "Y"
       SEQ_FIRSTRUN_NOAUTHENTICATION: true
     ports:
-      - "5341:80"
+      - "${PORT_SEQ}:80"
     volumes:
       - seq-data:/data
     restart: unless-stopped
@@ -49,9 +49,9 @@ services:
       dockerfile: Analyzer.Api/Dockerfile
     container_name: analyzer-api
     environment:
-      ASPNETCORE_ENVIRONMENT: "Docker" 
+      ASPNETCORE_ENVIRONMENT: "Docker"
     ports:
-      - "1555:8080" 
+      - "${PORT_API}:8080"
     depends_on:
       - postgres
       - neo4j_db
@@ -66,7 +66,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Docker"
     ports:
-      - "8080:8080"
+      - "${PORT_FRONT}:8080"
     depends_on:
       - api
     restart: unless-stopped
