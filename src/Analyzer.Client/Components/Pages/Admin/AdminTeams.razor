@@ -105,9 +105,9 @@
                                                             Margin="Margin.Dense"
                                                             Class="invite-code-field"
                                                             Adornment="Adornment.End"
-                                                            AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+                                                            AdornmentIcon="@_icon"
                                                             OnAdornmentClick="@(() => CopyAsync(invite.Code))"
-                                                            AdornmentColor="Color.Primary" />
+                                                            AdornmentColor="@_iconColor" />
                                             </div>
 
                                             <div class="d-flex align-center" 
