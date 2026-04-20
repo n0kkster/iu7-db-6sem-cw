@@ -21,19 +21,30 @@ public class InviteServiceTests
         _inviteService = new InviteService(_inviteRepoMock.Object, _teamServiceMock.Object);
     }
 
+    #region Generate Invite
+
     [Fact]
     public async Task GenerateInviteAsync_TeamExists_AddsInviteAndReturnsCode()
     {
         // Arrange
-        var dto = new GenerateInviteDto { Email = "new@test.com", TeamId = Guid.NewGuid(), ValidForDays = 3, Role = Role.Developer };
+        var dto = new GenerateInviteDto 
+        { 
+            Email = "new@test.com", 
+            TeamId = Guid.NewGuid(), 
+            ValidForDays = 3, 
+            Role = Role.Developer 
+        };
         _teamServiceMock.Setup(t => t.ExistsAsync(dto.TeamId)).ReturnsAsync(true);
 
         // Act
-        var invite = await _inviteService.GenerateInviteAsync(dto);
+        var inviteDto = await _inviteService.GenerateInviteAsync(dto);
 
         // Assert
-        Assert.NotEmpty(invite.Code);
-        _inviteRepoMock.Verify(r => r.AddAsync(It.Is<Invite>(i => i.TeamId == dto.TeamId && i.Role == dto.Role)), Times.Once);
+        Assert.NotEmpty(inviteDto.Code);
+        _inviteRepoMock.Verify(r => r.AddAsync(It.Is<Invite>(i => 
+            i.TeamId == dto.TeamId && 
+            i.Role == dto.Role && 
+            i.TargetEmail == dto.Email)), Times.Once);
     }
 
     [Fact]
@@ -48,35 +59,80 @@ public class InviteServiceTests
         Assert.Equal("Команда не найдена", ex.Message);
     }
 
+    #endregion
+
+    #region Invite Consumption Flow
+
     [Fact]
-    public async Task AcceptInviteAsync_ValidCode_ActivatesAndAddsToTeam()
+    public async Task GetValidatedInviteDetailsAsync_ValidCode_ReturnsRoleAndTeam()
     {
         // Arrange
         var email = "test@test.com";
         var teamId = Guid.NewGuid();
-        var invite = new Invite(email, 7, teamId, Role.Developer);
-        var user = new User("username", email, "hash");
+        var role = Role.Developer;
+        var invite = new Invite(email, 7, teamId, role);
 
         _inviteRepoMock.Setup(r => r.GetByCodeAsync(invite.Code)).ReturnsAsync(invite);
 
         // Act
-        await _inviteService.AcceptInviteAsync(invite.Code, user);
+        var (returnedRole, returnedTeamId) = await _inviteService.GetValidatedInviteDetailsAsync(invite.Code, email);
+
+        // Assert
+        Assert.Equal(role, returnedRole);
+        Assert.Equal(teamId, returnedTeamId);
+    }
+
+    [Fact]
+    public async Task GetValidatedInviteDetailsAsync_WrongEmail_ThrowsArgumentException()
+    {
+        // Arrange
+        var invite = new Invite("real@test.com", 7, Guid.NewGuid(), Role.Developer);
+        _inviteRepoMock.Setup(r => r.GetByCodeAsync(invite.Code)).ReturnsAsync(invite);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => 
+            _inviteService.GetValidatedInviteDetailsAsync(invite.Code, "wrong@test.com"));
+    }
+
+    [Fact]
+    public async Task ConsumeInviteAsync_ValidFlow_UpdatesStatusAndAddsToTeam()
+    {
+        // Arrange
+        var email = "test@test.com";
+        var teamId = Guid.NewGuid();
+        var role = Role.Developer;
+        var invite = new Invite(email, 7, teamId, role);
+        
+        var user = User.CreateInvitedUser("username", email, "hash", role, teamId);
+
+        _inviteRepoMock.Setup(r => r.GetByCodeAsync(invite.Code)).ReturnsAsync(invite);
+
+        // Act
+        await _inviteService.ConsumeInviteAsync(invite.Code, user);
 
         // Assert
         Assert.Equal(InviteStatus.Activated, invite.Status);
+        Assert.Equal(user.Id, invite.ActivatedByUserId);
+        
         _teamServiceMock.Verify(t => t.AddMemberAsync(teamId, user), Times.Once);
         _inviteRepoMock.Verify(r => r.UpdateAsync(invite), Times.Once);
     }
+
     [Fact]
-    public async Task AcceptInviteAsync_InvalidCode_ThrowsKeyNotFoundException()
+    public async Task ConsumeInviteAsync_InvalidCode_ThrowsKeyNotFoundException()
     {
         // Arrange
-        var user = new User("user", "test@test.com", "hash");
+        var user = User.CreateAdmin("admin", "admin@test.com", "hash");
         _inviteRepoMock.Setup(r => r.GetByCodeAsync(It.IsAny<string>())).ReturnsAsync((Invite?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => _inviteService.AcceptInviteAsync("wrong_code", user));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => 
+            _inviteService.ConsumeInviteAsync("wrong_code", user));
     }
+
+    #endregion
+
+    #region Revoke
 
     [Fact]
     public async Task RevokeInviteAsync_ValidInvite_CallsRevokeAndUpdate()
@@ -92,4 +148,6 @@ public class InviteServiceTests
         Assert.Equal(InviteStatus.Revoked, invite.Status);
         _inviteRepoMock.Verify(r => r.UpdateAsync(invite), Times.Once);
     }
+
+    #endregion
 }

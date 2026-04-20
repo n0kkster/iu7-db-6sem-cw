@@ -32,10 +32,7 @@ public static class DatabaseInitializer
                 var rawPassword = adminConfig["Password"] ?? "admin";
 
                 var passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(rawPassword);
-
-                var adminUser = new User(username, email, passwordHash);
-                
-                adminUser.SetRole(Role.Admin);
+                var adminUser = User.CreateAdmin(username, email, passwordHash);                
                 
                 await context.Users.AddAsync(adminUser);
                 await context.SaveChangesAsync();

@@ -13,9 +13,21 @@ public class UserRepositoryTests(SharedDatabaseFixture fixture)
     public async Task AddAsync_ShouldSaveUserToDatabase()
     {
         // Arrange
+        var team = new Team("User Test Team", "Desc");
+
+        await using var setupContext = fixture.CreateContext();
+        await setupContext.Teams.AddAsync(team);
+        await setupContext.SaveChangesAsync();
+
         var username = $"user_{Guid.NewGuid()}";
         var email = $"{Guid.NewGuid()}@test.com";
-        var user = new User(username, email, "hash123");
+        var user = User.CreateInvitedUser(
+            username, 
+            email, 
+            "hash123", 
+            Role.Developer, 
+            team.Id
+        );
 
         await using var context = fixture.CreateContext();
         var repository = new UserRepository(context);
@@ -30,15 +42,27 @@ public class UserRepositoryTests(SharedDatabaseFixture fixture)
         savedUser.Should().NotBeNull();
         savedUser!.Username.Should().Be(username);
         savedUser.Email.Should().Be(email);
-        savedUser.Role.Should().Be(Role.Unauthorized);
+        savedUser.Role.Should().Be(Role.Developer);
     }
 
     [Fact]
     public async Task GetByUsernameAsync_ShouldReturnUser_WhenUserExists()
     {
         // Arrange
+        var team = new Team("User Test Team", "Desc");
+
+        await using var setupContext = fixture.CreateContext();
+        await setupContext.Teams.AddAsync(team);
+        await setupContext.SaveChangesAsync();
+
         var username = $"findme_{Guid.NewGuid()}";
-        var user = new User(username, $"{Guid.NewGuid()}@test.com", "hash");
+        var user = User.CreateInvitedUser(
+            username, 
+            $"{Guid.NewGuid()}@test.com", 
+            "hash",
+            Role.Developer,
+            team.Id
+        );
 
         await using var context = fixture.CreateContext();
         await context.Users.AddAsync(user);
@@ -58,15 +82,22 @@ public class UserRepositoryTests(SharedDatabaseFixture fixture)
     public async Task UpdateAsync_ShouldModifyUserDetails()
     {
         // Arrange
-        var user = new User($"old_{Guid.NewGuid()}", $"{Guid.NewGuid()}@test.com", "oldHash");
-
         var team = new Team("User Test Team", "Desc");
 
         await using var setupContext = fixture.CreateContext();
         await setupContext.Teams.AddAsync(team);
+        
+        var user = User.CreateInvitedUser(
+            $"old_{Guid.NewGuid()}", 
+            $"{Guid.NewGuid()}@test.com", 
+            "oldHash",
+            Role.Developer,
+            team.Id
+        );
+        
         await setupContext.Users.AddAsync(user);
         await setupContext.SaveChangesAsync();
-
+        
         await using var actContext = fixture.CreateContext();
         var repository = new UserRepository(actContext);
 
@@ -75,8 +106,6 @@ public class UserRepositoryTests(SharedDatabaseFixture fixture)
         var newUsername = $"new_{Guid.NewGuid()}";
         userToUpdate!.UpdateProfile(newUsername, "new@test.com");
         userToUpdate.ChangePassword("newHash");
-        userToUpdate.SetRole(Role.Developer);
-        userToUpdate.AttachToTeam(team.Id);
 
         await repository.UpdateAsync(userToUpdate);
 
@@ -95,8 +124,20 @@ public class UserRepositoryTests(SharedDatabaseFixture fixture)
     public async Task ExistsByUsernameAsync_ShouldReturnTrue_WhenExists()
     {
         // Arrange
+        var team = new Team("User Test Team", "Desc");
+
+        await using var setupContext = fixture.CreateContext();
+        await setupContext.Teams.AddAsync(team);
+        await setupContext.SaveChangesAsync();
+
         var username = $"exists_{Guid.NewGuid()}";
-        var user = new User(username, $"{Guid.NewGuid()}@test.com", "hash");
+        var user = User.CreateInvitedUser(
+            username, 
+            $"{Guid.NewGuid()}@test.com", 
+            "hash",
+            Role.Developer,
+            team.Id
+        );
 
         await using var context = fixture.CreateContext();
         await context.Users.AddAsync(user);

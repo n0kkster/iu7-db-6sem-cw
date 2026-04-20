@@ -6,7 +6,7 @@ namespace Analyzer.Tests.Entities;
 public class InviteEntityTests
 {
     [Fact]
-    public void Invite_CreateValid_HasPendingStatusAndCorrectCode()
+    public void Invite_Constructor_ValidParams_HasPendingStatusAndCorrectCode()
     {
         // Arrange & Act
         var email = "test@domain.com";
@@ -22,6 +22,7 @@ public class InviteEntityTests
     public void InviteStatus_WhenDatePassed_AutomaticallyReturnsExpired()
     {
         // Arrange
+        // Создаем инвайт, который истек 1 день назад
         var invite = new Invite("test@domain.com", -1, Guid.NewGuid(), Role.Developer);
 
         // Act & Assert
@@ -29,73 +30,63 @@ public class InviteEntityTests
     }
 
     [Fact]
-    public void ActivateUser_WithWrongEmail_ThrowsArgumentException()
+    public void ValidateCanBeConsumedBy_WithWrongEmail_ThrowsArgumentException()
     {
         // Arrange
         var invite = new Invite("admin@company.com", 7, Guid.NewGuid(), Role.Admin);
-        var hackerUser = new User("hacker", "hacker@company.com", "hash");
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => invite.ActivateUser(hackerUser));
+        var ex = Assert.Throws<ArgumentException>(() => 
+            invite.ValidateCanBeConsumedBy("hacker@company.com"));
+            
         Assert.Contains("не предназначен", ex.Message);
     }
 
     [Fact]
-    public void ActivateUser_ValidUser_ChangesStatusAndUpdatesUserIntenals()
+    public void Consume_ValidUserId_ChangesStatusAndSetsActivatedBy()
     {
         // Arrange
-        var targetEmail = "dev@company.com";
-        var teamId = Guid.NewGuid();
-        var invite = new Invite(targetEmail, 7, teamId, Role.Developer);
-        var user = new User("dev", targetEmail, "hash");
+        var invite = new Invite("dev@company.com", 7, Guid.NewGuid(), Role.Developer);
+        var userId = Guid.NewGuid();
 
         // Act
-        invite.ActivateUser(user);
+        invite.Consume(userId);
 
         // Assert
         Assert.Equal(InviteStatus.Activated, invite.Status);
-        Assert.Equal(user.Id, invite.ActivatedByUserId);
-
-        Assert.Equal(Role.Developer, user.Role);
-        Assert.Equal(teamId, user.TeamId);
+        Assert.Equal(userId, invite.ActivatedByUserId);
     }
 
     [Fact]
-    public void ActivateUser_AlreadyActivated_ThrowsInvalidOperationException()
+    public void Consume_WhenAlreadyActivated_ThrowsInvalidOperationException()
     {
         // Arrange
-        var targetEmail = "sre@company.com";
-        var invite = new Invite(targetEmail, 7, Guid.NewGuid(), Role.SRE);
-        var user = new User("sre_user", targetEmail, "hash");
-
-        invite.ActivateUser(user);
-
-        var user2 = new User("another_sre", targetEmail, "hash2");
+        var invite = new Invite("sre@company.com", 7, Guid.NewGuid(), Role.SRE);
+        invite.Consume(Guid.NewGuid());
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => invite.ActivateUser(user2));
-        Assert.Contains("уже активировано", ex.Message);
+        var ex = Assert.Throws<InvalidOperationException>(() => invite.Consume(Guid.NewGuid()));
+        Assert.Contains("не находится в статусе ожидания", ex.Message);
     }
 
     [Fact]
-    public void ActivateUser_UserAlreadyHasRoleAndTeam_ThrowsInvalidOperationException()
+    public void GetDetails_ReturnsCorrectDataFromInvite()
     {
         // Arrange
-        var targetEmail = "arch@company.com";
-        var invite1 = new Invite(targetEmail, 7, Guid.NewGuid(), Role.Developer);
-        var invite2 = new Invite(targetEmail, 7, Guid.NewGuid(), Role.Architect);
-        var user = new User("arch_user", targetEmail, "hash");
+        var teamId = Guid.NewGuid();
+        var role = Role.Architect;
+        var invite = new Invite("arch@test.com", 7, teamId, role);
 
         // Act
-        invite1.ActivateUser(user);
+        var details = invite.GetDetails();
 
         // Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => invite2.ActivateUser(user));
-        Assert.Contains("Роль пользователя уже установлена", ex.Message);
+        Assert.Equal(role, details.Role);
+        Assert.Equal(teamId, details.TeamId);
     }
 
     [Fact]
-    public void RevokeInvite_WhenPending_ChangesToRevoked()
+    public void Revoke_WhenPending_ChangesToRevoked()
     {
         // Arrange
         var invite = new Invite("test@company.com", 7, Guid.NewGuid(), Role.Developer);
@@ -108,16 +99,25 @@ public class InviteEntityTests
     }
 
     [Fact]
-    public void RevokeInvite_WhenActivated_ThrowsInvalidOperationException()
+    public void Revoke_WhenAlreadyActivated_ThrowsInvalidOperationException()
     {
         // Arrange
-        var email = "test@company.com";
-        var invite = new Invite(email, 7, Guid.NewGuid(), Role.Developer);
-        var user = new User("test", email, "hash");
-        invite.ActivateUser(user);
+        var invite = new Invite("test@company.com", 7, Guid.NewGuid(), Role.Developer);
+        invite.Consume(Guid.NewGuid());
 
         // Act & Assert
         var ex = Assert.Throws<InvalidOperationException>(() => invite.Revoke());
         Assert.Contains("Нельзя отозвать уже принятое", ex.Message);
+    }
+
+    [Fact]
+    public void ValidateCanBeConsumedBy_WhenExpired_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var invite = new Invite("old@test.com", -5, Guid.NewGuid(), Role.Developer);
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => 
+            invite.ValidateCanBeConsumedBy("old@test.com"));
     }
 }

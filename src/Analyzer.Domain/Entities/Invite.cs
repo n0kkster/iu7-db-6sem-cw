@@ -61,9 +61,9 @@ public class Invite
                                 Encoding.UTF8.GetBytes(targetEmail)));
     }
 
-    public void ActivateUser(User user)
+    public void ValidateCanBeConsumedBy(string targetEmail)
     {
-        if (!CheckTarget(user.Email))
+        if (!CheckTarget(targetEmail))
             throw new ArgumentException("Приглашение не предназначено для этого пользователя");
 
         if (Status == InviteStatus.Expired)
@@ -74,12 +74,20 @@ public class Invite
 
         if (Status == InviteStatus.Revoked)
             throw new InvalidOperationException("Приглашение было отозвано");
+    }
+
+    public (Role Role, Guid TeamId) GetDetails()
+    {
+        return (Role, TeamId);
+    }
+
+    public void Consume(Guid newUserId)
+    {
+        if (Status != InviteStatus.Pending)
+            throw new InvalidOperationException("Инвайт не находится в статусе ожидания");
 
         Status = InviteStatus.Activated;
-        ActivatedByUserId = user.Id;
-
-        user.SetRole(Role);
-        user.AttachToTeam(TeamId);
+        ActivatedByUserId = newUserId;
     }
 
     public void Revoke()

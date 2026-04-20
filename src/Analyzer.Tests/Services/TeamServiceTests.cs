@@ -1,6 +1,7 @@
 using Analyzer.Application.Interfaces.Repositories;
 using Analyzer.Application.Services;
 using Analyzer.Domain.Entities;
+using Analyzer.Domain.Enums;
 using Analyzer.Shared.DTO;
 using Moq;
 using Xunit;
@@ -121,7 +122,13 @@ public class TeamServiceTests
         // Arrange
         var teamId = Guid.NewGuid();
         var team = new Team("Name", "Desc");
-        var user = new User("dev", "dev@test.com", "hash");
+        var user = User.CreateInvitedUser(
+            "dev", 
+            "dev@test.com", 
+            "hash",
+            Role.Developer,
+            team.Id
+        );
         _teamRepoMock.Setup(r => r.GetByIdAsync(teamId)).ReturnsAsync(team);
 
         // Act
@@ -156,7 +163,13 @@ public class TeamServiceTests
         var teamId = Guid.NewGuid();
         var team = new Team("Name", "Desc");
 
-        var user = new User("username", "test@test.com", "hash");
+        var user = User.CreateInvitedUser(
+            "username", 
+            "test@test.com", 
+            "hash",
+            Role.Developer,
+            team.Id
+        );
         team.AddMember(user.Id);
 
         _teamRepoMock.Setup(r => r.GetByIdAsync(teamId)).ReturnsAsync(team);

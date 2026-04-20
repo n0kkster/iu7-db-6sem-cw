@@ -22,13 +22,19 @@ public class UserService(IUserRepository userRepository,
         if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 8)
             throw new ArgumentException("Пароль должен содержать не менее 8 символов");
 
+        var (Role, TeamId) = await _inviteService.GetValidatedInviteDetailsAsync(dto.InviteCode, dto.Email);
+
         string passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.Password);
-
-        var user = new User(dto.Username, dto.Email, passwordHash);
-
-        await _inviteService.AcceptInviteAsync(dto.InviteCode, user);
+        var user = User.CreateInvitedUser(
+            dto.Username, 
+            dto.Email, 
+            passwordHash, 
+            Role, 
+            TeamId
+        );
 
         await _userRepository.AddAsync(user);
+        await _inviteService.ConsumeInviteAsync(dto.InviteCode, user);
 
         return user.Id;
     }

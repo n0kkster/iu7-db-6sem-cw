@@ -3,6 +3,7 @@ using Analyzer.Application.Interfaces.Repositories;
 using Analyzer.Application.Interfaces.Services;
 using Analyzer.Application.Services;
 using Analyzer.Domain.Entities;
+using Analyzer.Domain.Enums;
 using Analyzer.Shared.DTO;
 using Moq;
 
@@ -26,7 +27,7 @@ public class UserServiceTests
     #region Registration & Login
 
     [Fact]
-    public async Task RegisterAsync_ValidDto_HashesPasswordAcceptsInviteAndSaves()
+    public async Task RegisterAsync_ValidDto_SavesUserAndConsumesInvite()
     {
         // Arrange
         var dto = new RegisterDto
@@ -36,19 +37,29 @@ public class UserServiceTests
             Password = "MySecretPass123!",
             InviteCode = "INVITE_CODE"
         };
+
+        var teamId = Guid.NewGuid();
+        var roleFromInvite = Role.Developer;
+
         _userRepoMock.Setup(r => r.ExistsByUsernameAsync(dto.Username)).ReturnsAsync(false);
+        
+        _inviteServiceMock.Setup(i => i.GetValidatedInviteDetailsAsync(dto.InviteCode, dto.Email))
+            .ReturnsAsync((roleFromInvite, teamId));
 
         // Act
         var newUserId = await _userService.RegisterAsync(dto);
 
         // Assert
-        _inviteServiceMock.Verify(i => i.AcceptInviteAsync("INVITE_CODE", It.Is<User>(u =>
+        _userRepoMock.Verify(r => r.AddAsync(It.Is<User>(u =>
             u.Username == "new_user" &&
-            u.Email == "test@test.com" &&
-            BCrypt.Net.BCrypt.EnhancedVerify("MySecretPass123!", u.PasswordHash))),
+            u.Role == roleFromInvite &&
+            u.TeamId == teamId &&
+            BCrypt.Net.BCrypt.EnhancedVerify(dto.Password, u.PasswordHash))),
             Times.Once);
 
-        _userRepoMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Once);
+        _inviteServiceMock.Verify(i => i.ConsumeInviteAsync("INVITE_CODE", It.IsAny<User>()), 
+            Times.Once);
+
         Assert.NotEqual(Guid.Empty, newUserId);
     }
 
@@ -95,7 +106,8 @@ public class UserServiceTests
         // Arrange
         var password = "CorrectPassword";
         var hash = BCrypt.Net.BCrypt.EnhancedHashPassword(password);
-        var user = new User("test_user", "test@test.com", hash);
+        
+        var user = User.CreateAdmin("test_user", "test@test.com", hash);
 
         _userRepoMock.Setup(r => r.GetByUsernameAsync("test_user")).ReturnsAsync(user);
         _jwtProviderMock.Setup(j => j.GenerateToken(user, It.IsAny<string>())).Returns("token_abc_123");
@@ -114,7 +126,7 @@ public class UserServiceTests
     {
         // Arrange
         var hash = BCrypt.Net.BCrypt.EnhancedHashPassword("CorrectPassword");
-        var user = new User("test_user", "test@test.com", hash);
+        var user = User.CreateAdmin("test_user", "test@test.com", hash);
         _userRepoMock.Setup(r => r.GetByUsernameAsync("test_user")).ReturnsAsync(user);
 
         var dto = new LoginDto { Username = "test_user", Password = "WrongPassword" };
@@ -142,7 +154,7 @@ public class UserServiceTests
     public async Task UpdateProfileAsync_ChangeUsernameToAvailable_UpdatesSuccessfully()
     {
         // Arrange
-        var user = new User("old_name", "test@test.com", "hash");
+        var user = User.CreateAdmin("old_name", "test@test.com", "hash");
         _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
         _userRepoMock.Setup(r => r.ExistsByUsernameAsync("new_name")).ReturnsAsync(false);
 
@@ -165,7 +177,7 @@ public class UserServiceTests
     public async Task UpdateProfileAsync_ChangeUsernameToTaken_ThrowsInvalidOperationException()
     {
         // Arrange
-        var user = new User("old_name", "test@test.com", "hash");
+        var user = User.CreateAdmin("old_name", "test@test.com", "hash");
         _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
         _userRepoMock.Setup(r => r.ExistsByUsernameAsync("taken_name")).ReturnsAsync(true);
 
@@ -191,7 +203,7 @@ public class UserServiceTests
         var oldPass = "OldPass123!";
         var newPass = "NewPass456!";
         var oldHash = BCrypt.Net.BCrypt.EnhancedHashPassword(oldPass);
-        var user = new User("test_user", "test@test.com", oldHash);
+        var user = User.CreateAdmin("test_user", "test@test.com", oldHash);
 
         _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
 
@@ -208,7 +220,7 @@ public class UserServiceTests
     {
         // Arrange
         var oldHash = BCrypt.Net.BCrypt.EnhancedHashPassword("RealOldPass");
-        var user = new User("test_user", "test@test.com", oldHash);
+        var user = User.CreateAdmin("test_user", "test@test.com", oldHash);
         _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
 
         // Act & Assert

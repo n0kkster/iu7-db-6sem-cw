@@ -1,6 +1,7 @@
 using Analyzer.Application.Interfaces.Repositories;
 using Analyzer.Application.Interfaces.Services;
 using Analyzer.Domain.Entities;
+using Analyzer.Domain.Enums;
 using Analyzer.Shared.DTO;
 
 namespace Analyzer.Application.Services;
@@ -21,16 +22,27 @@ public class InviteService(IInviteRepository inviteRepository, ITeamService team
         return MapToDto(invite);
     }
 
-    public async Task AcceptInviteAsync(string code, User user)
+    public async Task<(Role Role, Guid TeamId)> GetValidatedInviteDetailsAsync(string code, string email)
     {
         var invite = await _inviteRepository.GetByCodeAsync(code) 
             ?? throw new KeyNotFoundException("Приглашение не найдено или код неверен");
 
-        invite.ActivateUser(user); 
-        await _teamService.AddMemberAsync(invite.TeamId, user);
+        invite.ValidateCanBeConsumedBy(email);
+
+        return invite.GetDetails();
+    }
+
+    public async Task ConsumeInviteAsync(string code, User user)
+    {
+        var invite = await _inviteRepository.GetByCodeAsync(code) 
+            ?? throw new KeyNotFoundException("Приглашение не найдено");
+
+        invite.Consume(user.Id); 
         
+        await _teamService.AddMemberAsync(invite.TeamId, user);
         await _inviteRepository.UpdateAsync(invite);
     }
+
 
     public async Task RevokeInviteAsync(Guid inviteId)
     {

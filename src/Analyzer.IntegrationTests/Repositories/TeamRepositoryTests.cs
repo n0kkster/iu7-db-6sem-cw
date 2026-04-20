@@ -2,6 +2,7 @@ using Analyzer.Domain.Entities;
 using Analyzer.IntegrationTests.Fixtures;
 using Analyzer.Infrastructure.Persistence;
 using FluentAssertions;
+using Analyzer.Domain.Enums;
 
 namespace Analyzer.IntegrationTests.Repositories;
 
@@ -34,10 +35,20 @@ public class TeamRepositoryTests(SharedDatabaseFixture fixture)
         // Arrange
         var team = new Team("Beta Team", "Frontend developers");
 
-        var user1 = new User("user1", "user1@test.com", "hash");
-        var user2 = new User("user2", "user2@test.com", "hash");
-        user1.AttachToTeam(team.Id);
-        user2.AttachToTeam(team.Id);
+        var user1 = User.CreateInvitedUser(
+            "user1", 
+            "user1@test.com", 
+            "hash",
+            Role.Developer,
+            team.Id
+        );
+        var user2 = User.CreateInvitedUser(
+            "user2", 
+            "user2@test.com", 
+            "hash",
+            Role.Developer,
+            team.Id
+        );
 
         await using var context = fixture.CreateContext();
         await context.Teams.AddAsync(team);
