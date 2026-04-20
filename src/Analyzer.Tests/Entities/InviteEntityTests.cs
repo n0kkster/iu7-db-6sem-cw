@@ -22,7 +22,6 @@ public class InviteEntityTests
     public void InviteStatus_WhenDatePassed_AutomaticallyReturnsExpired()
     {
         // Arrange
-        // Создаем инвайт, который истек 1 день назад
         var invite = new Invite("test@domain.com", -1, Guid.NewGuid(), Role.Developer);
 
         // Act & Assert
