@@ -62,6 +62,9 @@ public class User
 
     internal void AttachToTeam(Guid teamId)
     {
+        if (Role == Role.Admin)
+            throw new InvalidOperationException("Админ не может быть привязан к конкретной команде.");
+
         if (TeamId is not null && TeamId != Guid.Empty)
             throw new InvalidOperationException("Пользователь уже находится в команде");
 
