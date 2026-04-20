@@ -21,6 +21,11 @@ public class AnalyzerDbContext(DbContextOptions<AnalyzerDbContext> options) : Db
             builder.HasIndex(u => u.Email).IsUnique();
 
             builder.Property(u => u.Role).HasConversion<int>();
+
+            builder.HasOne<Team>()
+                   .WithMany()
+                   .HasForeignKey(u => u.TeamId)
+                   .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Team>(builder =>
@@ -38,12 +43,27 @@ public class AnalyzerDbContext(DbContextOptions<AnalyzerDbContext> options) : Db
 
             builder.Property(i => i.Status).HasConversion<int>();
             builder.Property(i => i.Role).HasConversion<int>();
+
+            builder.HasOne<Team>()
+                   .WithMany()
+                   .HasForeignKey(i => i.TeamId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne<User>()
+                   .WithMany()
+                   .HasForeignKey(i => i.ActivatedByUserId)
+                   .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<ITSystem>(builder =>
         {
             builder.HasKey(s => s.Id);
             builder.HasIndex(s => new { s.TeamId, s.Name }).IsUnique();
+
+            builder.HasOne<Team>()
+                   .WithMany()
+                   .HasForeignKey(s => s.TeamId)
+                   .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

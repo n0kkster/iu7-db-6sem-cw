@@ -101,9 +101,15 @@ namespace Analyzer.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_invites");
 
+                    b.HasIndex("ActivatedByUserId")
+                        .HasDatabaseName("ix_invites_activated_by_user_id");
+
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasDatabaseName("ix_invites_code");
+
+                    b.HasIndex("TeamId")
+                        .HasDatabaseName("ix_invites_team_id");
 
                     b.ToTable("invites", (string)null);
                 });
@@ -168,11 +174,50 @@ namespace Analyzer.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_users_email");
 
+                    b.HasIndex("TeamId")
+                        .HasDatabaseName("ix_users_team_id");
+
                     b.HasIndex("Username")
                         .IsUnique()
                         .HasDatabaseName("ix_users_username");
 
                     b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("Analyzer.Domain.Entities.ITSystem", b =>
+                {
+                    b.HasOne("Analyzer.Domain.Entities.Team", null)
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_it_systems_teams_team_id");
+                });
+
+            modelBuilder.Entity("Analyzer.Domain.Entities.Invite", b =>
+                {
+                    b.HasOne("Analyzer.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActivatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_invites_users_activated_by_user_id");
+
+                    b.HasOne("Analyzer.Domain.Entities.Team", null)
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_invites_teams_team_id");
+                });
+
+            modelBuilder.Entity("Analyzer.Domain.Entities.User", b =>
+                {
+                    b.HasOne("Analyzer.Domain.Entities.Team", null)
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_users_teams_team_id");
                 });
 #pragma warning restore 612, 618
         }
