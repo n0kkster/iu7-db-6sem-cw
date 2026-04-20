@@ -30,8 +30,8 @@ public class TeamRepository(AnalyzerDbContext context) : ITeamRepository
         var teams = await _context.Teams.ToListAsync();
         
         var teamUserMap = await _context.Users
-            .Where(u => u.TeamId != Guid.Empty)
-            .GroupBy(u => u.TeamId)
+            .Where(u => u.TeamId != null)
+            .GroupBy(u => u.TeamId ?? Guid.Empty)
             .ToDictionaryAsync(g => g.Key, g => g.Select(u => u.Id).ToList());
 
         foreach (var team in teams)

@@ -55,7 +55,7 @@ namespace Analyzer.Infrastructure.Migrations
                     email = table.Column<string>(type: "text", nullable: false),
                     password_hash = table.Column<string>(type: "text", nullable: false),
                     role = table.Column<int>(type: "integer", nullable: false),
-                    team_id = table.Column<Guid>(type: "uuid", nullable: false)
+                    team_id = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {

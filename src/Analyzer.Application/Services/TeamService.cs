@@ -91,7 +91,7 @@ public class TeamService(
             Username = user.Username,
             Email = user.Email,
             Role = user.Role,
-            TeamId = user.TeamId
+            TeamId = user.TeamId ?? Guid.Empty
         };
     }
 

@@ -9,7 +9,7 @@ public class User
     public string Email { get; private set; }
     public string PasswordHash { get; private set; }
     public Role Role { get; private set; }
-    public Guid TeamId { get; private set; }
+    public Guid? TeamId { get; private set; }
 
     public User(string username, string email, string passwordHash)
     {
@@ -28,7 +28,6 @@ public class User
                      ? throw new ArgumentException("Хэш пароля обязателен")
                      : passwordHash;
 
-        TeamId = Guid.Empty;
         Role = Role.Unauthorized;
     }
 
@@ -63,7 +62,7 @@ public class User
 
     internal void AttachToTeam(Guid teamId)
     {
-        if (TeamId != Guid.Empty)
+        if (TeamId is not null && TeamId != Guid.Empty)
             throw new InvalidOperationException("Пользователь уже находится в команде");
 
         TeamId = teamId;

@@ -158,7 +158,7 @@ namespace Analyzer.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("role");
 
-                    b.Property<Guid>("TeamId")
+                    b.Property<Guid?>("TeamId")
                         .HasColumnType("uuid")
                         .HasColumnName("team_id");
 
@@ -216,7 +216,6 @@ namespace Analyzer.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_users_teams_team_id");
                 });
 #pragma warning restore 612, 618
