@@ -57,6 +57,7 @@ services:
       - neo4j_db
       - seq
     restart: unless-stopped
+    profiles: ["production"]
 
   frontend:
     build:
@@ -70,6 +71,7 @@ services:
     depends_on:
       - api
     restart: unless-stopped
+    profiles: ["production"]
 
 volumes:
   postgres-data:
