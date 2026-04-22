@@ -12,33 +12,14 @@
 На основе формализации данных, проведенной в аналитическом разделе, в разрабатываемой
 реляционной базе данных выделены следующие таблицы:
 \begin{itemize}
-    \item roles --- таблица ролей пользователей;
     \item teams --- таблица команд разработчиков;
     \item users --- таблица пользователей приложения;
     \item invites --- таблица приглашений для регистрации;
     \item it\_systems --- таблица систем.
 \end{itemize}
 
-В таблицах \ref{tbl:roles} --- \ref{tbl:it_system} определены типы данных и ограничения
+В таблицах \ref{tbl:teams} --- \ref{tbl:it_system} определены типы данных и ограничения
 для каждого столбца перечисленных реляционных таблиц.
-
-\begin{center}
-    \begin{tabularx}{\textwidth}{|X|X|X|X|}
-        \caption{\label{tbl:roles}Информация о таблице roles} \\ \hline
-        Столбец & Значение & Тип & Ограничение \\ \hline
-        \endfirsthead
-
-        \multicolumn{4}{l}{{Продолжение таблицы\ \thetable{}}} \\ \hline
-        Столбец & Значение & Тип & Ограничение \\ \hline
-        \endhead
-
-        \endfoot
-        \endlastfoot
-
-        id & Идентификатор & UUID & Не ноль, первичный ключ \\ \hline
-        name & Название роли & Строка & Не ноль, уникальный \\ \hline
-    \end{tabularx}
-\end{center}
 
 \begin{center}
     \begin{tabularx}{\textwidth}{|X|X|X|X|}
@@ -53,8 +34,8 @@
         \endfoot
         \endlastfoot
 
-        id & Идентификатор & UUID & Не ноль, первичный ключ \\ \hline
-        name & Название & Строка & Не ноль, уникальный \\ \hline
+        id & Идентификатор & UUID & Не null, первичный ключ \\ \hline
+        name & Название & Строка & Не null, уникальный \\ \hline
         description & Описание & Строка & \\ \hline
     \end{tabularx}
 \end{center}
@@ -72,12 +53,12 @@
         \endfoot
         \endlastfoot
 
-        id & Идентификатор & UUID & Не ноль, первичный ключ \\ \hline
-        username & Имя пользователя & Строка & Не ноль, уникальный \\ \hline
-        email & Электронная почта & Строка & Не ноль, уникальный \\ \hline
-        password\_hash & Хэш пароля & Строка & Не ноль \\ \hline
-        role\_id & Идентификатор роли & UUID & Не ноль, внешний ключ \\ \hline
-        team\_id & Идентификатор команды & UUID & Не ноль, внешний ключ \\ \hline
+        id & Идентификатор & UUID & Не null, первичный ключ \\ \hline
+        username & Имя пользователя & Строка & Не null, уникальный \\ \hline
+        email & Электронная почта & Строка & Не null, уникальный \\ \hline
+        password\_hash & Хэш пароля & Строка & Не null \\ \hline
+        role & Идентификатор роли & Целое число & Не null \\ \hline
+        team\_id & Идентификатор команды & UUID & Внешний ключ \\ \hline
     \end{tabularx}
 \end{center}
 
@@ -94,11 +75,14 @@
         \endfoot
         \endlastfoot
 
-        id & Идентификатор & UUID & Не ноль, первичный ключ \\ \hline
-        code & Уникальный код & Строка & Не ноль, уникальный \\ \hline
-        expiration\_date & Дата истечения & Дата и время & Не ноль \\ \hline
-        is\_active & Статус активности & Логический & Не ноль \\ \hline
-        team\_id & Идентификатор команды & UUID & Не ноль, внешний ключ \\ \hline
+        id & Идентификатор & UUID & Не null, первичный ключ \\ \hline
+        status & Статус приглашения & Число & Не null \\ \hline
+        target\_email & Электронная почта получателя приглашения & Строка & Не null, уникальный \\ \hline
+        role & Роль нового пользователя & Число & Не null \\ \hline
+        code & Уникальный код & Строка & Не null, уникальный \\ \hline
+        expiration\_date & Дата истечения & Дата и время & Не null \\ \hline
+        team\_id & Идентификатор команды & UUID & Не null, внешний ключ \\ \hline
+        activated\_by\_uid & Идентификатор нового пользователя & UUID & Не null, внешний ключ \\ \hline
     \end{tabularx}
 \end{center}
 
@@ -115,12 +99,12 @@
         \endfoot
         \endlastfoot
 
-        id & Идентификатор & UUID & Не ноль, первичный ключ \\ \hline
-        name & Название & Строка & Не ноль \\ \hline
+        id & Идентификатор & UUID & Не null, первичный ключ \\ \hline
+        name & Название & Строка & Не null \\ \hline
         description & Описание & Строка & \\ \hline
-        created\_at & Дата создания & Дата и время & Не ноль \\ \hline
-        updated\_at & Дата обновления & Дата и время & Не ноль \\ \hline
-        team\_id & Идентификатор команды & UUID & Не ноль, внешний ключ \\ \hline
+        created\_at & Дата создания & Дата и время & Не null \\ \hline
+        updated\_at & Дата обновления & Дата и время & Не null \\ \hline
+        team\_id & Идентификатор команды & UUID & Не null, внешний ключ \\ \hline
     \end{tabularx}
 \end{center}
 
@@ -144,11 +128,11 @@
         \endfoot
         \endlastfoot
 
-        id & Идентификатор & UUID & Не ноль, уникальный \\ \hline
-        name & Название & Строка & Не ноль \\ \hline
-        type & Тип компонента & Число & Не ноль \\ \hline
+        id & Идентификатор & UUID & Не null, уникальный \\ \hline
+        name & Название & Строка & Не null \\ \hline
+        type & Тип компонента & Число & Не null \\ \hline
         description & Описание & Строка & \\ \hline
-        system\_id & Идентификатор системы & UUID & Не ноль \\ \hline
+        system\_id & Идентификатор системы & UUID & Не null \\ \hline
     \end{tabularx}
 \end{center}
 
@@ -168,9 +152,9 @@
         \endfoot
         \endlastfoot
 
-        id & Идентификатор & UUID & Не ноль, уникальный \\ \hline
+        id & Идентификатор & UUID & Не null, уникальный \\ \hline
         protocol & Тип протокола & Число & \\ \hline
-        severity & Уровень критичности & Число & Не ноль \\ \hline
+        severity & Уровень критичности & Число & Не null \\ \hline
     \end{tabularx}
 \end{center}
 
@@ -196,7 +180,7 @@
 является уникальным, а значение поля expiration\_date должно быть строго больше даты
 создания приглашения. В таблице it\_systems дата создания не может превышать текущее
 системное время. В графовой базе данных атрибут type узла Component может принимать
-только строго определенные значения: микросервис, база данных, брокер сообщений, внешний интерфейс.
+только строго определенные значения: микросервис, база данных, брокер сообщений, внешний API.
 
 \subsubsection{Целостность ссылок}
 Обеспечение ссылочной целостности в реляционной базе данных реализуется с помощью внешних
@@ -217,9 +201,9 @@
         \endfoot
         \endlastfoot
 
-        users & roles\_id & roles (id) \\ \hline
         users & teams\_id & teams (id) \\ \hline
         invites & teams\_id & teams (id) \\ \hline
+        invites & activated\_by\_uid & users (id) \\ \hline
         it\_systems & teams\_id & teams (id) \\ \hline
     \end{tabularx}
 \end{center}
