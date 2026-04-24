@@ -1,7 +1,7 @@
 services:
-  neo4j_db:
+  neo4j-cw:
     image: neo4j:latest
-    container_name: neo4j
+    container_name: neo4j-cw
     ports:
       - "${PORT_NEO4J_HTTP}:7474"
       - "${PORT_NEO4J_BOLT}:7687"
@@ -17,7 +17,7 @@ services:
       - ./.neo4j/logs:/logs
     restart: on-failure
 
-  postgres:
+  postgres-cw:
     image: postgres:17-alpine
     container_name: postgres-cw
     environment:
@@ -27,11 +27,11 @@ services:
     ports:
       - "${PORT_POSTGRES}:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-cw-data:/var/lib/postgresql/data
       - ./.postgres/data:/data
     restart: on-failure
 
-  seq:
+  seq-cw:
     image: datalust/seq:latest
     container_name: seq-cw
     environment:
@@ -40,40 +40,40 @@ services:
     ports:
       - "${PORT_SEQ}:80"
     volumes:
-      - seq-data:/data
+      - seq-cw-data:/data
     restart: on-failure
 
-  api:
+  api-cw:
     build:
       context: .
       dockerfile: Analyzer.Api/Dockerfile
-    container_name: analyzer-api
+    container_name: analyzer-api-cw
     environment:
       ASPNETCORE_ENVIRONMENT: "Docker"
     ports:
       - "${PORT_API}:8080"
     depends_on:
-      - postgres
-      - neo4j_db
-      - seq
+      - postgres-cw
+      - neo4j-cw
+      - seq-cw
     restart: on-failure
     profiles: ["production"]
 
-  frontend:
+  frontend-cw:
     build:
       context: .
       dockerfile: Analyzer.Client/Dockerfile
-    container_name: analyzer-web
+    container_name: analyzer-web-cw
     environment:
       ASPNETCORE_ENVIRONMENT: "Docker"
     ports:
       - "${PORT_FRONT}:8080"
     depends_on:
-      - api
+      - api-cw
     restart: on-failure
     profiles: ["production"]
 
 volumes:
-  postgres-data:
+  postgres-cw-data:
     name: postgres-cw-data
-  seq-data:
+  seq-cw-data:
