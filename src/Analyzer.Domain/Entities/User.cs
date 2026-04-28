@@ -26,7 +26,7 @@ public class User
 
         Email = string.IsNullOrWhiteSpace(email)
                 ? throw new ArgumentException("Email обязателен")
-                : !IsValidEmail(email) 
+                : !IsValidEmail(email)
                 ? throw new ArgumentException("Email невалиден")
                 : email;
 
@@ -55,7 +55,7 @@ public class User
         return new User(username, email, passwordHash, Role.Admin, null);
     }
 
-    public void UpdateProfile(string username, string email)
+    public void UpdateProfile(string username, string email, Guid? profilePicId)
     {
         Username = string.IsNullOrWhiteSpace(username)
                  ? throw new ArgumentException("Имя пользователя обязательно")
@@ -63,7 +63,7 @@ public class User
 
         Email = string.IsNullOrWhiteSpace(email)
               ? throw new ArgumentException("Email обязателен")
-              : !IsValidEmail(email) 
+              : !IsValidEmail(email)
               ? throw new ArgumentException("Email невалиден")
               : email;
     }
@@ -81,7 +81,7 @@ public class User
         var trimmedEmail = email.Trim();
 
         if (trimmedEmail.EndsWith("."))
-            return false; 
+            return false;
         try
         {
             var addr = new System.Net.Mail.MailAddress(email);
