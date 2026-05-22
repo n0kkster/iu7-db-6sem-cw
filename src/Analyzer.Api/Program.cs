@@ -30,7 +30,7 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("🚀 Запуск API-сервиса FaultAnalyzer");
+    Log.Information("🚀 Запуск API-сервиса Анализатора1337");
 
     var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddSerilog();
@@ -143,7 +143,7 @@ try
     {
         options.SwaggerDoc("v1", new OpenApiInfo
         {
-            Title = "FaultAnalyzer API",
+            Title = "Анализатор1337 API",
             Version = "v1",
             Description = "API для анализа отказоустойчивости систем на базе микросервисной архитектуры"
         });
@@ -191,7 +191,7 @@ try
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "FaultAnalyzer API v1");
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Анализатор1337 API v1");
             options.RoutePrefix = string.Empty;
         });
     }
