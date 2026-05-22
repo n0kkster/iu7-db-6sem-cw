@@ -55,7 +55,7 @@ public class User
         return new User(username, email, passwordHash, Role.Admin, null);
     }
 
-    public void UpdateProfile(string username, string email, Guid? profilePicId)
+    public void UpdateProfile(string username, string email)
     {
         Username = string.IsNullOrWhiteSpace(username)
                  ? throw new ArgumentException("Имя пользователя обязательно")
