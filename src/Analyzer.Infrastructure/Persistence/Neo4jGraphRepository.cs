@@ -152,6 +152,36 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         Log.Debug("Добавлен компонент с GUID: {id}", component.Id);
     }
 
+    public async Task AddComponentsBulkAsync(IEnumerable<Component> components)
+    {
+        var query = @"
+            UNWIND $batch AS row
+            CALL apoc.create.node([row.Type], {
+                id: row.Id,
+                name: row.Name,
+                desc: row.Description,
+                system_id: row.SystemId
+            }) YIELD node
+            RETURN count(node)";
+
+        var parameters = new
+        {
+            batch = components.Select(c => new
+            {
+                Id = c.Id.ToString(),
+                Name = c.Name,
+                Type = c.Type.ToString(),
+                Description = c.Description,
+                SystemId = c.SystemId.ToString()
+            }).ToList()
+        };
+
+        await _driver.ExecutableQuery(query)
+                    .WithConfig(_queryConfig)
+                    .WithParameters(parameters)
+                    .ExecuteAsync();
+    }
+
     public async Task UpdateComponentAsync(Component component)
     {
         Log.Debug("Обновляем компонент с GUID: {id}...", component.Id);
@@ -232,6 +262,37 @@ public sealed class Neo4jGraphRepository : IGraphRepository
         Log.Debug("Создана связь с GUID: {guid}", guid);
     }
 
+    public async Task AddLinksBulkAsync(IEnumerable<CreateLinkDto> links)
+    {
+        var query = @"
+            UNWIND $batch AS row
+            MATCH (source {id: row.SourceId})
+            MATCH (target {id: row.TargetId})
+            CREATE (source)-[r:DEPENDS_ON {
+                id: row.Id,
+                severity: row.Severity,
+                protocol: row.Protocol
+            }]->(target)
+            RETURN count(r)";
+
+        var parameters = new
+        {
+            batch = links.Select(l => new
+            {
+                Id = Guid.NewGuid().ToString(),
+                SourceId = l.SourceId.ToString(),
+                TargetId = l.TargetId.ToString(),
+                Severity = l.Severity.ToString(),
+                Protocol = l.Protocol.ToString()
+            }).ToList()
+        };
+
+        await _driver.ExecutableQuery(query)
+                    .WithConfig(_queryConfig)
+                    .WithParameters(parameters)
+                    .ExecuteAsync();
+    }
+
     public async Task<IReadOnlyCollection<Link>> GetLinksBySystemIdAsync(Guid systemId)
     {
         Log.Debug("Получаем все связи..");
@@ -293,6 +354,16 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             throw;
         }
         Log.Debug("Удален компонент с GUID: {id}.", id);
+    }
+    
+    public async Task DeleteSystemGraphAsync(Guid systemId)
+    {
+        var query = CypherQueryFactory.DeleteSystem();
+
+        await _driver.ExecutableQuery(query)
+                    .WithConfig(_queryConfig)
+                    .WithParameters(new { SystemId = systemId.ToString() })
+                    .ExecuteAsync();
     }
 
     public async Task<(IReadOnlyCollection<Guid>, long)> GetCascadingFailureImpactAsync(Guid failedComponentId)

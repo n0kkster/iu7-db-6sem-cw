@@ -60,6 +60,13 @@ public static class CypherQueryFactory
 
     #endregion
 
+    #region Система
+    public static string DeleteSystem() => @"
+        MATCH (n)
+        WHERE n.system_id = $SystemId
+        DETACH DELETE n";
+    #endregion
+
     #region Аналитика отказоустойчивости
 
     public static string GetCascadingFailureImpact() => @"

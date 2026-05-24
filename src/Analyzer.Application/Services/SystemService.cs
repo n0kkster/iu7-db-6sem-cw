@@ -51,42 +51,46 @@ public class SystemService(IGraphService graphService,
 
         var newSystemId = await CreateSystemAsync(systemDto);
 
-        Log.Information(
-            "Импорт системы с {compsCount} компонентами и {linksCount} связями..",
-            components.Count,
-            links.Count);
-        foreach (var component in components)
+        Log.Information("Импорт системы: {compsCount} узлов и {linksCount} связей...", components.Count, links.Count);
+
+        var domainComponents = new List<Component>();
+        foreach (var compDto in components)
         {
-            var newGuid = await _graphService.CreateComponentAsync(new(
-                newSystemId,
-                component.Type,
-                component.Name,
-                component.Description
-            ));
-            guidMap.Add(component.Id, newGuid);
+            var newGuid = Guid.NewGuid();
+            guidMap.Add(compDto.Id, newGuid);
+
+            domainComponents.Add(new Component
+            {
+                Id = newGuid,
+                SystemId = newSystemId,
+                Type = compDto.Type,
+                Name = compDto.Name,
+                Description = compDto.Description
+            });
         }
 
+        var domainLinks = new List<CreateLinkDto>();
         foreach (var link in links)
         {
             if (guidMap.TryGetValue(link.SourceId, out var newSourceId) &&
                 guidMap.TryGetValue(link.TargetId, out var newTargetId))
             {
-                var newLink = new CreateLinkDto(
+                domainLinks.Add(new CreateLinkDto(
                     newSourceId,
                     newTargetId,
                     link.Severity,
                     link.Protocol
-                );
-
-                await _graphService.CreateLinkAsync(newLink);
+                ));
             }
             else
             {
-                Log.Warning($"Откуда-то взялась битая ссылка? ({link.SourceId} -> {link.TargetId})");
+                Log.Warning($"Пропущена битая ссылка при импорте: {link.SourceId} -> {link.TargetId}");
             }
         }
 
-        Log.Information("Система создана с id: {id}", newSystemId);
+        await _graphService.ImportBulkAsync(domainComponents, domainLinks);
+
+        Log.Information("Импорт успешно завершен. Система создана с id: {id}", newSystemId);
 
         return newSystemId;
     }
@@ -109,10 +113,9 @@ public class SystemService(IGraphService graphService,
 
     public async Task DeleteSystemAsync(Guid systemId)
     {
-        var components = await _graphService.GetComponentsBySystemIdAsync(systemId);
-        foreach (var component in components)
-            await _graphService.DeleteComponentAsync(component.Id);
+        await _graphService.DeleteSystemAsync(systemId);
 
+        // Удаляем метаданные из Postgres
         await _systemsRepository.DeleteAsync(systemId);
     }
 }

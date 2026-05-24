@@ -103,4 +103,15 @@ public class GraphService(IGraphRepository repository) : IGraphService
     {
         await _repository.DeleteLinkAsync(id);
     }
+
+    public async Task DeleteSystemAsync(Guid systemId)
+    {
+        await _repository.DeleteSystemGraphAsync(systemId);
+    }
+
+    public async Task ImportBulkAsync(List<Component> components, List<CreateLinkDto> links)
+    {
+        await _repository.AddComponentsBulkAsync(components);
+        await _repository.AddLinksBulkAsync(links);
+    }
 }

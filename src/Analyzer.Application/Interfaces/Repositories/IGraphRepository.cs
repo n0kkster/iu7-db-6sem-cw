@@ -9,12 +9,16 @@ public interface IGraphRepository
     Task<IReadOnlyCollection<Component>> GetComponentsBySystemIdAsync(Guid systemId);
     Task<Component> GetComponentAsync(Guid id);
     Task AddComponentAsync(Component component);
+    Task AddComponentsBulkAsync(IEnumerable<Component> components);
     Task UpdateComponentAsync(Component component);
     Task DeleteComponentAsync(Guid id);
+
+    Task DeleteSystemGraphAsync(Guid systemId);
 
     // Связи
     Task<IReadOnlyCollection<Link>> GetLinksBySystemIdAsync(Guid systemId);
     Task AddLinkAsync(Link link);
+    Task AddLinksBulkAsync(IEnumerable<CreateLinkDto> links);
     Task DeleteLinkAsync(Guid id);
 
     // Анализ
