@@ -4,6 +4,7 @@ using Analyzer.Application.Interfaces.Repositories;
 using Analyzer.Application.Interfaces.Services;
 using Analyzer.Domain.Entities;
 using Analyzer.Shared.DTO;
+using Serilog;
 
 public class SystemService(IGraphService graphService, 
                            ISystemRepository systemsRepository) : ISystemService
@@ -50,6 +51,10 @@ public class SystemService(IGraphService graphService,
 
         var newSystemId = await CreateSystemAsync(systemDto);
 
+        Log.Information(
+            "Импорт системы с {compsCount} компонентами и {linksCount} связями..",
+            components.Count,
+            links.Count);
         foreach (var component in components)
         {
             var newGuid = await _graphService.CreateComponentAsync(new(
@@ -77,9 +82,11 @@ public class SystemService(IGraphService graphService,
             }
             else
             {
-                Console.WriteLine($"Откуда-то взялась битая ссылка? ({link.SourceId} -> {link.TargetId})");
+                Log.Warning($"Откуда-то взялась битая ссылка? ({link.SourceId} -> {link.TargetId})");
             }
         }
+
+        Log.Information("Система создана с id: {id}", newSystemId);
 
         return newSystemId;
     }

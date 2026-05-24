@@ -38,11 +38,10 @@ public class SystemsController(ISystemService systemsService) : ControllerBase
         return Ok();
     }
 
-
+    [Authorize(Roles = "Architect")] 
     [HttpGet("export")]
     public async Task<IActionResult> ExportSystem([FromQuery] Guid id)
     {
-        Console.WriteLine("export called");
         var (components, links) = await _systemsService.ExportSystemAsync(id);
         var jsonString = JsonSerializer.Serialize(new SystemStorage(components, links));
         var bytes = Encoding.UTF8.GetBytes(jsonString);
@@ -51,6 +50,7 @@ public class SystemsController(ISystemService systemsService) : ControllerBase
         return File(bytes, "application/json", fileName);
     }
 
+    [Authorize(Roles = " Architect")] 
     [HttpPost("import")]
     public async Task<IActionResult> ImportSystem(IFormFile file, [FromForm] string importData)
     {

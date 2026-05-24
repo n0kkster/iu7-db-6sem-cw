@@ -112,6 +112,21 @@ try
                         context.Token = accessToken; 
                     
                     return Task.CompletedTask;
+                },
+                OnAuthenticationFailed = context =>
+                {
+                    Log.Error($"[JWT ERROR] Токен отклонен: {context.Exception.Message}");
+                    return Task.CompletedTask;
+                },
+                OnTokenValidated = context =>
+                {
+                    Log.Information($"[JWT SUCCESS] Токен принят для: {context.Principal?.Identity?.Name}");
+                    return Task.CompletedTask;
+                },
+                OnChallenge = context =>
+                {
+                    Log.Error($"[JWT CHALLENGE] Запрос отклонен (нет токена или не прошел валидацию)");
+                    return Task.CompletedTask;
                 }
             };
         });

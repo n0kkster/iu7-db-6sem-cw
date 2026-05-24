@@ -8,16 +8,24 @@ public class GraphPathDto
     public List<LinkSeverity> LinkSeverities { get; set; } = [];
 }
 
+public class CascadingFailureResultDto
+{
+    public List<Guid> Nodes { get; set; } = [];
+    public long ExecutionTime { get; set; }
+}
+
 public class CycleAnalysisResultDto
 {
     public bool HasCycles => Cycles.Any();
     public List<List<Guid>> Cycles { get; set; } = [];
+    public long ExecutionTime { get; set; }
 }
 
 public class SpofAnalysisResultDto
 {
     public bool HasSpof => CriticalNodes.Any();
     public Dictionary<Guid, int> CriticalNodes { get; set; } = [];
+    public long ExecutionTime { get; set; }
 }
 
 public class DecommissioningResultDto
@@ -25,6 +33,7 @@ public class DecommissioningResultDto
     public bool IsSafeToDecommission => !ImpactedComponentIds.Any();
     public List<Guid> ImpactedComponentIds { get; set; } = [];
     public string Recommendation { get; set; } = string.Empty;
+    public long ExecutionTime { get; set; }
 }
 
 public class DeploymentRiskResultDto
@@ -33,4 +42,5 @@ public class DeploymentRiskResultDto
     public int RiskScore { get; set; }
     public int TotalAffectedPaths { get; set; }
     public string Summary { get; set; } = string.Empty;
+    public long ExecutionTime { get; set; }
 }

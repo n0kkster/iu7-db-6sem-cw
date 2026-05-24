@@ -1,7 +1,6 @@
 namespace Analyzer.Application.Interfaces.Repositories;
 
 using Analyzer.Domain.Entities;
-using Analyzer.Domain.Enums;
 using Analyzer.Shared.DTO;
 
 public interface IGraphRepository
@@ -19,9 +18,9 @@ public interface IGraphRepository
     Task DeleteLinkAsync(Guid id);
 
     // Анализ
-    Task<IReadOnlyCollection<Guid>> GetCascadingFailureImpactAsync(Guid failedComponentId);
-    Task<IReadOnlyCollection<IReadOnlyCollection<Guid>>> GetCyclicDependenciesAsync(Guid systemId);
-    Task<Dictionary<Guid, int>> GetSinglePointsOfFailureAsync(Guid systemId, int threshold = 3);
-    Task<IReadOnlyCollection<Guid>> GetDecommissioningImpactAsync(Guid targetComponentId);
-    Task<IReadOnlyCollection<GraphPathDto>> GetDeploymentRiskPathsAsync(Guid deployComponentId);
+    Task<(IReadOnlyCollection<Guid>, long)> GetCascadingFailureImpactAsync(Guid failedComponentId);
+    Task<(IReadOnlyCollection<IReadOnlyCollection<Guid>>, long)> GetCyclicDependenciesAsync(Guid systemId);
+    Task<(Dictionary<Guid, int>, long)> GetSinglePointsOfFailureAsync(Guid systemId, int threshold = 3);
+    Task<(IReadOnlyCollection<Guid>, long)> GetDecommissioningImpactAsync(Guid targetComponentId);
+    Task<(IReadOnlyCollection<GraphPathDto>, long)> GetDeploymentRiskPathsAsync(Guid deployComponentId);
 }

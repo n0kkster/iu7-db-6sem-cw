@@ -4,7 +4,7 @@ namespace Analyzer.Application.Interfaces.Services;
 
 public interface IAnalysisService
 {
-    Task<IReadOnlyCollection<Guid>> GetImpactedComponentsAsync(Guid failedComponentId);
+    Task<CascadingFailureResultDto> GetImpactedComponentsAsync(Guid failedComponentId);
     Task<CycleAnalysisResultDto> DetectCyclesAsync(Guid systemId);
     Task<SpofAnalysisResultDto> DetectSpofAsync(Guid systemId, int threshold = 3);
     Task<DecommissioningResultDto> PlanDecommissioningAsync(Guid targetComponentId);

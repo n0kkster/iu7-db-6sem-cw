@@ -9,17 +9,25 @@ public class AnalysisService(IGraphRepository repository) : IAnalysisService
 {
     readonly IGraphRepository _repository = repository;
 
-    public async Task<IReadOnlyCollection<Guid>> GetImpactedComponentsAsync(Guid failedComponentId)
+    public async Task<CascadingFailureResultDto> GetImpactedComponentsAsync(Guid failedComponentId)
     {
-        return await _repository.GetCascadingFailureImpactAsync(failedComponentId);
+        var (nodes, time) = await _repository.GetCascadingFailureImpactAsync(failedComponentId);
+        return new()
+        {
+            Nodes = nodes.ToList(),
+            ExecutionTime = time
+        };
     }
 
     public async Task<CycleAnalysisResultDto> DetectCyclesAsync(Guid systemId)
     {
-        var rawCycles = await _repository.GetCyclicDependenciesAsync(systemId);
+        var (rawCycles, time) = await _repository.GetCyclicDependenciesAsync(systemId);
 
-        var result = new CycleAnalysisResultDto();
-        
+        var result = new CycleAnalysisResultDto
+        {
+            ExecutionTime = time
+        };
+
         foreach (var cycle in rawCycles)
             result.Cycles.Add(cycle.ToList());
 
@@ -28,22 +36,24 @@ public class AnalysisService(IGraphRepository repository) : IAnalysisService
 
     public async Task<SpofAnalysisResultDto> DetectSpofAsync(Guid systemId, int threshold = 3)
     {
-        var spofNodes = await _repository.GetSinglePointsOfFailureAsync(systemId, threshold);
+        var (spofNodes, time) = await _repository.GetSinglePointsOfFailureAsync(systemId, threshold);
 
-        return new SpofAnalysisResultDto
+        return new()
         {
             CriticalNodes = spofNodes.OrderByDescending(x => x.Value)
-                                     .ToDictionary(x => x.Key, x => x.Value)
+                                     .ToDictionary(x => x.Key, x => x.Value),
+            ExecutionTime = time
         };
     }
 
     public async Task<DecommissioningResultDto> PlanDecommissioningAsync(Guid targetComponentId)
     {
-        var impactedIds = await _repository.GetDecommissioningImpactAsync(targetComponentId);
+        var (impactedIds, time) = await _repository.GetDecommissioningImpactAsync(targetComponentId);
 
         var result = new DecommissioningResultDto
         {
-            ImpactedComponentIds = impactedIds.ToList()
+            ImpactedComponentIds = impactedIds.ToList(),
+            ExecutionTime = time
         };
 
         if (result.IsSafeToDecommission)
@@ -61,11 +71,12 @@ public class AnalysisService(IGraphRepository repository) : IAnalysisService
 
     public async Task<DeploymentRiskResultDto> AssessDeploymentRiskAsync(Guid deployComponentId)
     {
-        var paths = await _repository.GetDeploymentRiskPathsAsync(deployComponentId);
+        var (paths, time) = await _repository.GetDeploymentRiskPathsAsync(deployComponentId);
 
         var result = new DeploymentRiskResultDto
         {
-            TotalAffectedPaths = paths.Count
+            TotalAffectedPaths = paths.Count,
+            ExecutionTime = time
         };
 
         if (paths.Count == 0)

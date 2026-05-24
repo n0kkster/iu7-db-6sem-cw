@@ -570,10 +570,10 @@ public partial class Home : ComponentBase, IDisposable
 
         try
         {
-            var result = await Http.GetFromJsonAsync<IReadOnlyCollection<Guid>>(
+            var result = await Http.GetFromJsonAsync<CascadingFailureResultDto>(
                 $"api/v1/analysis/simulate/{initialFailedComponentId}");
 
-            if (result is null || !result.Any())
+            if (result is null || !result.Nodes.Any())
             {
                 Snackbar.Add("Сбой не привел к каскадному отказу других компонентов.", Severity.Success);
                 return;
@@ -581,7 +581,7 @@ public partial class Home : ComponentBase, IDisposable
 
             _isAnalysisMode = true;
 
-            var allFailedIds = result.ToHashSet();
+            var allFailedIds = result.Nodes.ToHashSet();
             allFailedIds.Add(initialFailedComponentId);
 
             foreach (var node in Diagram!.Nodes)
