@@ -156,7 +156,7 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     {
         var query = @"
             UNWIND $batch AS row
-            CALL apoc.create.node([row.Type], {
+            CALL apoc.create.node([row.Type, 'Component'], {
                 id: row.Id,
                 name: row.Name,
                 desc: row.Description,
@@ -266,8 +266,8 @@ public sealed class Neo4jGraphRepository : IGraphRepository
     {
         var query = @"
             UNWIND $batch AS row
-            MATCH (source {id: row.SourceId})
-            MATCH (target {id: row.TargetId})
+            MATCH (source:Component {id: row.SourceId})
+            MATCH (target:Component {id: row.TargetId})
             CREATE (source)-[r:DEPENDS_ON {
                 id: row.Id,
                 severity: row.Severity,
