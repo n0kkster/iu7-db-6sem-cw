@@ -377,14 +377,14 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
         try
         {
-            Stopwatch stopWatch = new();
-            stopWatch.Start();
-            var (result, _, _) = await _driver.ExecutableQuery(query)
+            var eagerResult = await _driver.ExecutableQuery(query)
                          .WithConfig(_queryConfig)
                          .WithParameters(new { FailedId = failedComponentId.ToString() })
                          .ExecuteAsync();
-            stopWatch.Stop();
 
+            double dbTimeMs = eagerResult.Summary.ResultAvailableAfter.TotalMilliseconds + 
+                      eagerResult.Summary.ResultConsumedAfter.TotalMilliseconds;
+            var result = eagerResult.Result;
             var components = result.Select(record =>
                         Guid.TryParse(record["Id"].As<string>(), out var guid)
                         ? guid : throw new KeyNotFoundException("Ошибка парсинга GUID")
@@ -393,9 +393,9 @@ public sealed class Neo4jGraphRepository : IGraphRepository
             Log.Information("""
                             Поиск критического пути завершен. 
                             Время исполнения: {time} мс. Найдено {count} узлов.
-                            """, stopWatch.Elapsed.Microseconds, components.Count);
+                            """, dbTimeMs, components.Count);
 
-            return (components, stopWatch.Elapsed.Microseconds);
+            return (components, (long)(dbTimeMs * 1000.0));
         }
         catch (KeyNotFoundException ex)
         {
@@ -420,16 +420,16 @@ public sealed class Neo4jGraphRepository : IGraphRepository
 
         try
         {
-            Stopwatch stopWatch = new();
-            stopWatch.Start();
-
-            var (result, _, _) = await _driver.ExecutableQuery(query)
+            var eagerResult = await _driver.ExecutableQuery(query)
                 .WithConfig(_queryConfig)
                 .WithParameters(new { SystemId = systemId.ToString() })
                 .ExecuteAsync();
 
-            stopWatch.Stop();
 
+            var result = eagerResult.Result;
+            double dbTimeMs = eagerResult.Summary.ResultAvailableAfter.TotalMilliseconds + 
+                      eagerResult.Summary.ResultConsumedAfter.TotalMilliseconds;
+                      
             var cycles = new List<IReadOnlyCollection<Guid>>();
             var fetchedCycles = new HashSet<string>();
 
@@ -456,8 +456,8 @@ public sealed class Neo4jGraphRepository : IGraphRepository
                             Время исполнения: {time} мс
                             """,
                             cycles.Count,
-                            stopWatch.ElapsedMilliseconds);
-            return (cycles, stopWatch.ElapsedMilliseconds);
+                            dbTimeMs);
+            return (cycles, (long)dbTimeMs);
         }
         catch (Exception ex)
         {
