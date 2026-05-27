@@ -1,0 +1,16 @@
+
+set terminal pdfcairo enhanced color size 20cm, 10cm font 'Arial,16'
+set output 'plot.pdf'
+
+set title 'Зависимость времени анализа от размера графа' font ',16'
+set xlabel 'Количество узлов, единиц'
+set ylabel 'Время выполнения, мкс'
+
+set grid ytics lc rgb '#e0e0e0' lw 1 lt 0
+set grid xtics lc rgb '#e0e0e0' lw 1 lt 0
+
+set datafile separator ','
+
+plot 'benchmark_results.csv' using 1:2 with linespoints \
+        linewidth 2 pt 5 ps 0.5 \
+        title 'Время выполнения анализа, мкс', \

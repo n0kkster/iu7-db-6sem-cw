@@ -7,4 +7,5 @@
   <Project Path="Analyzer.IntegrationTests/Analyzer.IntegrationTests.csproj" />
   <Project Path="Analyzer.Shared/Analyzer.Shared.csproj" />
   <Project Path="Analyzer.Tests/Analyzer.Tests.csproj" />
+  <Project Path="Analyzer.Benchmark/Analyzer.Benchmark.csproj" />
 </Solution>
