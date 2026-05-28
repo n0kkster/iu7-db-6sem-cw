@@ -12,14 +12,14 @@ public class BM(HttpClient http, TopologyGenerator generator)
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
     public string Token { get; set; } = "";
 
-    public async Task RunBenchmarkAsync(Guid teamId, int minNodes, int maxNodes, int step)
+    public async Task<string> RunBenchmarkCascadeAsync(Guid teamId, int minNodes, int maxNodes, int step)
     {
-        string csvPath = "benchmark_results.csv";
-        await File.WriteAllTextAsync(csvPath, "Nodex,AvgExecutionTimeMs\n");
+        string csvPath = "cascade_results.csv";
+        await File.WriteAllTextAsync(csvPath, "Nodes,AvgExecutionTimeMs\n");
 
         Console.WriteLine("📊 Начинаем замеры...");
 
-        // Прогрев (Warm-up)
+        // Прогрев
         Console.WriteLine("🔥 Прогрев системы...");
         await RunSingleTopologyTestAsync(teamId, 15, 30);
 
@@ -35,6 +35,36 @@ public class BM(HttpClient http, TopologyGenerator generator)
         }
 
         Console.WriteLine($"\n✅ Все замеры завершены. Данные сохранены в {csvPath}");
+
+        return csvPath;
+    }
+
+    public async Task<string> RunBenchmarkCyclesAsync(Guid teamId, int minCycles, int maxCycles, int step)
+    {
+        string csvPath = "cycles_results.csv";
+        await File.WriteAllTextAsync(csvPath, "Cycles,AvgExecutionTimeMs\n");
+
+        Console.WriteLine("📊 Начинаем замеры...");
+
+        // Прогрев
+        Console.WriteLine("🔥 Прогрев системы...");
+        await RunSingleCycleAsync(teamId, 15, 30, 50);
+
+        for (int cycles = minCycles; cycles <= maxCycles; cycles += step)
+        {
+            int nodes = 50 + cycles * 3;
+            int links = nodes * 2;
+
+            double avgTimeMs = await RunSingleCycleAsync(teamId, nodes, links, cycles);
+
+            await File.AppendAllTextAsync(csvPath, $"{cycles},{avgTimeMs.ToString(System.Globalization.CultureInfo.InvariantCulture)}\n");
+            
+            Console.WriteLine($" Готово ({avgTimeMs:F2} мс).");
+        }
+
+        Console.WriteLine($"\n✅ Все замеры завершены. Данные сохранены в {csvPath}");
+
+        return csvPath;
     }
 
     private async Task<double> RunSingleTopologyTestAsync(Guid teamId, int nodeCount, int linkCount)
@@ -82,36 +112,40 @@ public class BM(HttpClient http, TopologyGenerator generator)
         var deleteResponse = await _http.DeleteAsync($"/api/v1/systems/{systemId}");
         deleteResponse.EnsureSuccessStatusCode();
         Console.WriteLine($"TOT: {totalExecutionTime}, NZ: {nonzero}");
-        return (totalExecutionTime / 1000.0) / testRuns;
+        return totalExecutionTime / 1000.0 / testRuns;
     }
 
     private async Task<double> RunSingleCycleAsync(Guid teamId, int nodeCount, int linkCount, int cycles)
     {
-        // 1. Генерация
-        await _generator.GenerateAsync(nodeCount, linkCount, cycles);
-
-        // 2. Импорт в БД
-        Guid systemId = await ImportSystemAsync(_generator.OutputFilePath, teamId);
-        Console.WriteLine($"Анализируем систему {systemId} с {nodeCount} компонентами, {linkCount} связями и {cycles} циклами.");
-
-        // 3. Анализ 10 раз
         double totalExecutionTime = 0;
-        int testRuns = 10;
+        int iterCountPerSize = 10;
+        int iterCountPerSystem = 10;
 
-        for (int i = 0; i < testRuns; i++)
+        for (int iter = 0; iter < iterCountPerSize; iter++)
         {
-            var response = await _http.GetAsync($"/api/v1/analysis/cycles/{systemId}");
-            response.EnsureSuccessStatusCode();
+            // 1. Генерация
+            await _generator.GenerateAsync(nodeCount, linkCount, cycles);
 
-            var result = await response.Content.ReadFromJsonAsync<CycleAnalysisResultDto>(_jsonOptions);
-            if (result != null)
-                totalExecutionTime += result.ExecutionTime;
+            // 2. Импорт в БД
+            Guid systemId = await ImportSystemAsync(_generator.OutputFilePath, teamId);
+            Console.WriteLine($"Анализируем систему {systemId} с {nodeCount} компонентами, {linkCount} связями и {cycles} циклами.");
+
+            for (int i = 0; i < iterCountPerSystem; i++)
+            {
+                var response = await _http.GetAsync($"/api/v1/analysis/cycles/{systemId}");
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<CycleAnalysisResultDto>(_jsonOptions);
+                if (result != null)
+                    totalExecutionTime += result.ExecutionTime;
+            }
+
+            // 4. Очистка БД
+            var deleteResponse = await _http.DeleteAsync($"/api/v1/systems/{systemId}");
+            deleteResponse.EnsureSuccessStatusCode();
         }
-
-        // 4. Очистка БД
-        var deleteResponse = await _http.DeleteAsync($"/api/v1/systems/{systemId}");
-        deleteResponse.EnsureSuccessStatusCode();
-        return totalExecutionTime / testRuns;
+        
+        return totalExecutionTime / (iterCountPerSize * iterCountPerSystem);
     }
 
     private async Task<Guid> ImportSystemAsync(string filePath, Guid teamId)

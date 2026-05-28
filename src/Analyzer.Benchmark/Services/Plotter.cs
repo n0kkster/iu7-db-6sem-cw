@@ -19,9 +19,9 @@ set grid xtics lc rgb '#e0e0e0' lw 1 lt 0
 
 set datafile separator ','
 
-plot 'benchmark_results.csv' using 1:2 with linespoints \
+plot '{csvFilePath}' using 1:2 with linespoints \
         linewidth 2 pt 5 ps 0.5 \
-        title 'Время выполнения анализа, мкс', \
+        title 'Время выполнения анализа, мс', \
 ";
 
 

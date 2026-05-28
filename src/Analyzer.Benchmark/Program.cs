@@ -21,7 +21,11 @@ class Program
 
         int minNodes = 1000;
         int maxNodes = 10000;
-        int step = 100;
+        int stepNodes = 100;
+
+        int minCycles = 10;
+        int maxCycles = 50;
+        int stepCycles = 1;
         // =================
 
         // 1. Инициализация DI контейнера
@@ -67,10 +71,13 @@ class Program
             var authResponse = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
             session.Token = authResponse?.Token;
 
-            await benchmark.RunBenchmarkAsync(targetTeamId, minNodes, maxNodes, step);
+            // string filename = await benchmark.RunBenchmarkCascadeAsync(
+                // targetTeamId, minNodes, maxNodes, stepNodes);
+            string filename = await benchmark.RunBenchmarkCyclesAsync(
+                targetTeamId, minCycles, maxCycles, stepCycles);
 
             // 5. Отрисовка графика
-            plotter.GenerateGraph("benchmark_results.csv");
+            plotter.GenerateGraph(filename);
         }
         catch (Exception ex)
         {
