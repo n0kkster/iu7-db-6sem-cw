@@ -1,16 +1,16 @@
-
-set terminal pdfcairo enhanced color size 20cm, 10cm font 'Arial,16'
-set output 'plots/cycles.pdf'
+set terminal svg standalone enhanced dynamic size 800,400 font 'Arial,16'
+set output 'plots/cascade.svg'
 
 set title 'Зависимость времени анализа от размера графа' font ',16'
-set xlabel 'Количество циклов, единиц'
+set xlabel 'Количество узлов, единиц'
 set ylabel 'Время выполнения, мс'
 
 set grid ytics lc rgb '#e0e0e0' lw 1 lt 0
 set grid xtics lc rgb '#e0e0e0' lw 1 lt 0
 
 set datafile separator ','
+set key bottom right
 
-plot 'plots/cycles_results.csv' using 1:2 with linespoints \
+plot 'plots/cascade_results.csv' using 1:2 with linespoints \
         linewidth 2 pt 5 ps 0.5 \
         title 'Время выполнения анализа, мс', \
