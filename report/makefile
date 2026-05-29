@@ -1,4 +1,4 @@
-# TITLE = ИУ7-52Б-Диваев-Александр-РПЗ-КГ.pdf
+# TITLE = ИУ7-62Б-Диваев-Александр-РПЗ-БД.pdf
 MAIN = report
 CC = pdflatex
 FLAGS = 
@@ -22,6 +22,7 @@ compress: $(MAIN).pdf
     -dQUIET \
     -dBATCH \
     -dRemoveUnusedFonts=true \
+    -dAutoRotatePages=/None \
     -dRemoveUnusedImages=true \
     -dOptimizeResources=true \
     -dDetectDuplicateImages \
