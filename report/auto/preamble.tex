@@ -270,6 +270,16 @@
 	\end{figure}
 }
 
+% Картинки, поставленные на бок
+\newcommand{\vimg}[2] {
+	\begin{figure}[h!]
+		\centering
+		\includegraphics[angle=90, height=0.8\textheight, keepaspectratio]{img/#1}
+		\caption{#2}
+		\label{img:#1}
+	\end{figure}
+}
+
 % Inline код
 \newcommand{\code}[1]{{\small \ttfamily #1}}
 
