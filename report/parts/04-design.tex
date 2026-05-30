@@ -22,7 +22,7 @@
 для каждого столбца перечисленных реляционных таблиц.
 
 \begin{center}
-    \begin{tabularx}{\textwidth}{|X|X|X|X|}
+    \begin{tabularx}{\textwidth}{|p{2.4cm}|X|p{3cm}|X|}
         \caption{\label{tbl:teams}Информация о таблице teams} \\ \hline
         Столбец & Значение & Тип & Ограничение \\ \hline
         \endfirsthead
@@ -41,7 +41,7 @@
 \end{center}
 
 \begin{center}
-    \begin{tabularx}{\textwidth}{|X|X|X|X|}
+    \begin{tabularx}{\textwidth}{|p{3cm}|X|p{3cm}|X|}
         \caption{\label{tbl:user_account}Информация о таблице users} \\ \hline
         Столбец & Значение & Тип & Ограничение \\ \hline
         \endfirsthead
@@ -57,13 +57,12 @@
         username & Имя пользователя & Строка & Не null, уникальный \\ \hline
         email & Электронная почта & Строка & Не null, уникальный \\ \hline
         password\_hash & Хэш пароля & Строка & Не null \\ \hline
-        role & Идентификатор роли & Целое число & Не null \\ \hline
-        team\_id & Идентификатор команды & UUID & Внешний ключ \\ \hline
+        role & Идентификатор \newline роли & Целое число & Не null \\ \hline
+        team\_id & Идентификатор \newline команды & UUID & Внешний ключ \\ \hline
     \end{tabularx}
 \end{center}
-
 \begin{center}
-    \begin{tabularx}{\textwidth}{|X|X|X|X|}
+    \begin{tabularx}{\textwidth}{|X|X|p{3cm}|X|}
         \caption{\label{tbl:invites}Информация о таблице invites} \\ \hline
         Столбец & Значение & Тип & Ограничение \\ \hline
         \endfirsthead
@@ -75,19 +74,19 @@
         \endfoot
         \endlastfoot
 
-        id & Идентификатор & UUID & Не null, первичный ключ \\ \hline
+        id & Идентификатор & UUID & Не null, \newline первичный ключ \\ \hline
         status & Статус приглашения & Целое число & Не null \\ \hline
-        target\_email & Электронная почта получателя приглашения & Строка & Не null, уникальный \\ \hline
-        role & Роль нового пользователя & Целое число & Не null \\ \hline
-        code & Уникальный код & Строка & Не null, уникальный \\ \hline
+        target\_email & Электронная \newline почта получателя & Строка & Не null, \newline уникальный \\ \hline
+        role & Роль нового \newline пользователя & Целое число & Не null \\ \hline
+        code & Уникальный код & Строка & Не null, \newline уникальный \\ \hline
         expiration\_date & Дата истечения & Дата и время & Не null \\ \hline
         team\_id & Идентификатор команды & UUID & Не null, внешний ключ \\ \hline
-        activated\_by\_uid & Идентификатор нового пользователя & UUID & Не null, внешний ключ \\ \hline
+        activated\_by\_uid & Идентификатор нового \newline пользователя & UUID & Не null, внешний ключ \\ \hline
     \end{tabularx}
 \end{center}
 
 \begin{center}
-    \begin{tabularx}{\textwidth}{|X|X|X|X|}
+    \begin{tabularx}{\textwidth}{|p{3cm}|X|p{3cm}|X|}
         \caption{\label{tbl:it_system}Информация о таблице it\_systems} \\ \hline
         Столбец & Значение & Тип & Ограничение \\ \hline
         \endfirsthead
@@ -104,7 +103,7 @@
         description & Описание & Строка & \\ \hline
         created\_at & Дата создания & Дата и время & Не null \\ \hline
         updated\_at & Дата обновления & Дата и время & Не null \\ \hline
-        team\_id & Идентификатор команды & UUID & Не null, внешний ключ \\ \hline
+        team\_id & Идентификатор \newline команды & UUID & Не null, внешний ключ \\ \hline
     \end{tabularx}
 \end{center}
 
@@ -116,7 +115,7 @@
 \ref{tbl:graph_node}.
 
 \begin{center}
-    \begin{tabularx}{\textwidth}{|X|X|X|X|}
+    \begin{tabularx}{\textwidth}{|p{3cm}|p{5.6cm}|p{1.8cm}|X|}
         \caption{\label{tbl:graph_node}Информация об атрибутах узла Component} \\ \hline
         Атрибут & Значение & Тип & Ограничение \\ \hline
         \endfirsthead
@@ -140,7 +139,7 @@
 данного ребра представлена в таблице \ref{tbl:graph_edge}.
 
 \begin{center}
-    \begin{tabularx}{\textwidth}{|X|X|X|X|}
+    \begin{tabularx}{\textwidth}{|p{3cm}|p{5.6cm}|p{1.8cm}|X|}
         \caption{\label{tbl:graph_edge}Информация об атрибутах связи DEPENDS\_ON} \\ \hline
         Атрибут & Значение & Тип & Ограничение \\ \hline
         \endfirsthead
@@ -160,7 +159,7 @@
 
 На рисунке \ref{img:relational-dbml.pdf} представлена полная схема разрабатываемой реляционной базы данных.
 
-\jimg{relational-dbml.pdf}{Схема реляционной БД в нотации DBML}
+\img{16cm}{relational-dbml.pdf}{Схема реляционной БД в нотации DBML}
 
 \clearpage
 
@@ -191,11 +190,11 @@ target\_email также являются уникальным, а значен�
 \begin{center}
     \begin{tabularx}{\textwidth}{|X|X|X|}
         \caption{\label{tbl:fk}Внешние ключи таблиц реляционной базы данных} \\ \hline
-        Таблица & Внешний ключ & Ссылка на родительскую таблицу \\ \hline
+        Таблица & Внешний ключ & Ссылка на \newline родительскую таблицу \\ \hline
         \endfirsthead
 
         \multicolumn{3}{l}{{Продолжение таблицы\ \thetable{}}} \\ \hline
-        Таблица & Внешний ключ & Ссылка на родительскую таблицу \\ \hline
+        Таблица & Внешний ключ & Ссылка на \newline родительскую таблицу \\ \hline
         \endhead
 
         \endfoot
@@ -232,7 +231,7 @@ target\_email также являются уникальным, а значен�
         \endfoot
         \endlastfoot
 
-        Незарегистрированный пользователь & Имеет доступ исключительно к функциям
+        Незарегистрированный \newline пользователь & Имеет доступ исключительно к функциям
         регистрации, авторизации и валидации кода приглашения. \\ \hline
         
         Разработчик & Обладает правами на чтение данных о пользователях своей
