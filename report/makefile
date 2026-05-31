@@ -37,6 +37,13 @@ compress: $(MAIN).pdf
     -dPreserveDeviceN=true \
     -dMaxInlineImageSize=0 \
     -sOutputFile="$(MAIN)_compressed.pdf" \
+    -dAutoFilterColorImages=false \
+    -dColorImageFilter="/FlateEncode" \
+    -dAutoFilterGrayImages=false \
+    -dGrayImageFilter="/FlateEncode" \
+    -dDownsampleColorImages=false \
+    -dDownsampleGrayImages=false \
+    -dDownsampleMonoImages=false \
     "$(MAIN).pdf"
 	rm $(MAIN).pdf
 	mv $(MAIN)_compressed.pdf $(MAIN).pdf
